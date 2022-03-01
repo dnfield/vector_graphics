@@ -11,6 +11,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/vector_graphics
     steps:
     - uses: actions/checkout@v3
     - uses: subosito/flutter-action@v2

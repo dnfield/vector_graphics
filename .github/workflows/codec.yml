@@ -1,4 +1,4 @@
-name: analyze and test encoder
+name: analyze and test codec
 
 on:
   push:
@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: packages/encoder
+        working-directory: packages/vector_graphics_codec
     steps:
     - uses: actions/checkout@v3
     - uses: subosito/flutter-action@v2

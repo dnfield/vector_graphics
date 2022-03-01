@@ -1,4 +1,4 @@
-name: analyze and test
+name: analyze and test compiler
 
 on:
   push:

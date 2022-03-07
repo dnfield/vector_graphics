@@ -450,7 +450,8 @@ class Stroke {
 
   /// Creates a string with the dart:ui code to represent this stroke and any
   /// shaders it contains as a ui.Paint.
-  String toFlutterPaintString(String shaderName, String paintName, [BlendMode? blendMode]) {
+  String toFlutterPaintString(String shaderName, String paintName,
+      [BlendMode? blendMode]) {
     final StringBuffer buffer = StringBuffer();
     if (shader != null) {
       buffer.writeln('final $shaderName = $shader');
@@ -570,7 +571,8 @@ class Fill {
 
   /// Creates a string with the dart:ui code to represent this fill and any
   /// shaders it contains as a ui.Paint.
-  String toFlutterPaintString(String shaderName, String paintName, [BlendMode? blendMode]) {
+  String toFlutterPaintString(String shaderName, String paintName,
+      [BlendMode? blendMode]) {
     final StringBuffer buffer = StringBuffer();
     if (shader != null) {
       buffer.writeln('final $shaderName = $shader');

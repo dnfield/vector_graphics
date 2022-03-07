@@ -42,17 +42,24 @@ void main(List<String> args) async {
   final VectorInstructions instructions = await parse(xml, key: args.first);
   final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
 
-  final Map<int, int> paintIdMapper = <int, int>{};
-  final Map<int, int> pathIdMapper = <int, int>{};
+  final Map<int, int> fillIds = <int, int>{};
+  final Map<int, int> strokeIds = <int, int>{};
 
+  int nextPaintId = 0;
   for (final Paint paint in instructions.paints) {
     final Fill? fill = paint.fill;
     final Stroke? stroke = paint.stroke;
+
     if (fill != null) {
-      _codec.writeFill(buffer, fill.color?.value ?? 0, paint.blendMode?.index ?? 0);
+      final int fillId = _codec.writeFill(
+        buffer,
+        fill.color?.value ?? 0,
+        paint.blendMode?.index ?? 0,
+      );
+      fillIds[nextPaintId] = fillId;
     }
     if (stroke != null) {
-      _codec.writeStroke(
+      final int strokeId = _codec.writeStroke(
         buffer,
         stroke.color?.value ?? 0,
         stroke.cap?.index ?? 0,
@@ -61,10 +68,13 @@ void main(List<String> args) async {
         stroke.miterLimit ?? 4,
         stroke.width ?? 1,
       );
+      strokeIds[nextPaintId] = strokeId;
     }
+    nextPaintId += 1;
   }
 
-  final Map<Path, int> pathIds = <Path, int>{};
+  final Map<int, int> pathIds = <int, int>{};
+  int nextPathId = 0;
   for (final Path path in instructions.paths) {
     final int id = _codec.writeStartPath(buffer, path.fillType.index);
     for (final PathCommand command in path.commands) {
@@ -79,7 +89,8 @@ void main(List<String> args) async {
           break;
         case PathCommandType.cubic:
           final CubicToCommand cubic = command as CubicToCommand;
-          _codec.writeCubicTo(buffer, cubic.x1, cubic.y1, cubic.x2, cubic.y2, cubic.x3, cubic.y3);
+          _codec.writeCubicTo(buffer, cubic.x1, cubic.y1, cubic.x2, cubic.y2,
+              cubic.x3, cubic.y3);
           break;
         case PathCommandType.close:
           _codec.writeClose(buffer);
@@ -87,19 +98,33 @@ void main(List<String> args) async {
       }
     }
     _codec.writeFinishPath(buffer);
-    pathIds[path] = id;
+    pathIds[nextPathId] = id;
+    nextPathId += 1;
   }
 
   for (final DrawCommand command in instructions.commands) {
     switch (command.type) {
       case DrawCommandType.path:
-        final Paint paint = instructions.paints[command.objectId];
-        final int id = pathIds[paint]!;
-        _codec.writeDrawPath(buffer, id, command.paintId);
+        if (fillIds.containsKey(command.paintId)) {
+          _codec.writeDrawPath(
+            buffer,
+            pathIds[command.objectId]!,
+            fillIds[command.paintId]!,
+          );
+        }
+        if (strokeIds.containsKey(command.paintId)) {
+          _codec.writeDrawPath(
+            buffer,
+            pathIds[command.objectId]!,
+            strokeIds[command.paintId]!,
+          );
+        }
         break;
       case DrawCommandType.vertices:
-        final IndexedVertices vertices = instructions.vertices[command.objectId];
-        _codec.writeDrawVertices(buffer, vertices.vertices, vertices.indices, command.paintId);
+        final IndexedVertices vertices =
+            instructions.vertices[command.objectId];
+        _codec.writeDrawVertices(
+            buffer, vertices.vertices, vertices.indices, command.paintId);
         break;
     }
   }

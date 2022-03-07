@@ -22,7 +22,7 @@ const List<String> kTestAssets =  <String>[
 ];
 
 void main() {
-  testWidgets('Can endcode and decode simple SVG with no errors', (WidgetTester tester) async {
+  testWidgets('Can endcode and decode simple SVGs with no errors', (WidgetTester tester) async {
     for (final String filename in kTestAssets) {
       final String svg = File(filename).readAsStringSync();
       final Uint8List bytes = await encodeSVG(svg, filename);

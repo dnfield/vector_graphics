@@ -75,7 +75,7 @@ Future<Uint8List> encodeSVG(String input, String filename) async {
       switch (command.type) {
         case PathCommandType.move:
           final MoveToCommand move = command as MoveToCommand;
-          codec.writeLineTo(buffer, move.x, move.y);
+          codec.writeMoveTo(buffer, move.x, move.y);
           break;
         case PathCommandType.line:
           final LineToCommand line = command as LineToCommand;

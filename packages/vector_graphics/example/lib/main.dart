@@ -19,7 +19,8 @@ class MyApp extends StatelessWidget {
       home: Scaffold(
         body: Center(
           child: VectorGraphic(
-            bytesLoader: AssetBytesLoader(assetName: 'assets/tiger.bin', assetBundle: rootBundle),
+            bytesLoader: AssetBytesLoader(
+                assetName: 'assets/tiger.bin', assetBundle: rootBundle),
           ),
         ),
       ),

@@ -16,18 +16,20 @@ class TestBytesLoader extends BytesLoader {
   }
 }
 
-const List<String> kTestAssets =  <String>[
+const List<String> kTestAssets = <String>[
   'assets/bars.svg',
   'assets/Ghostscript_Tiger.svg',
 ];
 
 void main() {
-  testWidgets('Can endcode and decode simple SVGs with no errors', (WidgetTester tester) async {
+  testWidgets('Can endcode and decode simple SVGs with no errors',
+      (WidgetTester tester) async {
     for (final String filename in kTestAssets) {
       final String svg = File(filename).readAsStringSync();
       final Uint8List bytes = await encodeSVG(svg, filename);
 
-      await tester.pumpWidget(VectorGraphic(bytesLoader: TestBytesLoader(bytes.buffer.asByteData())));
+      await tester.pumpWidget(VectorGraphic(
+          bytesLoader: TestBytesLoader(bytes.buffer.asByteData())));
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);

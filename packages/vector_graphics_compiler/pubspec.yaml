@@ -10,8 +10,13 @@ dependencies:
   meta: ^1.7.0
   path_parsing: ^1.0.0
   xml: ^5.3.1
+  vector_graphics_codec: 0.0.1
 
 dev_dependencies:
   flutter_lints: ^1.0.0
   test: ^1.20.1
   vector_math: ^2.1.2
+
+dependency_overrides:
+  vector_graphics_codec:
+    path: ../vector_graphics_codec

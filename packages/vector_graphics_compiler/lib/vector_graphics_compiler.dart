@@ -1,8 +1,8 @@
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
-import 'package:vector_graphics_compiler/src/geometry/vertices.dart';
 
+import 'src/geometry/vertices.dart';
 import 'src/geometry/path.dart';
 import 'src/optimizers.dart';
 import 'src/paint.dart';
@@ -30,16 +30,10 @@ Future<VectorInstructions> parse(
   return const PaintDeduplicator().optimize(await parser.parse());
 }
 
-const VectorGraphicsCodec _codec = VectorGraphicsCodec();
-
-void main(List<String> args) async {
-  if (args.length != 2) {
-    print('Usage: dart vector_graphics.dart input.svg output.bin');
-    exit(1);
-  }
-  final String xml = File(args[0]).readAsStringSync();
-  final File outputFile = File(args[1]);
-  final VectorInstructions instructions = await parse(xml, key: args.first);
+/// Encode an SVG [input] string into a vector_graphics binary format.
+Future<Uint8List> encodeSVG(String input, String filename) async {
+  const VectorGraphicsCodec codec = VectorGraphicsCodec();
+  final VectorInstructions instructions = await parse(input, key: filename);
   final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
 
   final Map<int, int> fillIds = <int, int>{};
@@ -51,7 +45,7 @@ void main(List<String> args) async {
     final Stroke? stroke = paint.stroke;
 
     if (fill != null) {
-      final int fillId = _codec.writeFill(
+      final int fillId = codec.writeFill(
         buffer,
         fill.color?.value ?? 0,
         paint.blendMode?.index ?? 0,
@@ -59,7 +53,7 @@ void main(List<String> args) async {
       fillIds[nextPaintId] = fillId;
     }
     if (stroke != null) {
-      final int strokeId = _codec.writeStroke(
+      final int strokeId = codec.writeStroke(
         buffer,
         stroke.color?.value ?? 0,
         stroke.cap?.index ?? 0,
@@ -76,28 +70,28 @@ void main(List<String> args) async {
   final Map<int, int> pathIds = <int, int>{};
   int nextPathId = 0;
   for (final Path path in instructions.paths) {
-    final int id = _codec.writeStartPath(buffer, path.fillType.index);
+    final int id = codec.writeStartPath(buffer, path.fillType.index);
     for (final PathCommand command in path.commands) {
       switch (command.type) {
         case PathCommandType.move:
           final MoveToCommand move = command as MoveToCommand;
-          _codec.writeLineTo(buffer, move.x, move.y);
+          codec.writeLineTo(buffer, move.x, move.y);
           break;
         case PathCommandType.line:
           final LineToCommand line = command as LineToCommand;
-          _codec.writeLineTo(buffer, line.x, line.y);
+          codec.writeLineTo(buffer, line.x, line.y);
           break;
         case PathCommandType.cubic:
           final CubicToCommand cubic = command as CubicToCommand;
-          _codec.writeCubicTo(buffer, cubic.x1, cubic.y1, cubic.x2, cubic.y2,
+          codec.writeCubicTo(buffer, cubic.x1, cubic.y1, cubic.x2, cubic.y2,
               cubic.x3, cubic.y3);
           break;
         case PathCommandType.close:
-          _codec.writeClose(buffer);
+          codec.writeClose(buffer);
           break;
       }
     }
-    _codec.writeFinishPath(buffer);
+    codec.writeFinishPath(buffer);
     pathIds[nextPathId] = id;
     nextPathId += 1;
   }
@@ -106,14 +100,14 @@ void main(List<String> args) async {
     switch (command.type) {
       case DrawCommandType.path:
         if (fillIds.containsKey(command.paintId)) {
-          _codec.writeDrawPath(
+          codec.writeDrawPath(
             buffer,
             pathIds[command.objectId]!,
             fillIds[command.paintId]!,
           );
         }
         if (strokeIds.containsKey(command.paintId)) {
-          _codec.writeDrawPath(
+          codec.writeDrawPath(
             buffer,
             pathIds[command.objectId]!,
             strokeIds[command.paintId]!,
@@ -123,11 +117,12 @@ void main(List<String> args) async {
       case DrawCommandType.vertices:
         final IndexedVertices vertices =
             instructions.vertices[command.objectId];
-        _codec.writeDrawVertices(
-            buffer, vertices.vertices, vertices.indices, command.paintId);
+        final int fillId = fillIds[command.paintId]!;
+        assert(!strokeIds.containsKey(command.paintId));
+        codec.writeDrawVertices(
+            buffer, vertices.vertices, vertices.indices, fillId);
         break;
     }
   }
-
-  outputFile.writeAsBytesSync(buffer.done().buffer.asUint8List());
+  return buffer.done().buffer.asUint8List();
 }

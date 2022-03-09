@@ -15,7 +15,6 @@ import 'parsers.dart';
 import 'theme.dart';
 import 'xml.dart';
 
-
 abstract class DrawCommandBuilder {
   void addSaveLayer(Paint paint) {}
 
@@ -1641,7 +1640,8 @@ class SvgParser implements DrawCommandBuilder {
 
   @override
   void addSaveLayer(Paint paint) {
-    _commands.add(DrawCommand(-1, _paints.length, DrawCommandType.saveLayer, null));
+    _commands
+        .add(DrawCommand(-1, _paints.length, DrawCommandType.saveLayer, null));
     _paints.add(paint);
   }
 

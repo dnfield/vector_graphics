@@ -383,8 +383,7 @@ class VectorGraphicsCodec {
   }
 
   void _readSaveLayer(
-    _ReadBuffer buffer, VectorGraphicsCodecListener? listener
-  ) {
+      _ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
     final int paintId = buffer.getInt32();
     listener?.onSaveLayer(paintId);
   }

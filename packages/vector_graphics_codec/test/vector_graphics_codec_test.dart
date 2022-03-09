@@ -225,7 +225,7 @@ class TestListener extends VectorGraphicsCodecListener {
 
   @override
   void onRestoreLayer() {
-     commands.add(const OnRestoreLayer());
+    commands.add(const OnRestoreLayer());
   }
 
   @override
@@ -243,8 +243,7 @@ class OnSaveLayer {
   int get hashCode => id.hashCode;
 
   @override
-  bool operator ==(Object other) =>
-      other is OnSaveLayer && other.id == id;
+  bool operator ==(Object other) => other is OnSaveLayer && other.id == id;
 }
 
 class OnRestoreLayer {

@@ -24,7 +24,6 @@ const String groupOpacity = '''
 </svg>
 ''';
 
-
 /// https://commons.wikimedia.org/wiki/File:Ghostscript_Tiger.svg
 const String ghostscriptTiger = '''
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>

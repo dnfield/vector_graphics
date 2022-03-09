@@ -24,8 +24,9 @@ void main() {
     for (final String svg in allSvgTestStrings) {
       final Uint8List bytes = await encodeSVG(svg, 'test.svg');
 
-      await tester.pumpWidget(Center(child: VectorGraphic(
-          bytesLoader: TestBytesLoader(bytes.buffer.asByteData()))));
+      await tester.pumpWidget(Center(
+          child: VectorGraphic(
+              bytesLoader: TestBytesLoader(bytes.buffer.asByteData()))));
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);

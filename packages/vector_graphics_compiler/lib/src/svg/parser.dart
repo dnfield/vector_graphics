@@ -868,9 +868,7 @@ class SvgParser implements DrawCommandBuilder {
     if (_root == null) {
       throw StateError('Invalid SVG data');
     }
-    print(_commands);
     _root!.addPaths(this, AffineMatrix.identity);
-    print(_commands);
 
     return VectorInstructions(
       width: _root!.width,

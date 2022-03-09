@@ -38,6 +38,7 @@ class PaintDeduplicator extends Optimizer {
     final Map<Paint, int> paints = <Paint, int>{};
     for (final DrawCommand command in original.commands) {
       if (command.paintId == -1) {
+        result.commands.add(command);
         continue;
       }
       final Paint originalPaint = original.paints[command.paintId];

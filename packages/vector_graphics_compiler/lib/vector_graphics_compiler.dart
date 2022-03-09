@@ -123,9 +123,13 @@ Future<Uint8List> encodeSVG(String input, String filename) async {
             buffer, vertices.vertices, vertices.indices, fillId);
         break;
       case DrawCommandType.opacity:
+        codec.writeOpacityLayer(buffer, command.objectId as double);
+        break;
       case DrawCommandType.saveLayer:
+        break;
       case DrawCommandType.restore:
-        print('warning unsupported command $command');
+        codec.writeRestoreLayer(buffer);
+        break;
     }
   }
   return buffer.done().buffer.asUint8List();

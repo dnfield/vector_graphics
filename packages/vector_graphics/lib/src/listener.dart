@@ -130,7 +130,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
 
   @override
   void onOpacityLayer(double value) {
-    _canvas.saveLayer(null, ui.Paint()..color = ui.Color.fromRGBO(0, 0, 0, value) ..blendMode = ui.BlendMode.multiply);
+    _canvas.saveLayer(null, ui.Paint()..color = ui.Color.fromRGBO(0, 0, 0, value));
   }
 
   @override

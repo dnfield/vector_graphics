@@ -18,9 +18,8 @@ class VectorGraphicsCodec {
   static const int _cubicToTag = 34;
   static const int _closeTag = 35;
   static const int _finishPathTag = 36;
-  static const int _opacityLayerTag = 37;
-  static const int _saveLayer = 38;
-  static const int _restore = 39;
+  static const int _saveLayer = 37;
+  static const int _restore = 38;
 
   static const int _version = 1;
   static const int _magicNumber = 0x00882d62;
@@ -81,14 +80,11 @@ class VectorGraphicsCodec {
         case _finishPathTag:
           listener?.onPathFinished();
           continue;
-        case _opacityLayerTag:
-          _readOpacityLayer(buffer, listener);
-          continue;
         case _restore:
           listener?.onRestoreLayer();
           continue;
         case _saveLayer:
-          listener?.onSaveLayer();
+          _readSaveLayer(buffer, listener);
           continue;
         default:
           throw StateError('Unknown type tag $type');
@@ -325,13 +321,9 @@ class VectorGraphicsCodec {
     buffer._currentPathId = -1;
   }
 
-  void writeOpacityLayer(VectorGraphicsBuffer buffer, double opacity) {
-    buffer._putUint8(_opacityLayerTag);
-    buffer._putFloat64(opacity);
-  }
-
-  void writeSaveLayer(VectorGraphicsBuffer buffer) {
+  void writeSaveLayer(VectorGraphicsBuffer buffer, int paint) {
     buffer._putUint8(_saveLayer);
+    buffer._putInt32(paint);
   }
 
   void writeRestoreLayer(VectorGraphicsBuffer buffer) {
@@ -390,11 +382,11 @@ class VectorGraphicsCodec {
     listener?.onDrawVertices(vertices, indices, paintId);
   }
 
-  void _readOpacityLayer(
+  void _readSaveLayer(
     _ReadBuffer buffer, VectorGraphicsCodecListener? listener
   ) {
-    final double opacity = buffer.getFloat64();
-    listener?.onOpacityLayer(opacity);
+    final int paintId = buffer.getInt32();
+    listener?.onSaveLayer(paintId);
   }
 }
 
@@ -457,10 +449,10 @@ abstract class VectorGraphicsCodecListener {
     int? paintId,
   );
 
-  void onOpacityLayer(double value);
+  /// Save a new layer with the given [paintId].
+  void onSaveLayer(int paintId);
 
-  void onSaveLayer();
-
+  /// Restore the save stack.
   void onRestoreLayer();
 }
 

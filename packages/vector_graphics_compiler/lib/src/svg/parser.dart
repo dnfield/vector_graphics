@@ -17,9 +17,7 @@ import 'xml.dart';
 
 
 abstract class DrawCommandBuilder {
-  void addOpacityLayer(double opacity) {}
-
-  void saveLayer() {}
+  void addSaveLayer(Paint paint) {}
 
   void restore() {}
 
@@ -1642,8 +1640,9 @@ class SvgParser implements DrawCommandBuilder {
   }
 
   @override
-  void addOpacityLayer(double opacity) {
-    _commands.add(DrawCommand(opacity, -1, DrawCommandType.opacity, null));
+  void addSaveLayer(Paint paint) {
+    _commands.add(DrawCommand(-1, _paints.length, DrawCommandType.saveLayer, null));
+    _paints.add(paint);
   }
 
   @override
@@ -1661,11 +1660,6 @@ class SvgParser implements DrawCommandBuilder {
   @override
   void restore() {
     _commands.add(const DrawCommand(-1, -1, DrawCommandType.restore, null));
-  }
-
-  @override
-  void saveLayer() {
-    _commands.add(const DrawCommand(-1, -1, DrawCommandType.saveLayer, null));
   }
 }
 

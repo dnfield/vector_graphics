@@ -116,16 +116,14 @@ Future<Uint8List> encodeSVG(String input, String filename) async {
         break;
       case DrawCommandType.vertices:
         final IndexedVertices vertices =
-            instructions.vertices[command.objectId as int];
+            instructions.vertices[command.objectId];
         final int fillId = fillIds[command.paintId]!;
         assert(!strokeIds.containsKey(command.paintId));
         codec.writeDrawVertices(
             buffer, vertices.vertices, vertices.indices, fillId);
         break;
-      case DrawCommandType.opacity:
-        codec.writeOpacityLayer(buffer, command.objectId as double);
-        break;
       case DrawCommandType.saveLayer:
+        codec.writeSaveLayer(buffer, fillIds[command.paintId]!);
         break;
       case DrawCommandType.restore:
         codec.writeRestoreLayer(buffer);

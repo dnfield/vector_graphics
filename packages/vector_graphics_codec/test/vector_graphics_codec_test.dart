@@ -132,16 +132,25 @@ void main() {
   test('Can encode opacity/save/restore layers', () {
     final buffer = VectorGraphicsBuffer();
     final TestListener listener = TestListener();
+    final int paintId = codec.writeFill(buffer, 0xAA000000, 0);
 
-    codec.writeOpacityLayer(buffer, 0.5);
-    codec.writeSaveLayer(buffer);
+    codec.writeSaveLayer(buffer, paintId);
     codec.writeRestoreLayer(buffer);
     codec.decode(buffer.done(), listener);
 
-    expect(listener.commands, const [
-      OnOpacityLayer(0.5),
-      OnSaveLayer(),
-      OnRestoreLayer(),
+    expect(listener.commands, [
+      OnPaintObject(
+        color: 0xAA000000,
+        strokeCap: null,
+        strokeJoin: null,
+        blendMode: 0,
+        strokeMiterLimit: null,
+        strokeWidth: null,
+        paintStyle: 0,
+        id: paintId,
+      ),
+      OnSaveLayer(paintId),
+      const OnRestoreLayer(),
     ]);
   });
 }
@@ -215,40 +224,31 @@ class TestListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onOpacityLayer(double value) {
-    commands.add(OnOpacityLayer(value));
-  }
-
-  @override
   void onRestoreLayer() {
      commands.add(const OnRestoreLayer());
   }
 
   @override
-  void onSaveLayer() {
-    commands.add(const OnSaveLayer());
+  void onSaveLayer(int id) {
+    commands.add(OnSaveLayer(id));
   }
 }
 
 class OnSaveLayer {
-  const OnSaveLayer();
+  const OnSaveLayer(this.id);
+
+  final int id;
+
+  @override
+  int get hashCode => id.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is OnSaveLayer && other.id == id;
 }
 
 class OnRestoreLayer {
   const OnRestoreLayer();
-}
-
-class OnOpacityLayer {
-  const OnOpacityLayer(this.value);
-
-  final double value;
-
-  @override
-  int get hashCode => value.hashCode;
-
-  @override
-  bool operator ==(Object other) =>
-      other is OnOpacityLayer && other.value == value;
 }
 
 class OnDrawPath {

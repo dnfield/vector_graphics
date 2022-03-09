@@ -128,16 +128,20 @@ class ParentNode extends Node {
   void addPaths(DrawCommandBuilder builder, AffineMatrix transform) {
     final Color? color = paint?.fill?.color;
 
-    if (color != null && color.o < 255) {
-      builder.saveLayer();
-      builder.addOpacityLayer(color.o / 255.0);
+    if (color != null && color.a < 255) {
+      final Paint fillOnly = Paint(
+        blendMode: paint!.blendMode,
+        fill: paint!.fill,
+        pathFillType: paint!.pathFillType,
+      );
+      builder.addSaveLayer(fillOnly);
     }
 
     for (final Node child in children) {
       child.addPaths(builder, transform);
     }
 
-    if (color != null && color.o < 255) {
+    if (color != null && color.a < 255) {
       builder.restore();
     }
   }

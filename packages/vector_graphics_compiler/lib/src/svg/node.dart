@@ -40,7 +40,7 @@ abstract class Node {
   /// [ParentNode]s in the subtree, and applied to any [Path] objects in leaf
   /// nodes in the tree. It may be [AffineMatrix.identity] to indicate that no
   /// additional transformation is needed.
-  void addPaths(DrawCommandConcatentor addDrawPath, AffineMatrix transform);
+  void addPaths(DrawCommandBuilder builder, AffineMatrix transform);
 }
 
 /// A graphics node describing a viewport area, which has a [width] and [height]
@@ -125,9 +125,20 @@ class ParentNode extends Node {
   }
 
   @override
-  void addPaths(DrawCommandConcatentor addDrawPath, AffineMatrix transform) {
+  void addPaths(DrawCommandBuilder builder, AffineMatrix transform) {
+    final Color? color = paint?.fill?.color;
+
+    if (color != null && color.o < 255) {
+      builder.saveLayer();
+      builder.addOpacityLayer(color.o / 255.0);
+    }
+
     for (final Node child in children) {
-      child.addPaths(addDrawPath, transform);
+      child.addPaths(builder, transform);
+    }
+
+    if (color != null && color.o < 255) {
+      builder.restore();
     }
   }
 }
@@ -170,7 +181,7 @@ class PathNode extends Node {
   }
 
   @override
-  void addPaths(DrawCommandConcatentor addDrawPath, AffineMatrix transform) {
-    addDrawPath(path.transformed(transform), paint!, id);
+  void addPaths(DrawCommandBuilder builder, AffineMatrix transform) {
+    builder.addPath(path.transformed(transform), paint!, id);
   }
 }

@@ -57,6 +57,13 @@ enum DrawCommandType {
   ///
   /// In this case, any [Stroke] properties on the [Paint] are ignored.
   vertices,
+
+  /// Specifies that this command draws an opacity layer.
+  opacity,
+
+  saveLayer,
+
+  restore,
 }
 
 /// A drawing command combining the index of a [Path] or an [IndexedVertices]
@@ -85,7 +92,7 @@ class DrawCommand {
   /// [VectorInstructions.vertices].
   ///
   /// Use [type] to determine which type of object this is.
-  final int objectId;
+  final num objectId;
 
   /// The index of a [Paint] for this object in [VectorInstructions.paints].
   final int paintId;

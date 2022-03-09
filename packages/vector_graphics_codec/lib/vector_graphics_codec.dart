@@ -18,6 +18,9 @@ class VectorGraphicsCodec {
   static const int _cubicToTag = 34;
   static const int _closeTag = 35;
   static const int _finishPathTag = 36;
+  static const int _opacityLayerTag = 37;
+  static const int _saveLayer = 38;
+  static const int _restore = 39;
 
   static const int _version = 1;
   static const int _magicNumber = 0x00882d62;
@@ -77,6 +80,15 @@ class VectorGraphicsCodec {
           continue;
         case _finishPathTag:
           listener?.onPathFinished();
+          continue;
+        case _opacityLayerTag:
+          _readOpacityLayer(buffer, listener);
+          continue;
+        case _restore:
+          listener?.onRestoreLayer();
+          continue;
+        case _saveLayer:
+          listener?.onSaveLayer();
           continue;
         default:
           throw StateError('Unknown type tag $type');
@@ -313,6 +325,19 @@ class VectorGraphicsCodec {
     buffer._currentPathId = -1;
   }
 
+  void writeOpacityLayer(VectorGraphicsBuffer buffer, double opacity) {
+    buffer._putUint8(_opacityLayerTag);
+    buffer._putFloat64(opacity);
+  }
+
+  void writeSaveLayer(VectorGraphicsBuffer buffer) {
+    buffer._putUint8(_saveLayer);
+  }
+
+  void writeRestoreLayer(VectorGraphicsBuffer buffer) {
+    buffer._putUint8(_restore);
+  }
+
   void _readPath(_ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
     final int fillType = buffer.getUint8();
     final int id = buffer.getInt32();
@@ -363,6 +388,13 @@ class VectorGraphicsCodec {
       indices = buffer.getUint16List(indexLength);
     }
     listener?.onDrawVertices(vertices, indices, paintId);
+  }
+
+  void _readOpacityLayer(
+    _ReadBuffer buffer, VectorGraphicsCodecListener? listener
+  ) {
+    final double opacity = buffer.getFloat64();
+    listener?.onOpacityLayer(opacity);
   }
 }
 
@@ -424,6 +456,12 @@ abstract class VectorGraphicsCodecListener {
     Uint16List? indices,
     int? paintId,
   );
+
+  void onOpacityLayer(double value);
+
+  void onSaveLayer();
+
+  void onRestoreLayer();
 }
 
 enum _CurrentSection {

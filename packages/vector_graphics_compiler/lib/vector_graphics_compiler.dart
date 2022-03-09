@@ -116,12 +116,16 @@ Future<Uint8List> encodeSVG(String input, String filename) async {
         break;
       case DrawCommandType.vertices:
         final IndexedVertices vertices =
-            instructions.vertices[command.objectId];
+            instructions.vertices[command.objectId as int];
         final int fillId = fillIds[command.paintId]!;
         assert(!strokeIds.containsKey(command.paintId));
         codec.writeDrawVertices(
             buffer, vertices.vertices, vertices.indices, fillId);
         break;
+      case DrawCommandType.opacity:
+      case DrawCommandType.saveLayer:
+      case DrawCommandType.restore:
+        print('warning unsupported command $command');
     }
   }
   return buffer.done().buffer.asUint8List();

@@ -128,6 +128,22 @@ void main() {
       ], null, paintId),
     ]);
   });
+
+  test('Can encode opacity/save/restore layers', () {
+    final buffer = VectorGraphicsBuffer();
+    final TestListener listener = TestListener();
+
+    codec.writeOpacityLayer(buffer, 0.5);
+    codec.writeSaveLayer(buffer);
+    codec.writeRestoreLayer(buffer);
+    codec.decode(buffer.done(), listener);
+
+    expect(listener.commands, const [
+      OnOpacityLayer(0.5),
+      OnSaveLayer(),
+      OnRestoreLayer(),
+    ]);
+  });
 }
 
 class TestListener extends VectorGraphicsCodecListener {
@@ -197,6 +213,42 @@ class TestListener extends VectorGraphicsCodecListener {
   void onPathStart(int id, int fillType) {
     commands.add(OnPathStart(id, fillType));
   }
+
+  @override
+  void onOpacityLayer(double value) {
+    commands.add(OnOpacityLayer(value));
+  }
+
+  @override
+  void onRestoreLayer() {
+     commands.add(const OnRestoreLayer());
+  }
+
+  @override
+  void onSaveLayer() {
+    commands.add(const OnSaveLayer());
+  }
+}
+
+class OnSaveLayer {
+  const OnSaveLayer();
+}
+
+class OnRestoreLayer {
+  const OnRestoreLayer();
+}
+
+class OnOpacityLayer {
+  const OnOpacityLayer(this.value);
+
+  final double value;
+
+  @override
+  int get hashCode => value.hashCode;
+
+  @override
+  bool operator ==(Object other) =>
+      other is OnOpacityLayer && other.value == value;
 }
 
 class OnDrawPath {

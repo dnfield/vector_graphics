@@ -15,12 +15,17 @@ import 'parsers.dart';
 import 'theme.dart';
 import 'xml.dart';
 
-/// The signature of a method for adding a [Path] and [Paint] while building up
-/// [VectorInstructions].
-///
-/// Used by [Node.addPaths].
-typedef DrawCommandConcatentor = void Function(
-    Path path, Paint paint, String? debugString);
+
+abstract class DrawCommandBuilder {
+  void addOpacityLayer(double opacity) {}
+
+  void saveLayer() {}
+
+  void restore() {}
+
+  /// Add a path to the current draw command stack
+  void addPath(Path path, Paint paint, String? debugString);
+}
 
 final Set<String> _unhandledElements = <String>{'title', 'desc'};
 
@@ -196,7 +201,7 @@ class _Elements {
 
     parserState.checkForIri(group);
     parent.children.add(group);
-    group.addPaths(parserState._addDrawPath, transform);
+    group.addPaths(parserState, transform);
     return null;
   }
 
@@ -751,7 +756,7 @@ class _SvgGroupTuple {
 
 /// Reads an SVG XML string and via the [parse] method creates a set of
 /// [VectorInstructions].
-class SvgParser {
+class SvgParser implements DrawCommandBuilder {
   /// Creates a new [SvgParser].
   SvgParser(
     String xml,
@@ -863,6 +868,10 @@ class SvgParser {
     if (_root == null) {
       throw StateError('Invalid SVG data');
     }
+    print(_commands);
+    _root!.addPaths(this, AffineMatrix.identity);
+    print(_commands);
+
     return VectorInstructions(
       width: _root!.width,
       height: _root!.height,
@@ -940,19 +949,8 @@ class SvgParser {
       paint: paint,
     );
     checkForIri(drawable);
-    _addDrawPath(path, paint, drawable.id);
+    parent.children.add(drawable);
     return true;
-  }
-
-  void _addDrawPath(Path path, Paint paint, String? debugString) {
-    _commands.add(DrawCommand(
-      _paths.length,
-      _paints.length,
-      DrawCommandType.path,
-      debugString,
-    ));
-    _paints.add(paint);
-    _paths.add(path);
   }
 
   /// Potentially handles a starting element.
@@ -1047,7 +1045,6 @@ class SvgParser {
     } else if (rawDouble?.contains('ex') ?? false) {
       unit = theme.xHeight;
     }
-
     final double? value = parseDouble(
       rawDouble,
       tryParse: tryParse,
@@ -1644,6 +1641,33 @@ class SvgParser {
     }
 
     throw StateError('Could not parse "$colorString" as a color.');
+  }
+
+  @override
+  void addOpacityLayer(double opacity) {
+    _commands.add(DrawCommand(opacity, -1, DrawCommandType.opacity, null));
+  }
+
+  @override
+  void addPath(Path path, Paint paint, String? debugString) {
+    _commands.add(DrawCommand(
+      _paths.length,
+      _paints.length,
+      DrawCommandType.path,
+      debugString,
+    ));
+    _paints.add(paint);
+    _paths.add(path);
+  }
+
+  @override
+  void restore() {
+    _commands.add(const DrawCommand(-1, -1, DrawCommandType.restore, null));
+  }
+
+  @override
+  void saveLayer() {
+    _commands.add(const DrawCommand(-1, -1, DrawCommandType.saveLayer, null));
   }
 }
 

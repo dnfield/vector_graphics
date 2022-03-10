@@ -140,20 +140,20 @@ class ParentNode extends Node {
     if (localPaint.blendMode == null) {
       return false;
     }
-    return fill.color == null ||
-      fill.color !=  const Color(0xFF000000);
+    return fill.color == null || fill.color != const Color(0xFF000000);
   }
 
   @override
   void build(DrawCommandBuilder builder, AffineMatrix transform) {
     final bool requiresLayer = _requiresSaveLayer();
-
     if (requiresLayer) {
       builder.addSaveLayer(paint!);
     }
-
+    final AffineMatrix nextTransform = this.transform == null
+        ? transform
+        : transform.multiplied(this.transform!);
     for (final Node child in children) {
-      child.build(builder, transform);
+      child.build(builder, nextTransform);
     }
 
     if (requiresLayer) {

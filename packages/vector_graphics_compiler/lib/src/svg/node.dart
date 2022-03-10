@@ -124,12 +124,29 @@ class ParentNode extends Node {
     );
   }
 
+  // Whether or not a save layer should be inserted at this node.
+  bool _requiresSaveLayer() {
+    final Paint? localPaint = paint;
+    if (localPaint == null) {
+      return false;
+    }
+    final Fill? fill = localPaint.fill;
+    if (fill == null) {
+      return false;
+    }
+    if (fill.shader != null) {
+      return true;
+    }
+    if (localPaint.blendMode == null) {
+      return false;
+    }
+    return fill.color == null ||
+      fill.color !=  const Color(0xFF000000);
+  }
+
   @override
   void build(DrawCommandBuilder builder, AffineMatrix transform) {
-    final bool requiresLayer = paint != null &&
-        paint!.fill != null &&
-        (paint!.fill!.color != const Color(0xFF000000) ||
-            paint!.fill!.shader != null);
+    final bool requiresLayer = _requiresSaveLayer();
 
     if (requiresLayer) {
       builder.addSaveLayer(paint!);

@@ -58,8 +58,14 @@ enum DrawCommandType {
   /// In this case, any [Stroke] properties on the [Paint] are ignored.
   vertices,
 
+  /// Specifies that this command saves a layer.
+  ///
+  /// In this case, any [Stroke] properties on the [Paint] are ignored.
   saveLayer,
 
+  /// Specifies that this command restores a layer.
+  ///
+  /// In this case, both the objectId and paintId will be `-1`.
   restore,
 }
 

@@ -15,9 +15,12 @@ import 'parsers.dart';
 import 'theme.dart';
 import 'xml.dart';
 
+/// An interface for building up a stack of vector commands.
 abstract class DrawCommandBuilder {
+  /// Add a save layer to the command stack.
   void addSaveLayer(Paint paint) {}
 
+  /// Add a restore to the command stack.
   void restore() {}
 
   /// Add a path to the current draw command stack
@@ -198,7 +201,7 @@ class _Elements {
 
     parserState.checkForIri(group);
     parent.children.add(group);
-    group.addPaths(parserState, transform);
+    group.build(parserState, transform);
     return null;
   }
 
@@ -865,8 +868,8 @@ class SvgParser implements DrawCommandBuilder {
     if (_root == null) {
       throw StateError('Invalid SVG data');
     }
-    _root!.addPaths(this, AffineMatrix.identity);
-
+    _root!.build(this, AffineMatrix.identity);
+    print(_paths);
     return VectorInstructions(
       width: _root!.width,
       height: _root!.height,

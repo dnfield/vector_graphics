@@ -33,14 +33,14 @@ abstract class Node {
   /// the current paint applied as a parent.
   Node adoptPaint(Paint? newPaint);
 
-  /// Calls `addDrawPath` for all paths contained in this subtree with the
-  /// specified `transform` in painting order..
+  /// Calls `build` for all nodes contained in this subtree with the
+  /// specified `transform` in painting order.
   ///
   /// The transform will be multiplied with any transforms present on
   /// [ParentNode]s in the subtree, and applied to any [Path] objects in leaf
   /// nodes in the tree. It may be [AffineMatrix.identity] to indicate that no
   /// additional transformation is needed.
-  void addPaths(DrawCommandBuilder builder, AffineMatrix transform);
+  void build(DrawCommandBuilder builder, AffineMatrix transform);
 }
 
 /// A graphics node describing a viewport area, which has a [width] and [height]
@@ -125,23 +125,21 @@ class ParentNode extends Node {
   }
 
   @override
-  void addPaths(DrawCommandBuilder builder, AffineMatrix transform) {
-    final Color? color = paint?.fill?.color;
+  void build(DrawCommandBuilder builder, AffineMatrix transform) {
+    final bool requiresLayer = paint != null &&
+        paint!.fill != null &&
+        (paint!.fill!.color != const Color(0xFF000000) ||
+            paint!.fill!.shader != null);
 
-    if (color != null && color.a < 255) {
-      final Paint fillOnly = Paint(
-        blendMode: paint!.blendMode,
-        fill: paint!.fill,
-        pathFillType: paint!.pathFillType,
-      );
-      builder.addSaveLayer(fillOnly);
+    if (requiresLayer) {
+      builder.addSaveLayer(paint!);
     }
 
     for (final Node child in children) {
-      child.addPaths(builder, transform);
+      child.build(builder, transform);
     }
 
-    if (color != null && color.a < 255) {
+    if (requiresLayer) {
       builder.restore();
     }
   }
@@ -185,7 +183,7 @@ class PathNode extends Node {
   }
 
   @override
-  void addPaths(DrawCommandBuilder builder, AffineMatrix transform) {
+  void build(DrawCommandBuilder builder, AffineMatrix transform) {
     builder.addPath(path.transformed(transform), paint!, id);
   }
 }

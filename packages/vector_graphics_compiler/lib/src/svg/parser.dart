@@ -165,8 +165,7 @@ class _Elements {
       children: <Node>[],
       paint: parserState.parseStyle(parserState.rootBounds, parent.paint,
           currentColor: color),
-      transform:
-          parseTransform(parserState.attribute('transform')),
+      transform: parseTransform(parserState.attribute('transform')),
       color: color,
     );
     parent.children.add(group);
@@ -187,8 +186,7 @@ class _Elements {
         parent.paint,
         currentColor: color,
       ),
-      transform:
-          parseTransform(parserState.attribute('transform')),
+      transform: parseTransform(parserState.attribute('transform')),
       color: color,
     );
     parserState.addGroup(parserState._currentStartElement!, group);

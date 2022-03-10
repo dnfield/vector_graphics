@@ -32,8 +32,7 @@ void main() {
 
   test('SVG Transform parser tests', () {
     expect(() => parseTransform('invalid'), throwsStateError);
-    expect(() => parseTransform('transformunsupported(0,0)'),
-        throwsStateError);
+    expect(() => parseTransform('transformunsupported(0,0)'), throwsStateError);
 
     expect(
       parseTransform('skewX(60)'),

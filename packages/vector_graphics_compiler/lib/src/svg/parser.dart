@@ -105,18 +105,6 @@ class _Elements {
       if (warningsAsErrors) {
         throw UnsupportedError(errorMessage);
       }
-      // FlutterError.reportError(FlutterErrorDetails(
-      //   exception: UnsupportedError(errorMessage),
-      //   informationCollector: () => <DiagnosticsNode>[
-      //     ErrorDescription(
-      //         'The root <svg> element contained an unsupported nested SVG element.'),
-      //     if (parserState._key != null) ErrorDescription(''),
-      //     if (parserState._key != null)
-      //       DiagnosticsProperty<String>('Picture key', parserState._key),
-      //   ],
-      //   library: 'SVG',
-      //   context: ErrorDescription('in _Element.svg'),
-      // ));
 
       parserState._parentDrawables.addLast(
         _SvgGroupTuple(

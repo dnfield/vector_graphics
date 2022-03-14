@@ -147,7 +147,6 @@ class _Elements {
     final ParentNode parent = parserState.currentGroup!;
     final Color? color =
         parserState.parseColor(parserState.attribute('color')) ?? parent.color;
-
     final ParentNode group = ParentNode(
       id: parserState.attribute('id', def: ''),
       children: <Node>[],

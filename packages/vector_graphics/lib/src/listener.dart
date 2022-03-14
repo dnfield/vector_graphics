@@ -70,12 +70,12 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   }) {
     assert(_paints.length == id, 'Expect ID to be ${_paints.length}');
     final ui.Paint paint = ui.Paint()..color = ui.Color(color);
-
     if (blendMode != 0) {
       paint.blendMode = ui.BlendMode.values[blendMode];
-      if (shaderId != null) {
-        paint.shader = _shaders[shaderId];
-      }
+    }
+
+    if (shaderId != null) {
+      paint.shader = _shaders[shaderId];
     }
 
     if (paintStyle == 1) {
@@ -200,6 +200,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
       focal,
       radius,
     );
+    print("added $gradient");
     _shaders.add(gradient);
   }
 }

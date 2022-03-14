@@ -200,7 +200,6 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
       focal,
       radius,
     );
-    print("added $gradient");
     _shaders.add(gradient);
   }
 }

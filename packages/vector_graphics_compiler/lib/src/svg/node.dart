@@ -147,6 +147,7 @@ class ParentNode extends Node {
   void build(DrawCommandBuilder builder, AffineMatrix transform) {
     final bool requiresLayer = _requiresSaveLayer();
     if (requiresLayer) {
+      // TODO: bounds
       builder.addSaveLayer(paint!);
     }
     final AffineMatrix nextTransform = this.transform == null
@@ -201,6 +202,8 @@ class PathNode extends Node {
 
   @override
   void build(DrawCommandBuilder builder, AffineMatrix transform) {
-    builder.addPath(path.transformed(transform), paint!, id);
+    final Path transformedPath = path.transformed(transform);
+    final Rect bounds = transformedPath.bounds();
+    builder.addPath(transformedPath, paint!.applyBounds(bounds, transform), id);
   }
 }

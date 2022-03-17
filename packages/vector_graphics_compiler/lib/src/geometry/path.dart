@@ -481,7 +481,17 @@ class Path {
           largestY = math.max(move.y, largestY);
           break;
         case PathCommandType.cubic:
-          // TODO: Handle this case.
+          final CubicToCommand cubic = command as CubicToCommand;
+          for (List<double> pair in <List<double>>[
+            <double>[cubic.x1, cubic.y1],
+            <double>[cubic.x2, cubic.y2],
+            <double>[cubic.x3, cubic.y3],
+          ]) {
+            smallestX = math.min(pair[0], smallestX);
+            smallestY = math.min(pair[1], smallestY);
+            largestX = math.max(pair[0], largestX);
+            largestY = math.max(pair[1], largestY);
+          }
           break;
         case PathCommandType.close:
           break;

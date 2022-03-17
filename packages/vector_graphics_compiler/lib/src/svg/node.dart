@@ -147,7 +147,6 @@ class ParentNode extends Node {
   void build(DrawCommandBuilder builder, AffineMatrix transform) {
     final bool requiresLayer = _requiresSaveLayer();
     if (requiresLayer) {
-      // TODO: bounds
       builder.addSaveLayer(paint!);
     }
     final AffineMatrix nextTransform = this.transform == null

@@ -143,11 +143,19 @@ class LinearGradient extends Shader {
   LinearGradient applyBounds(Rect bounds, AffineMatrix transform) {
     return LinearGradient(
       from: transform.transformPoint(
-          Point(from.x * bounds.width, from.y * bounds.height) +
-              Point(bounds.left, bounds.top)),
+        Point(from.x * bounds.width, from.y * bounds.height) +
+            Point(
+              bounds.left,
+              bounds.top,
+            ),
+      ),
       to: transform.transformPoint(
-          Point(to.x * bounds.width, to.y * bounds.height) +
-              Point(bounds.left, bounds.top)),
+        Point(to.x * bounds.width, to.y * bounds.height) +
+            Point(
+              bounds.left,
+              bounds.top,
+            ),
+      ),
       colors: colors,
       offsets: offsets,
       tileMode: tileMode,
@@ -267,8 +275,15 @@ class RadialGradient extends Shader {
   RadialGradient applyBounds(Rect bounds, AffineMatrix transform) {
     return RadialGradient(
       center: transform.transformPoint(
-          Point(center.x * bounds.width, center.y * bounds.height) +
-              Point(bounds.left, bounds.top)),
+        Point(
+              center.x * bounds.width,
+              center.y * bounds.height,
+            ) +
+            Point(
+              bounds.left,
+              bounds.top,
+            ),
+      ),
       radius: radius,
       colors: colors,
       offsets: offsets,
@@ -276,9 +291,16 @@ class RadialGradient extends Shader {
       transform: this.transform,
       focalPoint: focalPoint == null
           ? focalPoint
-          : transform.transformPoint(Point(
-                  focalPoint!.x * bounds.width, focalPoint!.y * bounds.height) +
-              Point(bounds.left, bounds.top)),
+          : transform.transformPoint(
+              Point(
+                    focalPoint!.x * bounds.width,
+                    focalPoint!.y * bounds.height,
+                  ) +
+                  Point(
+                    bounds.left,
+                    bounds.top,
+                  ),
+            ),
       unitMode: unitMode,
     );
   }

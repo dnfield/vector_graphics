@@ -76,4 +76,7 @@ class IndexedVertices {
   ///
   /// May be null if [vertices] was not compressable.
   final Uint16List? indices;
+
+  @override
+  String toString() => 'IndexedVertices(vertices: $vertices, indices: $indices)';
 }

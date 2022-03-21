@@ -27,7 +27,11 @@ Future<VectorInstructions> parse(
   SvgTheme theme = const SvgTheme(),
 }) async {
   final SvgParser parser = SvgParser(xml, theme, key, warningsAsErrors);
-  return const PaintDeduplicator().optimize(await parser.parse());
+  return const PathTessellator().optimize(
+    const PaintDeduplicator().optimize(
+      await parser.parse(),
+    ),
+  );
 }
 
 /// Encode an SVG [input] string into a vector_graphics binary format.

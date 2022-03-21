@@ -1,3 +1,9 @@
+import 'dart:typed_data';
+
+import 'package:tessellator/tessellator.dart';
+import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
+
+import 'geometry/path.dart';
 import 'paint.dart';
 import 'vector_instructions.dart';
 
@@ -31,6 +37,7 @@ class PaintDeduplicator extends Optimizer {
       width: original.width,
       height: original.height,
       paths: original.paths,
+      vertices: original.vertices,
       paints: <Paint>[],
       commands: <DrawCommand>[],
     );
@@ -56,6 +63,76 @@ class PaintDeduplicator extends Optimizer {
         command.debugString,
       ));
     }
+    return result;
+  }
+}
+
+class PathTessellator extends Optimizer {
+  const PathTessellator();
+
+  @override
+  VectorInstructions optimize(VectorInstructions original) {
+    Map<int, Path> combinedPaths = {};
+
+    final VectorInstructions result = VectorInstructions(
+      width: original.width,
+      height: original.height,
+      paints: original.paints,
+      vertices: <IndexedVertices>[],
+      commands: <DrawCommand>[],
+    );
+
+    for (final DrawCommand command in original.commands) {
+      final Path originalPath = original.paths[command.objectId];
+      if (combinedPaths.containsKey(command.paintId)) {
+        combinedPaths[command.paintId] =
+            (PathBuilder.fromPath(combinedPaths[command.paintId]!)
+                  ..addPath(originalPath))
+                .toPath();
+      } else {
+        combinedPaths[command.paintId] = originalPath;
+      }
+    }
+
+    for (final MapEntry<int, Path> entry in combinedPaths.entries) {
+      final VerticesBuilder builder = VerticesBuilder();
+      for (final PathCommand pathCommand in entry.value.commands) {
+        switch (pathCommand.type) {
+          case PathCommandType.move:
+            final MoveToCommand move = pathCommand as MoveToCommand;
+            builder.moveTo(move.x, move.y);
+            break;
+          case PathCommandType.line:
+            final LineToCommand line = pathCommand as LineToCommand;
+            builder.lineTo(line.x, line.y);
+            break;
+          case PathCommandType.cubic:
+            final CubicToCommand cubic = pathCommand as CubicToCommand;
+            builder.cubicTo(
+              cubic.x1,
+              cubic.y1,
+              cubic.x2,
+              cubic.y2,
+              cubic.x3,
+              cubic.y3,
+            );
+            break;
+          case PathCommandType.close:
+            builder.close();
+            break;
+        }
+      }
+      final Float32List vertices = builder.tessellate(
+        smoothing: const SmoothingApproximation(scale: 0.1),
+      );
+      // print(vertices);
+      result.commands.add(DrawCommand(
+          result.vertices.length, entry.key, DrawCommandType.vertices, ''));
+      result.vertices.add(Vertices.fromFloat32List(vertices).createIndex());
+      print(result.vertices.last);
+      builder.dispose();
+    }
+    print(result.vertices.length);
     return result;
   }
 }

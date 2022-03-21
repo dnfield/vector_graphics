@@ -1,9 +1,9 @@
 import 'dart:typed_data';
 
 import 'package:tessellator/tessellator.dart';
-import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 
 import 'geometry/path.dart';
+import 'geometry/vertices.dart';
 import 'paint.dart';
 import 'vector_instructions.dart';
 
@@ -72,7 +72,7 @@ class PathTessellator extends Optimizer {
 
   @override
   VectorInstructions optimize(VectorInstructions original) {
-    Map<int, Path> combinedPaths = {};
+    final Map<int, Path> combinedPaths = <int, Path>{};
 
     final VectorInstructions result = VectorInstructions(
       width: original.width,
@@ -125,14 +125,11 @@ class PathTessellator extends Optimizer {
       final Float32List vertices = builder.tessellate(
         smoothing: const SmoothingApproximation(scale: 0.1),
       );
-      // print(vertices);
       result.commands.add(DrawCommand(
           result.vertices.length, entry.key, DrawCommandType.vertices, ''));
       result.vertices.add(Vertices.fromFloat32List(vertices).createIndex());
-      print(result.vertices.last);
       builder.dispose();
     }
-    print(result.vertices.length);
     return result;
   }
 }

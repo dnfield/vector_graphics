@@ -151,10 +151,6 @@ class _VectorGraphicsWidgetState extends State<VectorGraphic> {
           size: ui.Size(pictureInfo.viewBox.width, pictureInfo.viewBox.height),
           child: _RawVectorGraphicsWidget(
             pictureInfo: pictureInfo,
-            width: widget.width,
-            height: widget.height,
-            alignment: widget.alignment,
-            fit: widget.fit,
           ),
         ),
       ),
@@ -235,17 +231,9 @@ class _RawVectorGraphicsWidget extends SingleChildRenderObjectWidget {
   const _RawVectorGraphicsWidget({
     Key? key,
     required this.pictureInfo,
-    required this.width,
-    required this.height,
-    required this.fit,
-    required this.alignment,
   }) : super(key: key);
 
   final PictureInfo pictureInfo;
-  final double? width;
-  final double? height;
-  final BoxFit fit;
-  final AlignmentGeometry alignment;
 
   @override
   RenderObject createRenderObject(BuildContext context) {
@@ -255,7 +243,7 @@ class _RawVectorGraphicsWidget extends SingleChildRenderObjectWidget {
   @override
   void updateRenderObject(
       BuildContext context, covariant _RenderVectorGraphics renderObject) {
-    renderObject..pictureInfo = pictureInfo;
+    renderObject.pictureInfo = pictureInfo;
   }
 }
 

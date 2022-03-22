@@ -285,9 +285,7 @@ void main() {
     codec.writeViewBox(buffer, 0, 1, 20, 30);
     codec.decode(buffer.done(), listener);
 
-    expect(listener.commands, [
-      const OnViewBox(0, 1, 20, 30)
-    ]);
+    expect(listener.commands, [const OnViewBox(0, 1, 20, 30)]);
   });
 
   test('Only supports a single viewbox', () {

@@ -50,8 +50,6 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     return PictureInfo(_recorder.endRecording(), _viewBox);
   }
 
-
-
   @override
   void onDrawPath(int pathId, int? paintId) {
     final ui.Path path = _paths[pathId];

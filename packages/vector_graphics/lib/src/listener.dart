@@ -3,6 +3,21 @@ import 'dart:typed_data';
 
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
+/// The deocded result of a vector graphics asset.
+class PictureInfo {
+  /// Construct a new [PictureInfo].
+  const PictureInfo(this.picture, this.viewBox);
+
+  /// The picture to be drawn with [ui.canvas.drawPicture]
+  final ui.Picture picture;
+
+  /// The target size and position of the picture.
+  ///
+  /// This information should be used to scale and position
+  /// the picture based on the available space and alignment.
+  final ui.Rect viewBox;
+}
+
 /// A listener implementation for the vector graphics codec that converts the
 /// format into a [ui.Picture].
 class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
@@ -21,6 +36,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   final List<ui.Path> _paths = <ui.Path>[];
   final List<ui.Shader> _shaders = <ui.Shader>[];
   ui.Path? _currentPath;
+  ui.Rect _viewBox = ui.Rect.zero;
   bool _done = false;
 
   static final _emptyPaint = ui.Paint();
@@ -28,11 +44,13 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   /// Convert the vector graphics asset this listener decoded into a [ui.Picture].
   ///
   /// This method can only be called once for a given listener instance.
-  ui.Picture toPicture() {
+  PictureInfo toPicture() {
     assert(!_done);
     _done = true;
-    return _recorder.endRecording();
+    return PictureInfo(_recorder.endRecording(), _viewBox);
   }
+
+
 
   @override
   void onDrawPath(int pathId, int? paintId) {
@@ -201,5 +219,10 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
       radius,
     );
     _shaders.add(gradient);
+  }
+
+  @override
+  void onViewBox(double minX, double minY, double width, double height) {
+    _viewBox = ui.Rect.fromLTWH(minX, minY, width, height);
   }
 }

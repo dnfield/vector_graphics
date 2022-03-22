@@ -22,6 +22,7 @@ class VectorGraphicsCodec {
   static const int _restore = 38;
   static const int _linearGradientTag = 39;
   static const int _radialGradientTag = 40;
+  static const int _viewboxTag = 41;
 
   static const int _version = 1;
   static const int _magicNumber = 0x00882d62;
@@ -94,10 +95,35 @@ class VectorGraphicsCodec {
         case _saveLayer:
           _readSaveLayer(buffer, listener);
           continue;
+        case _viewboxTag:
+          _readViewBox(buffer, listener);
+          continue;
         default:
           throw StateError('Unknown type tag $type');
       }
     }
+  }
+
+  /// Encode the position and dimensions of the vector
+  /// graphic.
+  ///
+  /// This should be the first attribute encoded.
+  void writeViewBox(
+    VectorGraphicsBuffer buffer,
+    double minX,
+    double minY,
+    double width,
+    double height,
+  ) {
+    if (buffer._decodePhase.index != _CurrentSection.viewbox.index) {
+      throw StateError('Viewbox already written');
+    }
+    buffer._decodePhase = _CurrentSection.shaders;
+    buffer._putUint8(_viewboxTag);
+    buffer._putFloat64(minX);
+    buffer._putFloat64(minY);
+    buffer._putFloat64(width);
+    buffer._putFloat64(height);
   }
 
   /// Encode a draw path command in the current buffer.
@@ -539,11 +565,30 @@ class VectorGraphicsCodec {
     final int paintId = buffer.getInt32();
     listener?.onSaveLayer(paintId);
   }
+
+  void _readViewBox(_ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
+    final double minX = buffer.getFloat64();
+    final double minY = buffer.getFloat64();
+    final double width = buffer.getFloat64();
+    final double height = buffer.getFloat64();
+    listener?.onViewBox(minX, minY, width, height);
+  }
 }
 
 /// Implement this listener class to support decoding of vector_graphics binary
 /// assets.
 abstract class VectorGraphicsCodecListener {
+  /// The viewbox of the vector graphic has been decoded.
+  ///
+  /// This defines the position and dimension of the decoded
+  /// vector graphic.
+  void onViewBox(
+    double minX,
+    double minY,
+    double width,
+    double height,
+  );
+
   /// A paint object has been decoded.
   ///
   /// If the paint object is for a fill, then [strokeCap], [strokeJoin],
@@ -636,6 +681,7 @@ abstract class VectorGraphicsCodecListener {
 }
 
 enum _CurrentSection {
+  viewbox,
   shaders,
   paints,
   paths,
@@ -684,7 +730,7 @@ class VectorGraphicsBuffer {
   ///
   /// Objects must be written in the correct order, the same as the
   /// enum order.
-  _CurrentSection _decodePhase = _CurrentSection.shaders;
+  _CurrentSection _decodePhase = _CurrentSection.viewbox;
 
   /// Write a Uint8 into the buffer.
   void _putUint8(int byte) {

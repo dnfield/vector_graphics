@@ -277,6 +277,25 @@ void main() {
       ),
     ]);
   });
+
+  test('Encodes a viewbox', () {
+    final buffer = VectorGraphicsBuffer();
+    final TestListener listener = TestListener();
+
+    codec.writeViewBox(buffer, 0, 1, 20, 30);
+    codec.decode(buffer.done(), listener);
+
+    expect(listener.commands, [
+      const OnViewBox(0, 1, 20, 30)
+    ]);
+  });
+
+  test('Only supports a single viewbox', () {
+    final buffer = VectorGraphicsBuffer();
+
+    codec.writeViewBox(buffer, 0, 1, 20, 30);
+    expect(() => codec.writeViewBox(buffer, 1, 1, 1, 1), throwsStateError);
+  });
 }
 
 class TestListener extends VectorGraphicsCodecListener {
@@ -408,6 +427,11 @@ class TestListener extends VectorGraphicsCodecListener {
       tileMode: tileMode,
       id: id,
     ));
+  }
+
+  @override
+  void onViewBox(double minX, double minY, double width, double height) {
+    commands.add(OnViewBox(minX, minY, width, height));
   }
 }
 
@@ -711,6 +735,29 @@ class OnPathStart {
 
   @override
   String toString() => 'OnPathStart($id, $fillType)';
+}
+
+class OnViewBox {
+  const OnViewBox(this.minX, this.minY, this.width, this.height);
+
+  final double minX;
+  final double minY;
+  final double width;
+  final double height;
+
+  @override
+  int get hashCode => Object.hash(minX, minY, width, height);
+
+  @override
+  bool operator ==(Object other) =>
+      other is OnViewBox &&
+      other.minX == minX &&
+      other.minY == minY &&
+      other.width == width &&
+      other.height == height;
+
+  @override
+  String toString() => 'OnViewBox($minX, $minY, $width, $height)';
 }
 
 bool _listEquals<E>(List<E>? left, List<E>? right) {

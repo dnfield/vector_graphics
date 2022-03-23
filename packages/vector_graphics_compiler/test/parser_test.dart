@@ -5,7 +5,7 @@ import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 import 'test_svg_strings.dart';
 
 void main() {
-  test('Can parse an SVG with clips without crashing', () async {
+  test('Combines clips where possible', () async {
     const String svg = '''
 <!-- Learn about this code on MDN: https://developer.mozilla.org/en-US/docs/Web/SVG/Element/clipPath -->
 <svg viewBox="0 0 120 120" xmlns="http://www.w3.org/2000/svg">
@@ -21,12 +21,66 @@ void main() {
 </svg>
 ''';
     final VectorInstructions instructions = await parse(svg);
-    // Depending on how we implement clipping, this number will change. For now,
-    // just make it possible to actually parse the SVG without throwing an
-    // exception.
-    expect(instructions.commands.length, 1);
+    expect(instructions.paths, <Path>[
+      (PathBuilder()
+            ..addOval(const Rect.fromCircle(30, 30, 20))
+            ..addOval(const Rect.fromCircle(70, 70, 20)))
+          .toPath(),
+      (PathBuilder()..addRect(const Rect.fromLTWH(10, 10, 100, 100))).toPath(),
+    ]);
+    expect(instructions.commands, const <DrawCommand>[
+      DrawCommand(0, -1, DrawCommandType.clip, null),
+      DrawCommand(1, 0, DrawCommandType.path, null),
+      DrawCommand(-1, -1, DrawCommandType.restore, null),
+    ]);
   });
 
+  test('Does not combine clips with multiple fill rules', () async {
+    const String svg = '''
+<!-- multiple clip-rules -->
+<svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <clipPath id="myClip">
+      <path d="M 250,75 L 323,301 131,161 369,161 177,301 z" clip-rule="evenodd"/>
+      <path d="M 250,75 L 323,301 131,161 369,161 177,301 z" transform="translate(250, 0)" clip-rule="nonzero"/>
+    </clipPath>
+  </defs>
+  <circle cx="400" cy="200" r="150" fill="green" fill-opacity=".5" stroke="black" clip-path="url(#myClip)" />
+  <g clip-path="url(#myClip)">
+    <circle cx="450" cy="300" r="150" fill="blue" fill-opacity=".6" stroke="black" />
+  </g>
+</svg>
+''';
+    final VectorInstructions instructions = await parse(svg);
+    expect(instructions.paths, <Path>[
+      parseSvgPathData(
+          'M 250,75 L 323,301 131,161 369,161 177,301 z', PathFillType.evenOdd),
+      (PathBuilder()..addOval(const Rect.fromCircle(400, 200, 150))).toPath(),
+      parseSvgPathData('M 250,75 L 323,301 131,161 369,161 177,301 z')
+          .transformed(AffineMatrix.identity.translated(250, 0)),
+      (PathBuilder()..addOval(const Rect.fromCircle(400, 200, 150))).toPath(),
+      parseSvgPathData(
+          'M 250,75 L 323,301 131,161 369,161 177,301 z', PathFillType.evenOdd),
+      (PathBuilder()..addOval(const Rect.fromCircle(450, 300, 150))).toPath(),
+      parseSvgPathData('M 250,75 L 323,301 131,161 369,161 177,301 z')
+          .transformed(AffineMatrix.identity.translated(250, 0)),
+      (PathBuilder()..addOval(const Rect.fromCircle(450, 300, 150))).toPath(),
+    ]);
+    expect(instructions.commands, const <DrawCommand>[
+      DrawCommand(0, -1, DrawCommandType.clip, null),
+      DrawCommand(1, 0, DrawCommandType.path, null),
+      DrawCommand(-1, -1, DrawCommandType.restore, null),
+      DrawCommand(2, -1, DrawCommandType.clip, null),
+      DrawCommand(3, 0, DrawCommandType.path, null),
+      DrawCommand(-1, -1, DrawCommandType.restore, null),
+      DrawCommand(4, -1, DrawCommandType.clip, null),
+      DrawCommand(5, 1, DrawCommandType.path, null),
+      DrawCommand(-1, -1, DrawCommandType.restore, null),
+      DrawCommand(6, -1, DrawCommandType.clip, null),
+      DrawCommand(7, 1, DrawCommandType.path, null),
+      DrawCommand(-1, -1, DrawCommandType.restore, null),
+    ]);
+  });
   test('Path with empty paint does not draw anything', () async {
     final VectorInstructions instructions = await parse(
       '''

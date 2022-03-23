@@ -174,6 +174,9 @@ Future<Uint8List> encodeSVG(String input, String filename) async {
       case DrawCommandType.restore:
         codec.writeRestoreLayer(buffer);
         break;
+      case DrawCommandType.clip:
+        codec.writeClipPath(buffer, pathIds[command.objectId]!);
+        break;
     }
   }
   return buffer.done().buffer.asUint8List();

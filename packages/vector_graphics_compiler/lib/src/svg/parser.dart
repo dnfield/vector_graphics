@@ -16,19 +16,22 @@ import 'xml.dart';
 
 /// An interface for building up a stack of vector commands.
 class DrawCommandBuilder {
-  final List<Paint> _paints = <Paint>[];
-  final List<Path> _paths = <Path>[];
+  final Map<Paint, int> _paints = <Paint, int>{};
+  final Map<Path, int> _paths = <Path, int>{};
   final List<DrawCommand> _commands = <DrawCommand>[];
+
+  int _getOrGenerateId<T>(T object, Map<T, int> map) =>
+      map.putIfAbsent(object, () => map.length);
 
   /// Add a save layer to the command stack.
   void addSaveLayer(Paint paint) {
+    final int paintId = _getOrGenerateId(paint, _paints);
     _commands.add(DrawCommand(
       -1,
-      _paints.length,
+      paintId,
       DrawCommandType.saveLayer,
       null,
     ));
-    _paints.add(paint);
   }
 
   /// Add a restore to the command stack.
@@ -38,20 +41,20 @@ class DrawCommandBuilder {
 
   /// Adds a clip to the command stack.
   void addClip(Path path) {
-    _commands.add(DrawCommand(_paths.length, -1, DrawCommandType.clip, null));
-    _paths.add(path);
+    final int pathId = _getOrGenerateId(path, _paths);
+    _commands.add(DrawCommand(pathId, -1, DrawCommandType.clip, null));
   }
 
   /// Add a path to the current draw command stack
   void addPath(Path path, Paint paint, String? debugString) {
+    final int pathId = _getOrGenerateId(path, _paths);
+    final int paintId = _getOrGenerateId(paint, _paints);
     _commands.add(DrawCommand(
-      _paths.length,
-      _paints.length,
+      pathId,
+      paintId,
       DrawCommandType.path,
       debugString,
     ));
-    _paints.add(paint);
-    _paths.add(path);
   }
 
   /// Create a new [VectorInstructions] with the given width and height.
@@ -59,8 +62,8 @@ class DrawCommandBuilder {
     return VectorInstructions(
       width: width,
       height: height,
-      paints: _paints,
-      paths: _paths,
+      paints: _paints.keys.toList(),
+      paths: _paths.keys.toList(),
       commands: _commands,
     );
   }

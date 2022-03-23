@@ -304,8 +304,8 @@ bool _scaleCanvasToViewBox(
     halfDesiredSize.height - scaledHalfViewBoxSize.height,
   );
   matrix
-    ..setIdentity()
     ..translate(shift.dx, shift.dy)
     ..scale(scale, scale);
+
   return true;
 }

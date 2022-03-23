@@ -1420,7 +1420,9 @@ class SvgParser {
   List<Path> parseClipPath() {
     final String? rawClipAttribute = getAttribute(attributes, 'clip-path');
     if (rawClipAttribute != '') {
-      return _definitions.getClipPath(rawClipAttribute!)!;
+      // If this returns null it should be an error, but for now match
+      // flutter_svg behavior.
+      return _definitions.getClipPath(rawClipAttribute!) ?? <Path>[];
     }
 
     return <Path>[];

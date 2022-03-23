@@ -278,21 +278,21 @@ void main() {
     ]);
   });
 
-  test('Encodes a viewbox', () {
+  test('Encodes a size', () {
     final buffer = VectorGraphicsBuffer();
     final TestListener listener = TestListener();
 
-    codec.writeViewBox(buffer, 0, 1, 20, 30);
+    codec.writeSize(buffer, 20, 30);
     codec.decode(buffer.done(), listener);
 
-    expect(listener.commands, [const OnViewBox(0, 1, 20, 30)]);
+    expect(listener.commands, [const OnSize(20, 30)]);
   });
 
-  test('Only supports a single viewbox', () {
+  test('Only supports a single size', () {
     final buffer = VectorGraphicsBuffer();
 
-    codec.writeViewBox(buffer, 0, 1, 20, 30);
-    expect(() => codec.writeViewBox(buffer, 1, 1, 1, 1), throwsStateError);
+    codec.writeSize(buffer, 20, 30);
+    expect(() => codec.writeSize(buffer, 1, 1), throwsStateError);
   });
 }
 
@@ -428,8 +428,8 @@ class TestListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onViewBox(double minX, double minY, double width, double height) {
-    commands.add(OnViewBox(minX, minY, width, height));
+  void onSize(double width, double height) {
+    commands.add(OnSize(width, height));
   }
 }
 
@@ -735,27 +735,21 @@ class OnPathStart {
   String toString() => 'OnPathStart($id, $fillType)';
 }
 
-class OnViewBox {
-  const OnViewBox(this.minX, this.minY, this.width, this.height);
+class OnSize {
+  const OnSize(this.width, this.height);
 
-  final double minX;
-  final double minY;
   final double width;
   final double height;
 
   @override
-  int get hashCode => Object.hash(minX, minY, width, height);
+  int get hashCode => Object.hash(width, height);
 
   @override
   bool operator ==(Object other) =>
-      other is OnViewBox &&
-      other.minX == minX &&
-      other.minY == minY &&
-      other.width == width &&
-      other.height == height;
+      other is OnSize && other.width == width && other.height == height;
 
   @override
-  String toString() => 'OnViewBox($minX, $minY, $width, $height)';
+  String toString() => 'OnSize($width, $height)';
 }
 
 bool _listEquals<E>(List<E>? left, List<E>? right) {

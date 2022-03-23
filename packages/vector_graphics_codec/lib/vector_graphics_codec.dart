@@ -22,7 +22,7 @@ class VectorGraphicsCodec {
   static const int _restore = 38;
   static const int _linearGradientTag = 39;
   static const int _radialGradientTag = 40;
-  static const int _viewboxTag = 41;
+  static const int _sizeTag = 41;
 
   static const int _version = 1;
   static const int _magicNumber = 0x00882d62;
@@ -95,8 +95,8 @@ class VectorGraphicsCodec {
         case _saveLayer:
           _readSaveLayer(buffer, listener);
           continue;
-        case _viewboxTag:
-          _readViewBox(buffer, listener);
+        case _sizeTag:
+          _readSize(buffer, listener);
           continue;
         default:
           throw StateError('Unknown type tag $type');
@@ -104,24 +104,19 @@ class VectorGraphicsCodec {
     }
   }
 
-  /// Encode the position and dimensions of the vector
-  /// graphic.
+  /// Encode the dimensions of the vector graphic.
   ///
   /// This should be the first attribute encoded.
-  void writeViewBox(
+  void writeSize(
     VectorGraphicsBuffer buffer,
-    double minX,
-    double minY,
     double width,
     double height,
   ) {
-    if (buffer._decodePhase.index != _CurrentSection.viewbox.index) {
-      throw StateError('Viewbox already written');
+    if (buffer._decodePhase.index != _CurrentSection.size.index) {
+      throw StateError('Size already written');
     }
     buffer._decodePhase = _CurrentSection.shaders;
-    buffer._putUint8(_viewboxTag);
-    buffer._putFloat64(minX);
-    buffer._putFloat64(minY);
+    buffer._putUint8(_sizeTag);
     buffer._putFloat64(width);
     buffer._putFloat64(height);
   }
@@ -566,25 +561,18 @@ class VectorGraphicsCodec {
     listener?.onSaveLayer(paintId);
   }
 
-  void _readViewBox(_ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
-    final double minX = buffer.getFloat64();
-    final double minY = buffer.getFloat64();
+  void _readSize(_ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
     final double width = buffer.getFloat64();
     final double height = buffer.getFloat64();
-    listener?.onViewBox(minX, minY, width, height);
+    listener?.onSize(width, height);
   }
 }
 
 /// Implement this listener class to support decoding of vector_graphics binary
 /// assets.
 abstract class VectorGraphicsCodecListener {
-  /// The viewbox of the vector graphic has been decoded.
-  ///
-  /// This defines the position and dimension of the decoded
-  /// vector graphic.
-  void onViewBox(
-    double minX,
-    double minY,
+  /// The size of the vector graphic has been decoded.
+  void onSize(
     double width,
     double height,
   );
@@ -681,7 +669,7 @@ abstract class VectorGraphicsCodecListener {
 }
 
 enum _CurrentSection {
-  viewbox,
+  size,
   shaders,
   paints,
   paths,
@@ -730,7 +718,7 @@ class VectorGraphicsBuffer {
   ///
   /// Objects must be written in the correct order, the same as the
   /// enum order.
-  _CurrentSection _decodePhase = _CurrentSection.viewbox;
+  _CurrentSection _decodePhase = _CurrentSection.size;
 
   /// Write a Uint8 into the buffer.
   void _putUint8(int byte) {

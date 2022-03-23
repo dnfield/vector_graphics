@@ -148,7 +148,7 @@ class _VectorGraphicsWidgetState extends State<VectorGraphic> {
         fit: widget.fit,
         alignment: widget.alignment,
         child: SizedBox.fromSize(
-          size: ui.Size(pictureInfo.viewBox.width, pictureInfo.viewBox.height),
+          size: pictureInfo.size,
           child: _RawVectorGraphicsWidget(
             pictureInfo: pictureInfo,
           ),

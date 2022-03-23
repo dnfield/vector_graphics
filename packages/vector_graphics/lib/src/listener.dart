@@ -6,16 +6,16 @@ import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 /// The deocded result of a vector graphics asset.
 class PictureInfo {
   /// Construct a new [PictureInfo].
-  const PictureInfo(this.picture, this.viewBox);
+  const PictureInfo(this.picture, this.size);
 
   /// The picture to be drawn with [ui.canvas.drawPicture]
   final ui.Picture picture;
 
-  /// The target size and position of the picture.
+  /// The target size of the picture.
   ///
   /// This information should be used to scale and position
   /// the picture based on the available space and alignment.
-  final ui.Rect viewBox;
+  final ui.Size size;
 }
 
 /// A listener implementation for the vector graphics codec that converts the
@@ -36,7 +36,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   final List<ui.Path> _paths = <ui.Path>[];
   final List<ui.Shader> _shaders = <ui.Shader>[];
   ui.Path? _currentPath;
-  ui.Rect _viewBox = ui.Rect.zero;
+  ui.Size _size = ui.Size.zero;
   bool _done = false;
 
   static final _emptyPaint = ui.Paint();
@@ -47,7 +47,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   PictureInfo toPicture() {
     assert(!_done);
     _done = true;
-    return PictureInfo(_recorder.endRecording(), _viewBox);
+    return PictureInfo(_recorder.endRecording(), _size);
   }
 
   @override
@@ -220,7 +220,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onViewBox(double minX, double minY, double width, double height) {
-    _viewBox = ui.Rect.fromLTWH(minX, minY, width, height);
+  void onSize(double width, double height) {
+    _size = ui.Size(width, height);
   }
 }

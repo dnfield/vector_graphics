@@ -99,7 +99,7 @@ void main() {
   testWidgets('Sizes VectorGraphic based on encoded viewbox information',
       (WidgetTester tester) async {
     final buffer = VectorGraphicsBuffer();
-    codec.writeViewBox(buffer, 0, 0, 100, 200);
+    codec.writeSize(buffer, 100, 200);
 
     await tester.pumpWidget(VectorGraphic(
       bytesLoader: TestBytesLoader(buffer.done()),

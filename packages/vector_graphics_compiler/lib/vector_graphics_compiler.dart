@@ -36,7 +36,7 @@ Future<Uint8List> encodeSVG(String input, String filename) async {
   final VectorInstructions instructions = await parse(input, key: filename);
   final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
 
-  codec.writeViewBox(buffer, 0, 0, instructions.width, instructions.height);
+  codec.writeSize(buffer, instructions.width, instructions.height);
 
   final Map<int, int> fillIds = <int, int>{};
   final Map<int, int> strokeIds = <int, int>{};

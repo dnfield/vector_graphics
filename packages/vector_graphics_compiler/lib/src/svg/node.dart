@@ -119,11 +119,18 @@ class ParentNode extends PaintingNode {
   final Color? color;
 
   /// Calls `visitor` for each child node of this parent group.
+  ///
+  /// This call does not recursively call `visitChildren`. Callers must decide
+  /// whether to do BFS or DFS by calling `visitChildren` if the visited child
+  /// is a [ParentNode].
   void visitChildren(NodeCallback visitor) {
     _children.forEach(visitor);
   }
 
   /// Adds a child to this parent node.
+  ///
+  /// If `clips` is empty, the child is directly appended. Otherwise, a
+  /// [ClipNode] is inserted.
   void addChild(Node child, List<Path> clips) {
     if (clips.isEmpty) {
       _children.add(child);
@@ -184,7 +191,11 @@ class ParentNode extends PaintingNode {
 class ClipNode extends Node {
   /// Creates a new clip node that applies [clip] to [child].
   ClipNode({required this.child, required this.clips, String? id})
-      : super(id: id);
+      : assert(
+          clips.isNotEmpty,
+          'Do not use a ClipNode without any clip paths.',
+        ),
+        super(id: id);
 
   /// The clips to apply to the child node.
   ///

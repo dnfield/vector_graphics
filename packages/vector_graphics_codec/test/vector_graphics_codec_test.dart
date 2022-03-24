@@ -309,6 +309,7 @@ void main() {
     final buffer = VectorGraphicsBuffer();
     final TestListener listener = TestListener();
     codec.writeMask(buffer);
+    codec.decode(buffer.done(), listener);
     expect(listener.commands, [const OnMask()]);
   });
 

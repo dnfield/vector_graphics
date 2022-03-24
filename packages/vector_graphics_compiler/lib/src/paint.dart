@@ -140,12 +140,15 @@ class LinearGradient extends Shader {
 
   @override
   LinearGradient applyBounds(Rect bounds, AffineMatrix transform) {
+    final AffineMatrix appliedTransform = this.transform == null
+        ? transform
+        : transform.multiplied(this.transform!);
     if (unitMode == GradientUnitMode.userSpaceOnUse) {
       // Transform the point using the flattened affine transform but treat them
       // as already in local coordinates.
       return LinearGradient(
-        from: transform.transformPoint(from),
-        to: transform.transformPoint(to),
+        from: appliedTransform.transformPoint(from),
+        to: appliedTransform.transformPoint(to),
         colors: colors,
         offsets: offsets,
         tileMode: tileMode,
@@ -154,14 +157,14 @@ class LinearGradient extends Shader {
       );
     }
     return LinearGradient(
-      from: transform.transformPoint(
+      from: appliedTransform.transformPoint(
         Point(from.x * bounds.width, from.y * bounds.height) +
             Point(
               bounds.left,
               bounds.top,
             ),
       ),
-      to: transform.transformPoint(
+      to: appliedTransform.transformPoint(
         Point(to.x * bounds.width, to.y * bounds.height) +
             Point(
               bounds.left,
@@ -285,11 +288,14 @@ class RadialGradient extends Shader {
 
   @override
   RadialGradient applyBounds(Rect bounds, AffineMatrix transform) {
+    final AffineMatrix appliedTransform = this.transform == null
+        ? transform
+        : transform.multiplied(this.transform!);
     if (unitMode == GradientUnitMode.userSpaceOnUse) {
       // Transform the points using the flattened affine transform but treat them
       // as already in local coordinates.
       return RadialGradient(
-        center: transform.transformPoint(center),
+        center: appliedTransform.transformPoint(center),
         radius: radius,
         colors: colors,
         offsets: offsets,
@@ -297,12 +303,12 @@ class RadialGradient extends Shader {
         transform: this.transform,
         focalPoint: focalPoint == null
             ? focalPoint
-            : transform.transformPoint(focalPoint!),
+            : appliedTransform.transformPoint(focalPoint!),
         unitMode: unitMode,
       );
     }
     return RadialGradient(
-      center: transform.transformPoint(
+      center: appliedTransform.transformPoint(
         Point(
               center.x * bounds.width,
               center.y * bounds.height,
@@ -319,7 +325,7 @@ class RadialGradient extends Shader {
       transform: this.transform,
       focalPoint: focalPoint == null
           ? focalPoint
-          : transform.transformPoint(
+          : appliedTransform.transformPoint(
               Point(
                     focalPoint!.x * bounds.width,
                     focalPoint!.y * bounds.height,

@@ -147,8 +147,8 @@ class LinearGradient extends Shader {
       // Transform the point using the flattened affine transform but treat them
       // as already in local coordinates.
       return LinearGradient(
-        from: appliedTransform.transformPoint(from) + transform.transformPoint(Point(bounds.left, bounds.top)),
-        to: appliedTransform.transformPoint(to) + transform.transformPoint(Point(bounds.left, bounds.top)),
+        from: appliedTransform.transformPoint(from),
+        to: appliedTransform.transformPoint(to),
         colors: colors,
         offsets: offsets,
         tileMode: tileMode,
@@ -295,7 +295,7 @@ class RadialGradient extends Shader {
       // Transform the points using the flattened affine transform but treat them
       // as already in local coordinates.
       return RadialGradient(
-        center: appliedTransform.transformPoint(center) + transform.transformPoint(Point(bounds.left, bounds.top)),
+        center: appliedTransform.transformPoint(center),
         radius: radius,
         colors: colors,
         offsets: offsets,
@@ -303,7 +303,7 @@ class RadialGradient extends Shader {
         transform: this.transform,
         focalPoint: focalPoint == null
             ? focalPoint
-            : appliedTransform.transformPoint(focalPoint!) + transform.transformPoint(Point(bounds.left, bounds.top)),
+            : appliedTransform.transformPoint(focalPoint!),
         unitMode: unitMode,
       );
     }

@@ -228,6 +228,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     final List<ui.Color> colorValues = <ui.Color>[
       for (int i = 0; i < colors.length; i++) ui.Color(colors[i])
     ];
+    final bool hasFocal = focal != center && focal != null;
     final ui.Gradient gradient = ui.Gradient.radial(
       center,
       radius,
@@ -235,8 +236,8 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
       offsets,
       ui.TileMode.values[tileMode],
       transform,
-      focal,
-      radius,
+      hasFocal ? focal : null,
+      hasFocal ? radius : 0,
     );
     _shaders.add(gradient);
   }

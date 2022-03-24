@@ -287,7 +287,7 @@ class RadialGradient extends Shader {
     if (unitMode == GradientUnitMode.userSpaceOnUse) {
       return RadialGradient(
         center: transform.transformPoint(center),
-        radius: radius, // How to transform?
+        radius: radius,
         colors: colors,
         offsets: offsets,
         tileMode: tileMode,

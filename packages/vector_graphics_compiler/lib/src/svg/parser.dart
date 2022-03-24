@@ -1665,11 +1665,7 @@ class _DrawableDefinitionServer {
   final Map<String, Shader> _shaders = <String, Shader>{};
   final Map<String, List<Path>> _clips = <String, List<Path>>{};
 
-<<<<<<< HEAD
-  Node? getDrawable(String ref) => _drawables[ref];
-=======
   PaintingNode? getDrawable(String ref) => _drawables[ref];
->>>>>>> origin/main
   List<Path>? getClipPath(String ref) => _clips[ref];
   T? getGradient<T extends Shader>(String ref) => _shaders[ref] as T;
   void addGradient<T extends Shader>(String ref, T gradient) {

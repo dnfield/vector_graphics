@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 import 'dart:typed_data';
 
 import 'package:tessellator/tessellator.dart';
@@ -6,8 +5,6 @@ import 'package:tessellator/tessellator.dart';
 import 'geometry/path.dart';
 import 'geometry/vertices.dart';
 import 'paint.dart';
-=======
->>>>>>> origin/main
 import 'vector_instructions.dart';
 
 /// An optimization pass for a [VectorInstructions] object.

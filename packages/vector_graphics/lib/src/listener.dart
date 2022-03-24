@@ -237,7 +237,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
       ui.TileMode.values[tileMode],
       transform,
       hasFocal ? focal : null,
-      hasFocal ? radius : 0,
+      0,
     );
     _shaders.add(gradient);
   }

@@ -257,9 +257,9 @@ class MaskNode extends Node {
 
   @override
   void build(DrawCommandBuilder builder, AffineMatrix transform) {
-    // Save layer expects to use the fill paint. Consider refactoring paint
-    // into separate fill and stroke objects entirely.
-    builder.addSaveLayer(const Paint(fill: Fill.empty));
+    // Save layer expects to use the fill paint, and will unconditionally set
+    // the color on the dart:ui.Paint object.
+    builder.addSaveLayer(const Paint(fill: Fill(color: Color.opaqueBlack)));
     child.build(builder, transform);
     {
       builder.addMask();

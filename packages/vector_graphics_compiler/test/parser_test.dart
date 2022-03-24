@@ -21,18 +21,17 @@ void main() {
 
     expect(instructions.paints, const <Paint>[
       Paint(fill: Fill(color: Color(0xffffa500))),
-      Paint(fill: Fill()),
-      Paint(fill: Fill(color: Color(0xff000000))),
+      Paint(fill: Fill(color: Color.opaqueBlack)),
       Paint(fill: Fill(color: Color(0xffffffff))),
     ]);
 
     expect(instructions.commands, const <DrawCommand>[
       DrawCommand(DrawCommandType.path, objectId: 0, paintId: 0),
       DrawCommand(DrawCommandType.saveLayer, paintId: 1),
-      DrawCommand(DrawCommandType.path, objectId: 1, paintId: 2),
+      DrawCommand(DrawCommandType.path, objectId: 1, paintId: 1),
       DrawCommand(DrawCommandType.mask),
-      DrawCommand(DrawCommandType.path, objectId: 2, paintId: 3),
-      DrawCommand(DrawCommandType.path, objectId: 3, paintId: 2),
+      DrawCommand(DrawCommandType.path, objectId: 2, paintId: 2),
+      DrawCommand(DrawCommandType.path, objectId: 3, paintId: 1),
       DrawCommand(DrawCommandType.restore),
       DrawCommand(DrawCommandType.restore),
     ]);
@@ -57,7 +56,7 @@ void main() {
 
     expect(instructions.paints, const <Paint>[
       Paint(fill: Fill(color: Color(0xff727272))),
-      Paint(fill: Fill()),
+      Paint(fill: Fill(color: Color.opaqueBlack)),
       Paint(fill: Fill(color: Color(0xff8e93a1))),
       Paint(fill: Fill(color: Color(0xffffffff)))
     ]);

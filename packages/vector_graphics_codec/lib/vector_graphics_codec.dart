@@ -18,10 +18,13 @@ class VectorGraphicsCodec {
   static const int _cubicToTag = 34;
   static const int _closeTag = 35;
   static const int _finishPathTag = 36;
-  static const int _saveLayer = 37;
-  static const int _restore = 38;
+  static const int _saveLayerTag = 37;
+  static const int _restoreTag = 38;
   static const int _linearGradientTag = 39;
   static const int _radialGradientTag = 40;
+  static const int _sizeTag = 41;
+  static const int _clipPathTag = 42;
+  static const int _maskTag = 43;
 
   static const int _version = 1;
   static const int _magicNumber = 0x00882d62;
@@ -88,16 +91,42 @@ class VectorGraphicsCodec {
         case _finishPathTag:
           listener?.onPathFinished();
           continue;
-        case _restore:
+        case _restoreTag:
           listener?.onRestoreLayer();
           continue;
-        case _saveLayer:
+        case _saveLayerTag:
           _readSaveLayer(buffer, listener);
+          continue;
+        case _sizeTag:
+          _readSize(buffer, listener);
+          continue;
+        case _clipPathTag:
+          _readClipPath(buffer, listener);
+          continue;
+        case _maskTag:
+          listener?.onMask();
           continue;
         default:
           throw StateError('Unknown type tag $type');
       }
     }
+  }
+
+  /// Encode the dimensions of the vector graphic.
+  ///
+  /// This should be the first attribute encoded.
+  void writeSize(
+    VectorGraphicsBuffer buffer,
+    double width,
+    double height,
+  ) {
+    if (buffer._decodePhase.index != _CurrentSection.size.index) {
+      throw StateError('Size already written');
+    }
+    buffer._decodePhase = _CurrentSection.shaders;
+    buffer._putUint8(_sizeTag);
+    buffer._putFloat64(width);
+    buffer._putFloat64(height);
   }
 
   /// Encode a draw path command in the current buffer.
@@ -182,8 +211,10 @@ class VectorGraphicsCodec {
     required double toY,
     required Int32List colors,
     required Float32List? offsets,
+    required Float64List? transform,
     required int tileMode,
   }) {
+    assert(transform == null || transform.length == 16);
     if (buffer._decodePhase.index > _CurrentSection.shaders.index) {
       throw StateError('Shaders must be encoded together.');
     }
@@ -203,6 +234,12 @@ class VectorGraphicsCodec {
       buffer._putInt32(offsets.length);
       buffer._putFloat32List(offsets);
     }
+    if (transform != null) {
+      buffer._putUint8(transform.length);
+      buffer._putFloat64List(transform);
+    } else {
+      buffer._putInt32(0);
+    }
     buffer._putUint8(tileMode);
     return shaderId;
   }
@@ -219,10 +256,12 @@ class VectorGraphicsCodec {
     required double? focalY,
     required Int32List colors,
     required Float32List? offsets,
+    required Float64List? transform,
     required int tileMode,
   }) {
     assert((focalX == null && focalY == null) ||
         (focalX != null && focalY != null));
+    assert(transform == null || transform.length == 16);
     if (buffer._decodePhase.index > _CurrentSection.shaders.index) {
       throw StateError('Shaders must be encoded together.');
     }
@@ -246,6 +285,12 @@ class VectorGraphicsCodec {
     if (offsets != null) {
       buffer._putInt32(offsets.length);
       buffer._putFloat32List(offsets);
+    } else {
+      buffer._putInt32(0);
+    }
+    if (transform != null) {
+      buffer._putUint8(transform.length);
+      buffer._putFloat64List(transform);
     } else {
       buffer._putInt32(0);
     }
@@ -300,6 +345,9 @@ class VectorGraphicsCodec {
     final Int32List colors = buffer.getInt32List(colorLength);
     final int offsetLength = buffer.getInt32();
     final Float32List offsets = buffer.getFloat32List(offsetLength);
+    final int transformLength = buffer.getUint8();
+    final Float64List? transform =
+        transformLength != 0 ? buffer.getFloat64List(transformLength) : null;
     final int tileMode = buffer.getUint8();
     listener?.onLinearGradient(
       fromX,
@@ -308,6 +356,7 @@ class VectorGraphicsCodec {
       toY,
       colors,
       offsets,
+      transform,
       tileMode,
       id,
     );
@@ -332,6 +381,9 @@ class VectorGraphicsCodec {
     final Int32List colors = buffer.getInt32List(colorsLength);
     final int offsetsLength = buffer.getInt32();
     final Float32List offsets = buffer.getFloat32List(offsetsLength);
+    final int transformLength = buffer.getUint8();
+    final Float64List? transform =
+        transformLength != 0 ? buffer.getFloat64List(transformLength) : null;
     final int tileMode = buffer.getUint8();
     listener?.onRadialGradient(
       centerX,
@@ -341,6 +393,7 @@ class VectorGraphicsCodec {
       focalY,
       colors,
       offsets,
+      transform,
       tileMode,
       id,
     );
@@ -474,12 +527,21 @@ class VectorGraphicsCodec {
   }
 
   void writeSaveLayer(VectorGraphicsBuffer buffer, int paint) {
-    buffer._putUint8(_saveLayer);
+    buffer._putUint8(_saveLayerTag);
     buffer._putInt32(paint);
   }
 
   void writeRestoreLayer(VectorGraphicsBuffer buffer) {
-    buffer._putUint8(_restore);
+    buffer._putUint8(_restoreTag);
+  }
+
+  void writeClipPath(VectorGraphicsBuffer buffer, int path) {
+    buffer._putUint8(_clipPathTag);
+    buffer._putInt32(path);
+  }
+
+  void writeMask(VectorGraphicsBuffer buffer) {
+    buffer._putUint8(_maskTag);
   }
 
   void _readPath(_ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
@@ -535,15 +597,37 @@ class VectorGraphicsCodec {
   }
 
   void _readSaveLayer(
-      _ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
+    _ReadBuffer buffer,
+    VectorGraphicsCodecListener? listener,
+  ) {
     final int paintId = buffer.getInt32();
     listener?.onSaveLayer(paintId);
+  }
+
+  void _readClipPath(
+    _ReadBuffer buffer,
+    VectorGraphicsCodecListener? listener,
+  ) {
+    final int pathId = buffer.getInt32();
+    listener?.onClipPath(pathId);
+  }
+
+  void _readSize(_ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
+    final double width = buffer.getFloat64();
+    final double height = buffer.getFloat64();
+    listener?.onSize(width, height);
   }
 }
 
 /// Implement this listener class to support decoding of vector_graphics binary
 /// assets.
 abstract class VectorGraphicsCodecListener {
+  /// The size of the vector graphic has been decoded.
+  void onSize(
+    double width,
+    double height,
+  );
+
   /// A paint object has been decoded.
   ///
   /// If the paint object is for a fill, then [strokeCap], [strokeJoin],
@@ -604,8 +688,14 @@ abstract class VectorGraphicsCodecListener {
   /// Save a new layer with the given [paintId].
   void onSaveLayer(int paintId);
 
+  /// Apply the specified paths as clips to the current canvas.
+  void onClipPath(int pathId);
+
   /// Restore the save stack.
   void onRestoreLayer();
+
+  /// Prepare to draw a new mask, until the next [onRestoreLayer] command.
+  void onMask();
 
   /// A radial gradient shader has been parsed.
   ///
@@ -618,6 +708,7 @@ abstract class VectorGraphicsCodecListener {
     double? focalY,
     Int32List colors,
     Float32List? offsets,
+    Float64List? transform,
     int tileMode,
     int id,
   );
@@ -630,12 +721,14 @@ abstract class VectorGraphicsCodecListener {
     double toY,
     Int32List colors,
     Float32List? offsets,
+    Float64List? transform,
     int tileMode,
     int id,
   );
 }
 
 enum _CurrentSection {
+  size,
   shaders,
   paints,
   paths,
@@ -684,7 +777,7 @@ class VectorGraphicsBuffer {
   ///
   /// Objects must be written in the correct order, the same as the
   /// enum order.
-  _CurrentSection _decodePhase = _CurrentSection.shaders;
+  _CurrentSection _decodePhase = _CurrentSection.size;
 
   /// Write a Uint8 into the buffer.
   void _putUint8(int byte) {
@@ -725,7 +818,8 @@ class VectorGraphicsBuffer {
   void _putUint16List(Uint16List list) {
     assert(!_isDone);
     _alignTo(2);
-    _buffer.addAll(list);
+    _buffer
+        .addAll(list.buffer.asUint8List(list.offsetInBytes, 2 * list.length));
   }
 
   /// Write all the values from a [Float32List] into the buffer.
@@ -734,6 +828,13 @@ class VectorGraphicsBuffer {
     _alignTo(4);
     _buffer
         .addAll(list.buffer.asUint8List(list.offsetInBytes, 4 * list.length));
+  }
+
+  void _putFloat64List(Float64List list) {
+    assert(!_isDone);
+    _alignTo(8);
+    _buffer
+        .addAll(list.buffer.asUint8List(list.offsetInBytes, 8 * list.length));
   }
 
   void _alignTo(int alignment) {

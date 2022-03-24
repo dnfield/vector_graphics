@@ -2,7 +2,6 @@ import 'package:meta/meta.dart';
 
 import 'geometry/basic_types.dart';
 import 'geometry/matrix.dart';
-import 'geometry/path.dart';
 import 'util.dart';
 
 // The enumerations in this file must match the ordering and index valuing of
@@ -141,15 +140,29 @@ class LinearGradient extends Shader {
 
   @override
   LinearGradient applyBounds(Rect bounds, AffineMatrix transform) {
+    final AffineMatrix appliedTransform = this.transform == null
+        ? transform
+        : transform.multiplied(this.transform!);
+    if (unitMode == GradientUnitMode.userSpaceOnUse) {
+      return LinearGradient(
+        from: appliedTransform.transformPoint(from),
+        to: appliedTransform.transformPoint(to),
+        colors: colors,
+        offsets: offsets,
+        tileMode: tileMode,
+        unitMode: unitMode,
+      );
+    }
+
     return LinearGradient(
-      from: transform.transformPoint(
+      from: appliedTransform.transformPoint(
         Point(from.x * bounds.width, from.y * bounds.height) +
             Point(
               bounds.left,
               bounds.top,
             ),
       ),
-      to: transform.transformPoint(
+      to: appliedTransform.transformPoint(
         Point(to.x * bounds.width, to.y * bounds.height) +
             Point(
               bounds.left,
@@ -159,8 +172,7 @@ class LinearGradient extends Shader {
       colors: colors,
       offsets: offsets,
       tileMode: tileMode,
-      transform: this.transform,
-      unitMode: unitMode,
+      unitMode: GradientUnitMode.userSpaceOnUse,
     );
   }
 
@@ -273,6 +285,21 @@ class RadialGradient extends Shader {
 
   @override
   RadialGradient applyBounds(Rect bounds, AffineMatrix transform) {
+    if (unitMode == GradientUnitMode.userSpaceOnUse) {
+      return RadialGradient(
+        center: transform.transformPoint(center),
+        radius: radius,
+        colors: colors,
+        offsets: offsets,
+        tileMode: tileMode,
+        transform: this.transform,
+        focalPoint: focalPoint == null
+            ? focalPoint
+            : transform.transformPoint(focalPoint!),
+        unitMode: unitMode,
+      );
+    }
+
     return RadialGradient(
       center: transform.transformPoint(
         Point(
@@ -301,7 +328,7 @@ class RadialGradient extends Shader {
                     bounds.top,
                   ),
             ),
-      unitMode: unitMode,
+      unitMode: GradientUnitMode.userSpaceOnUse,
     );
   }
 
@@ -363,7 +390,6 @@ class Paint {
     this.blendMode,
     this.stroke,
     this.fill,
-    this.pathFillType,
   });
 
   /// An empty paint object, in which all attributes are `null`.
@@ -387,9 +413,6 @@ class Paint {
   /// followed by stroke.
   final Fill? fill;
 
-  /// The path fill type, if any, to apply to shapes drawn with this paint.
-  final PathFillType? pathFillType;
-
   /// Returns a paint object that merges the properties of the parent paint
   /// into this one.
   ///
@@ -406,7 +429,6 @@ class Paint {
       blendMode: blendMode ?? parent.blendMode,
       stroke: stroke?.applyParent(parent.stroke) ?? defaultStroke,
       fill: fill?.applyParent(parent.fill) ?? defaultFill,
-      pathFillType: pathFillType ?? parent.pathFillType,
     );
   }
 
@@ -414,15 +436,14 @@ class Paint {
   bool get isEmpty => (fill?.isEmpty ?? true) && (stroke?.isEmpty ?? true);
 
   @override
-  int get hashCode => Object.hash(blendMode, stroke, fill, pathFillType);
+  int get hashCode => Object.hash(blendMode, stroke, fill);
 
   @override
   bool operator ==(Object other) {
     return other is Paint &&
         other.blendMode == blendMode &&
         other.stroke == stroke &&
-        other.fill == fill &&
-        other.pathFillType == pathFillType;
+        other.fill == fill;
   }
 
   /// Apply the bounds to the given paint.
@@ -438,7 +459,6 @@ class Paint {
     return Paint(
       blendMode: blendMode,
       stroke: stroke,
-      pathFillType: pathFillType,
       fill: Fill(
         color: fill!.color,
         shader: newShader,
@@ -461,9 +481,6 @@ class Paint {
     if (fill != null) {
       buffer.write('${leading}fill: $fill');
       leading = ', ';
-    }
-    if (pathFillType != null) {
-      buffer.write('${leading}pathFillType: $pathFillType');
     }
     buffer.write(')');
     return buffer.toString();

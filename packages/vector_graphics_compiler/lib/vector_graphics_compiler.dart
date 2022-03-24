@@ -1,6 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
+import 'package:vector_graphics_compiler/src/geometry/matrix.dart';
 
 import 'src/geometry/vertices.dart';
 import 'src/geometry/path.dart';
@@ -28,17 +29,24 @@ Future<VectorInstructions> parse(
 }) async {
   final SvgParser parser = SvgParser(xml, theme, key, warningsAsErrors);
   return const PathTessellator().optimize(
-    const PaintDeduplicator().optimize(
-      await parser.parse(),
-    ),
+    await parser.parse(),
   );
 }
 
+Float64List? _encodeMatrix(AffineMatrix? matrix) {
+  if (matrix == null || matrix == AffineMatrix.identity) {
+    return null;
+  }
+  return matrix.toMatrix4();
+}
+
 /// Encode an SVG [input] string into a vector_graphics binary format.
-Future<Uint8List> encodeSVG(String input, String filename) async {
+Future<Uint8List> encodeSvg(String input, String filename) async {
   const VectorGraphicsCodec codec = VectorGraphicsCodec();
   final VectorInstructions instructions = await parse(input, key: filename);
   final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
+
+  codec.writeSize(buffer, instructions.width, instructions.height);
 
   final Map<int, int> fillIds = <int, int>{};
   final Map<int, int> strokeIds = <int, int>{};
@@ -63,6 +71,7 @@ Future<Uint8List> encodeSVG(String input, String filename) async {
             ? Float32List.fromList(shader.offsets!)
             : null,
         tileMode: shader.tileMode.index,
+        transform: _encodeMatrix(shader.transform),
       );
     } else if (shader is RadialGradient) {
       shaderId = codec.writeRadialGradient(
@@ -78,6 +87,7 @@ Future<Uint8List> encodeSVG(String input, String filename) async {
             ? Float32List.fromList(shader.offsets!)
             : null,
         tileMode: shader.tileMode.index,
+        transform: _encodeMatrix(shader.transform),
       );
     } else {
       assert(false);
@@ -165,9 +175,8 @@ Future<Uint8List> encodeSVG(String input, String filename) async {
         break;
       case DrawCommandType.vertices:
         final IndexedVertices vertices =
-            instructions.vertices[command.objectId];
+            instructions.vertices[command.objectId!];
         final int fillId = fillIds[command.paintId]!;
-        assert(!strokeIds.containsKey(command.paintId));
         codec.writeDrawVertices(
             buffer, vertices.vertices, vertices.indices, fillId);
         break;
@@ -176,6 +185,12 @@ Future<Uint8List> encodeSVG(String input, String filename) async {
         break;
       case DrawCommandType.restore:
         codec.writeRestoreLayer(buffer);
+        break;
+      case DrawCommandType.clip:
+        codec.writeClipPath(buffer, pathIds[command.objectId]!);
+        break;
+      case DrawCommandType.mask:
+        codec.writeMask(buffer);
         break;
     }
   }

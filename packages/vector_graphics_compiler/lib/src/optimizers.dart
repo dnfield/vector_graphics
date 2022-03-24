@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import 'dart:typed_data';
 
 import 'package:tessellator/tessellator.dart';
@@ -5,6 +6,8 @@ import 'package:tessellator/tessellator.dart';
 import 'geometry/path.dart';
 import 'geometry/vertices.dart';
 import 'paint.dart';
+=======
+>>>>>>> origin/main
 import 'vector_instructions.dart';
 
 /// An optimization pass for a [VectorInstructions] object.
@@ -21,6 +24,7 @@ abstract class Optimizer {
   /// Takes `original` and produces a new object that is optimized.
   VectorInstructions optimize(VectorInstructions original);
 }
+<<<<<<< HEAD
 
 /// An optimizer that removes duplicate [Paint] objects and rewrites
 /// [DrawCommand]s to refer to the updated paint index.
@@ -133,3 +137,5 @@ class PathTessellator extends Optimizer {
     return result;
   }
 }
+=======
+>>>>>>> origin/main

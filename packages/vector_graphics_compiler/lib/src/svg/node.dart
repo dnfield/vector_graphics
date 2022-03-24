@@ -7,20 +7,41 @@ import '../paint.dart';
 
 /// A node in a tree of graphics operations.
 ///
-/// Nodes describe painting attributes, transformations, paths, and vertices
-/// to draw in depth-first order.
+/// Nodes describe painting attributes, clips, transformations, paths, and
+/// vertices to draw in depth-first order.
 abstract class Node {
-  /// Constructs a new tree node with [id] and [paint].
-  const Node({
-    this.id,
-    this.paint,
-  });
+  /// Constructs a new tree node with [id].
+  const Node({this.id});
 
   /// An identifier for this path, generally taken from the original SVG file.
   ///
   /// This ID is unique for conformant SVGs. However, uniqueness is not enforced
   /// or guaranteed.
   final String? id;
+
+  /// Subclasses that have additional transformation information will
+  /// concatenate their transform to the supplied `currentTransform`.
+  AffineMatrix concatTransform(AffineMatrix currentTransform) {
+    return currentTransform;
+  }
+
+  /// Calls `build` for all nodes contained in this subtree with the
+  /// specified `transform` in painting order.
+  ///
+  /// The transform will be multiplied with any transforms present on
+  /// [ParentNode]s in the subtree, and applied to any [Path] objects in leaf
+  /// nodes in the tree. It may be [AffineMatrix.identity] to indicate that no
+  /// additional transformation is needed.
+  void build(DrawCommandBuilder builder, AffineMatrix transform);
+}
+
+/// A node that has painting properties in the tree of graphics operations.
+abstract class PaintingNode extends Node {
+  /// Constructs a new tree node with [id] and [paint].
+  const PaintingNode({
+    String? id,
+    this.paint,
+  }) : super(id: id);
 
   /// A collection of painting attributes.
   ///
@@ -32,15 +53,6 @@ abstract class Node {
   /// Creates a new compatible node with this as if the `newPaint` had
   /// the current paint applied as a parent.
   Node adoptPaint(Paint? newPaint);
-
-  /// Calls `build` for all nodes contained in this subtree with the
-  /// specified `transform` in painting order.
-  ///
-  /// The transform will be multiplied with any transforms present on
-  /// [ParentNode]s in the subtree, and applied to any [Path] objects in leaf
-  /// nodes in the tree. It may be [AffineMatrix.identity] to indicate that no
-  /// additional transformation is needed.
-  void build(DrawCommandBuilder builder, AffineMatrix transform);
 }
 
 /// A graphics node describing a viewport area, which has a [width] and [height]
@@ -53,18 +65,18 @@ class ViewportNode extends ParentNode {
   /// Creates a new viewport node.
   ///
   /// See [ViewportNode].
-  const ViewportNode({
+  ViewportNode({
     String? id,
     required this.width,
     required this.height,
     Paint? paint,
-    required List<Node> children,
     AffineMatrix? transform,
+    PathFillType? pathFillType,
   }) : super(
           id: id,
-          children: children,
           paint: paint,
           transform: transform,
+          pathFillType: pathFillType,
         );
 
   /// The width of the viewport in pixels.
@@ -81,31 +93,33 @@ class ViewportNode extends ParentNode {
     return ViewportNode(
       width: width,
       height: height,
-      children: children,
       id: id,
       transform: transform,
       paint: newPaint?.applyParent(paint),
-    );
+    ).._children.addAll(_children);
   }
 }
 
+/// The signature for a visitor callback to [ParentNode.visitChildren].
+typedef NodeCallback = void Function(Node child);
+
 /// A node that contains children, transformed by [transform] and provided a
 /// default [color].
-class ParentNode extends Node {
+class ParentNode extends PaintingNode {
   /// Creates a new [ParentNode].
-  const ParentNode({
+  ParentNode({
     String? id,
     Paint? paint,
-    required this.children,
     this.transform,
     this.color,
+    this.pathFillType,
   }) : super(id: id, paint: paint);
 
   /// The transform to apply to this subtree, if any.
   final AffineMatrix? transform;
 
   /// The child nodes of this node.
-  final List<Node> children;
+  final List<Node> _children = <Node>[];
 
   /// The color, if any, to pass on to children for inheritence purposes.
   ///
@@ -113,15 +127,53 @@ class ParentNode extends Node {
   /// paints.
   final Color? color;
 
+  /// The path fill type, if any, to pass on to children for inheritence
+  /// purposes.
+  final PathFillType? pathFillType;
+
+  /// Calls `visitor` for each child node of this parent group.
+  ///
+  /// This call does not recursively call `visitChildren`. Callers must decide
+  /// whether to do BFS or DFS by calling `visitChildren` if the visited child
+  /// is a [ParentNode].
+  void visitChildren(NodeCallback visitor) {
+    _children.forEach(visitor);
+  }
+
+  /// Adds a child to this parent node.
+  ///
+  /// If `clips` is empty, the child is directly appended. Otherwise, a
+  /// [ClipNode] is inserted.
+  void addChild(
+    Node child, {
+    List<Path> clips = const <Path>[],
+    Node? mask,
+  }) {
+    if (clips.isNotEmpty) {
+      child = ClipNode(clips: clips, child: child);
+    }
+    if (mask != null) {
+      child = MaskNode(mask: mask, child: child);
+    }
+    _children.add(child);
+  }
+
+  @override
+  AffineMatrix concatTransform(AffineMatrix currentTransform) {
+    if (transform == null) {
+      return currentTransform;
+    }
+    return currentTransform.multiplied(transform!);
+  }
+
   @override
   Node adoptPaint(Paint? newPaint) {
     return ParentNode(
-      children: children,
       id: id,
       transform: transform,
       color: color,
       paint: newPaint?.applyParent(paint),
-    );
+    ).._children.addAll(_children);
   }
 
   // Whether or not a save layer should be inserted at this node.
@@ -149,11 +201,9 @@ class ParentNode extends Node {
     if (requiresLayer) {
       builder.addSaveLayer(paint!);
     }
-    final AffineMatrix nextTransform = this.transform == null
-        ? transform
-        : transform.multiplied(this.transform!);
-    for (final Node child in children) {
-      child.build(builder, nextTransform);
+
+    for (final Node child in _children) {
+      child.build(builder, concatTransform(transform));
     }
 
     if (requiresLayer) {
@@ -162,11 +212,69 @@ class ParentNode extends Node {
   }
 }
 
+/// A parent node that applies a clip to its children.
+class ClipNode extends Node {
+  /// Creates a new clip node that applies [clips] to [child].
+  ClipNode({required this.child, required this.clips, String? id})
+      : assert(
+          clips.isNotEmpty,
+          'Do not use a ClipNode without any clip paths.',
+        ),
+        super(id: id);
+
+  /// The clips to apply to the child node.
+  ///
+  /// Normally, there will only be one clip to apply. However, if multiple paths
+  /// with differeing [PathFillType]s are used, multiple clips must be
+  /// specified.
+  final List<Path> clips;
+
+  /// The child to clip.
+  final Node child;
+
+  @override
+  void build(DrawCommandBuilder builder, AffineMatrix transform) {
+    for (final Path clip in clips) {
+      final Path transformedClip = clip.transformed(transform);
+      builder.addClip(transformedClip);
+      child.build(builder, transform);
+      builder.restore();
+    }
+  }
+}
+
+/// A parent node that applies a mask to its child.
+class MaskNode extends Node {
+  /// Creates a new mask node that applies [mask] to [child].
+  MaskNode({required this.child, required this.mask, String? id})
+      : super(id: id);
+
+  /// The mask to apply.
+  final Node mask;
+
+  /// The child to mask.
+  final Node child;
+
+  @override
+  void build(DrawCommandBuilder builder, AffineMatrix transform) {
+    // Save layer expects to use the fill paint, and will unconditionally set
+    // the color on the dart:ui.Paint object.
+    builder.addSaveLayer(const Paint(fill: Fill(color: Color.opaqueBlack)));
+    child.build(builder, transform);
+    {
+      builder.addMask();
+      mask.build(builder, child.concatTransform(transform));
+      builder.restore();
+    }
+    builder.restore();
+  }
+}
+
 /// A leaf node in the graphics tree.
 ///
 /// Leaf nodes get added with all paint and transform accumulations from their
 /// parents applied.
-class PathNode extends Node {
+class PathNode extends PaintingNode {
   /// Creates a new leaf node for the graphics tree with the specified [path],
   /// [id], and [paint].
   PathNode(
@@ -178,12 +286,8 @@ class PathNode extends Node {
           'Do not use empty paints on leaf nodes',
         ),
         assert(
-          paint.fill != Fill.empty,
+          paint.fill != Fill.empty || paint.stroke != Stroke.empty,
           'Do not use empty fills on leaf nodes',
-        ),
-        assert(
-          paint.stroke != Stroke.empty,
-          'Do not use empty strokes on leaf nodes',
         ),
         super(id: id, paint: paint);
 

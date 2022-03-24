@@ -3,6 +3,21 @@ import 'dart:typed_data';
 
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
+/// The deocded result of a vector graphics asset.
+class PictureInfo {
+  /// Construct a new [PictureInfo].
+  const PictureInfo(this.picture, this.size);
+
+  /// The picture to be drawn with [ui.canvas.drawPicture]
+  final ui.Picture picture;
+
+  /// The target size of the picture.
+  ///
+  /// This information should be used to scale and position
+  /// the picture based on the available space and alignment.
+  final ui.Size size;
+}
+
 /// A listener implementation for the vector graphics codec that converts the
 /// format into a [ui.Picture].
 class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
@@ -21,17 +36,26 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   final List<ui.Path> _paths = <ui.Path>[];
   final List<ui.Shader> _shaders = <ui.Shader>[];
   ui.Path? _currentPath;
+  ui.Size _size = ui.Size.zero;
   bool _done = false;
 
   static final _emptyPaint = ui.Paint();
+  static final _grayscaleDstInPaint = ui.Paint()
+    ..blendMode = ui.BlendMode.dstIn
+    ..colorFilter = const ui.ColorFilter.matrix(<double>[
+      0, 0, 0, 0, 0, //
+      0, 0, 0, 0, 0,
+      0, 0, 0, 0, 0,
+      0.2126, 0.7152, 0.0722, 0, 0,
+    ]); //convert to grayscale (https://www.w3.org/Graphics/Color/sRGB) and use them as transparency
 
   /// Convert the vector graphics asset this listener decoded into a [ui.Picture].
   ///
   /// This method can only be called once for a given listener instance.
-  ui.Picture toPicture() {
+  PictureInfo toPicture() {
     assert(!_done);
     _done = true;
-    return _recorder.endRecording();
+    return PictureInfo(_recorder.endRecording(), _size);
   }
 
   @override
@@ -144,6 +168,17 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   }
 
   @override
+  void onMask() {
+    _canvas.saveLayer(null, _grayscaleDstInPaint);
+  }
+
+  @override
+  void onClipPath(int pathId) {
+    _canvas.save();
+    _canvas.clipPath(_paths[pathId]);
+  }
+
+  @override
   void onLinearGradient(
     double fromX,
     double fromY,
@@ -151,6 +186,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     double toY,
     Int32List colors,
     Float32List? offsets,
+    Float64List? transform,
     int tileMode,
     int id,
   ) {
@@ -167,6 +203,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
       colorValues,
       offsets,
       ui.TileMode.values[tileMode],
+      transform,
     );
     _shaders.add(gradient);
   }
@@ -180,6 +217,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     double? focalY,
     Int32List colors,
     Float32List? offsets,
+    Float64List? transform,
     int tileMode,
     int id,
   ) {
@@ -190,16 +228,22 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     final List<ui.Color> colorValues = <ui.Color>[
       for (int i = 0; i < colors.length; i++) ui.Color(colors[i])
     ];
+    final bool hasFocal = focal != center && focal != null;
     final ui.Gradient gradient = ui.Gradient.radial(
       center,
       radius,
       colorValues,
       offsets,
       ui.TileMode.values[tileMode],
-      null,
-      focal,
-      radius,
+      transform,
+      hasFocal ? focal : null,
+      0,
     );
     _shaders.add(gradient);
+  }
+
+  @override
+  void onSize(double width, double height) {
+    _size = ui.Size(width, height);
   }
 }

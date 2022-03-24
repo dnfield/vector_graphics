@@ -1,21 +1,23 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
 
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
 import 'src/listener.dart';
 
+export 'src/listener.dart' show PictureInfo;
+
 const VectorGraphicsCodec _codec = VectorGraphicsCodec();
 
 /// Decode a vector graphics binary asset into a [ui.Picture].
 ///
 /// Throws a [StateError] if the data is invalid.
-ui.Picture decodeVectorGraphics(ByteData data) {
+PictureInfo decodeVectorGraphics(ByteData data) {
   final FlutterVectorGraphicsListener listener =
       FlutterVectorGraphicsListener();
   _codec.decode(data, listener);
@@ -30,8 +32,7 @@ ui.Picture decodeVectorGraphics(ByteData data) {
 ///
 /// ```dart
 /// class MyVectorGraphic extends StatefulWidget {
-///
-///  State<MyVectorGraphic> createState() =>
+///   State<MyVectorGraphic> createState() => _MyVectorGraphicState();
 /// }
 ///
 /// class _MyVectorGraphicState extends State<MyVectorGraphic> {
@@ -50,16 +51,59 @@ ui.Picture decodeVectorGraphics(ByteData data) {
 /// }
 /// ```
 class VectorGraphic extends StatefulWidget {
-  const VectorGraphic({Key? key, required this.bytesLoader}) : super(key: key);
+  const VectorGraphic({
+    Key? key,
+    required this.bytesLoader,
+    this.width,
+    this.height,
+    this.fit = BoxFit.contain,
+    this.alignment = Alignment.center,
+  }) : super(key: key);
 
   final BytesLoader bytesLoader;
+
+  /// If specified, the width to use for the vector graphic. If unspecified,
+  /// the vector graphic will take the width of its parent.
+  final double? width;
+
+  /// If specified, the height to use for the vector graphic. If unspecified,
+  /// the vector graphic will take the height of its parent.
+  final double? height;
+
+  /// How to inscribe the picture into the space allocated during layout.
+  /// The default is [BoxFit.contain].
+  final BoxFit fit;
+
+  /// How to align the picture within its parent widget.
+  ///
+  /// The alignment aligns the given position in the picture to the given position
+  /// in the layout bounds. For example, an [Alignment] alignment of (-1.0,
+  /// -1.0) aligns the image to the top-left corner of its layout bounds, while a
+  /// [Alignment] alignment of (1.0, 1.0) aligns the bottom right of the
+  /// picture with the bottom right corner of its layout bounds. Similarly, an
+  /// alignment of (0.0, 1.0) aligns the bottom middle of the image with the
+  /// middle of the bottom edge of its layout bounds.
+  ///
+  /// If the [alignment] is [TextDirection]-dependent (i.e. if it is a
+  /// [AlignmentDirectional]), then a [TextDirection] must be available
+  /// when the picture is painted.
+  ///
+  /// Defaults to [Alignment.center].
+  ///
+  /// See also:
+  ///
+  ///  * [Alignment], a class with convenient constants typically used to
+  ///    specify an [AlignmentGeometry].
+  ///  * [AlignmentDirectional], like [Alignment] for specifying alignments
+  ///    relative to text direction.
+  final AlignmentGeometry alignment;
 
   @override
   State<VectorGraphic> createState() => _VectorGraphicsWidgetState();
 }
 
 class _VectorGraphicsWidgetState extends State<VectorGraphic> {
-  ui.Picture? _picture;
+  PictureInfo? _pictureInfo;
 
   @override
   void initState() {
@@ -77,28 +121,41 @@ class _VectorGraphicsWidgetState extends State<VectorGraphic> {
 
   @override
   void dispose() {
-    _picture?.dispose();
-    _picture = null;
+    _pictureInfo?.picture.dispose();
+    _pictureInfo = null;
     super.dispose();
   }
 
   void _loadAssetBytes() {
     widget.bytesLoader.loadBytes().then((ByteData data) {
-      final ui.Picture picture = decodeVectorGraphics(data);
+      final PictureInfo pictureInfo = decodeVectorGraphics(data);
       setState(() {
-        _picture?.dispose();
-        _picture = picture;
+        _pictureInfo?.picture.dispose();
+        _pictureInfo = pictureInfo;
       });
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final ui.Picture? picture = _picture;
-    if (picture == null) {
-      return const SizedBox();
+    final PictureInfo? pictureInfo = _pictureInfo;
+    if (pictureInfo == null) {
+      return SizedBox(width: widget.width, height: widget.height);
     }
-    return _RawVectorGraphicsWidget(picture: picture);
+    return SizedBox(
+      width: widget.width,
+      height: widget.height,
+      child: FittedBox(
+        fit: widget.fit,
+        alignment: widget.alignment,
+        child: SizedBox.fromSize(
+          size: pictureInfo.size,
+          child: _RawVectorGraphicsWidget(
+            pictureInfo: pictureInfo,
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -172,41 +229,84 @@ class NetworkBytesLoader extends BytesLoader {
 }
 
 class _RawVectorGraphicsWidget extends SingleChildRenderObjectWidget {
-  const _RawVectorGraphicsWidget({Key? key, required this.picture})
-      : super(key: key);
+  const _RawVectorGraphicsWidget({
+    Key? key,
+    required this.pictureInfo,
+  }) : super(key: key);
 
-  final ui.Picture picture;
+  final PictureInfo pictureInfo;
 
   @override
   RenderObject createRenderObject(BuildContext context) {
-    return _RenderVectorGraphics(picture);
+    return _RenderVectorGraphics(pictureInfo);
   }
 
   @override
   void updateRenderObject(
       BuildContext context, covariant _RenderVectorGraphics renderObject) {
-    renderObject.picture = picture;
+    renderObject.pictureInfo = pictureInfo;
   }
 }
 
-class _RenderVectorGraphics extends RenderProxyBox {
-  _RenderVectorGraphics(this._picture);
+class _RenderVectorGraphics extends RenderBox {
+  _RenderVectorGraphics(this._pictureInfo);
 
-  ui.Picture get picture => _picture;
-  ui.Picture _picture;
-  set picture(ui.Picture value) {
-    if (identical(value, _picture)) {
+  PictureInfo get pictureInfo => _pictureInfo;
+  PictureInfo _pictureInfo;
+  set pictureInfo(PictureInfo value) {
+    if (identical(value, _pictureInfo)) {
       return;
     }
-    _picture = value;
+    _pictureInfo = value;
     markNeedsPaint();
   }
 
   @override
-  void paint(PaintingContext context, ui.Offset offset) {
-    if (offset != Offset.zero) {
-      context.canvas.translate(offset.dx, offset.dy);
-    }
-    context.canvas.drawPicture(picture);
+  bool hitTestSelf(Offset position) => true;
+
+  @override
+  bool get sizedByParent => true;
+
+  @override
+  Size computeDryLayout(BoxConstraints constraints) {
+    return constraints.smallest;
   }
+
+  @override
+  bool get isRepaintBoundary => true;
+
+  final Matrix4 transform = Matrix4.identity();
+
+  @override
+  void paint(PaintingContext context, ui.Offset offset) {
+    if (_scaleCanvasToViewBox(transform, size, pictureInfo.size)) {
+      context.canvas.transform(transform.storage);
+    }
+    context.canvas.drawPicture(_pictureInfo.picture);
+  }
+}
+
+bool _scaleCanvasToViewBox(
+  Matrix4 matrix,
+  Size desiredSize,
+  Size pictureSize,
+) {
+  if (desiredSize == pictureSize) {
+    return false;
+  }
+  final double scale = math.min(
+    desiredSize.width / pictureSize.width,
+    desiredSize.height / pictureSize.height,
+  );
+  final Size scaledHalfViewBoxSize = pictureSize * scale / 2.0;
+  final Size halfDesiredSize = desiredSize / 2.0;
+  final Offset shift = Offset(
+    halfDesiredSize.width - scaledHalfViewBoxSize.width,
+    halfDesiredSize.height - scaledHalfViewBoxSize.height,
+  );
+  matrix
+    ..translate(shift.dx, shift.dy)
+    ..scale(scale, scale);
+
+  return true;
 }

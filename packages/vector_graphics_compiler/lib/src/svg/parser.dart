@@ -16,32 +16,48 @@ import 'xml.dart';
 
 /// An interface for building up a stack of vector commands.
 class DrawCommandBuilder {
-  final List<Paint> _paints = <Paint>[];
-  final List<Path> _paths = <Path>[];
+  final Map<Paint, int> _paints = <Paint, int>{};
+  final Map<Path, int> _paths = <Path, int>{};
   final List<DrawCommand> _commands = <DrawCommand>[];
+
+  int _getOrGenerateId<T>(T object, Map<T, int> map) =>
+      map.putIfAbsent(object, () => map.length);
 
   /// Add a save layer to the command stack.
   void addSaveLayer(Paint paint) {
-    _commands
-        .add(DrawCommand(-1, _paints.length, DrawCommandType.saveLayer, null));
-    _paints.add(paint);
+    final int paintId = _getOrGenerateId(paint, _paints);
+    _commands.add(DrawCommand(
+      DrawCommandType.saveLayer,
+      paintId: paintId,
+    ));
   }
 
   /// Add a restore to the command stack.
   void restore() {
-    _commands.add(const DrawCommand(-1, -1, DrawCommandType.restore, null));
+    _commands.add(const DrawCommand(DrawCommandType.restore));
+  }
+
+  /// Adds a clip to the command stack.
+  void addClip(Path path) {
+    final int pathId = _getOrGenerateId(path, _paths);
+    _commands.add(DrawCommand(DrawCommandType.clip, objectId: pathId));
+  }
+
+  /// Adds a mask to the command stack.
+  void addMask() {
+    _commands.add(const DrawCommand(DrawCommandType.mask));
   }
 
   /// Add a path to the current draw command stack
   void addPath(Path path, Paint paint, String? debugString) {
+    final int pathId = _getOrGenerateId(path, _paths);
+    final int paintId = _getOrGenerateId(paint, _paints);
     _commands.add(DrawCommand(
-      _paths.length,
-      _paints.length,
       DrawCommandType.path,
-      debugString,
+      objectId: pathId,
+      paintId: paintId,
+      debugString: debugString,
     ));
-    _paints.add(paint);
-    _paths.add(path);
   }
 
   /// Create a new [VectorInstructions] with the given width and height.
@@ -49,8 +65,8 @@ class DrawCommandBuilder {
     return VectorInstructions(
       width: width,
       height: height,
-      paints: _paints,
-      paths: _paths,
+      paints: _paints.keys.toList(),
+      paths: _paths.keys.toList(),
       commands: _commands,
     );
   }
@@ -113,7 +129,8 @@ class _Elements {
             id: id,
             width: viewBox.width,
             height: viewBox.height,
-            children: <Node>[],
+            transform: viewBox.transform,
+            pathFillType: parserState.parseFillRule(),
             paint: parserState.parseStyle(
               Rect.fromLTWH(0, 0, viewBox.width, viewBox.height),
               null,
@@ -128,8 +145,8 @@ class _Elements {
       id: id,
       width: viewBox.width,
       height: viewBox.height,
-      children: <Node>[],
-      // parserState._definitions,
+      transform: viewBox.transform,
+      pathFillType: parserState.parseFillRule(),
       paint: parserState.parseStyle(
         Rect.fromLTWH(0, 0, viewBox.width, viewBox.height),
         null,
@@ -149,13 +166,17 @@ class _Elements {
         parserState.parseColor(parserState.attribute('color')) ?? parent.color;
     final ParentNode group = ParentNode(
       id: parserState.attribute('id', def: ''),
-      children: <Node>[],
       paint: parserState.parseStyle(parserState.rootBounds, parent.paint,
           currentColor: color),
       transform: parseTransform(parserState.attribute('transform')),
       color: color,
+      pathFillType: parserState.parseFillRule() ?? parent.pathFillType,
     );
-    parent.children.add(group);
+    parent.addChild(
+      group,
+      clips: parserState.parseClipPath(),
+      mask: parserState.parseMask(),
+    );
     parserState.addGroup(parserState._currentStartElement!, group);
     return null;
   }
@@ -167,7 +188,6 @@ class _Elements {
 
     final ParentNode group = ParentNode(
       id: parserState.attribute('id', def: ''),
-      children: <Node>[],
       paint: parserState.parseStyle(
         parserState.rootBounds,
         parent.paint,
@@ -175,6 +195,7 @@ class _Elements {
       ),
       transform: parseTransform(parserState.attribute('transform')),
       color: color,
+      pathFillType: parserState.parseFillRule() ?? parent.pathFillType,
     );
     parserState.addGroup(parserState._currentStartElement!, group);
     return null;
@@ -205,14 +226,20 @@ class _Elements {
       )!,
     );
 
-    final Node ref = parserState._definitions.getDrawable('url($xlinkHref)')!;
+    final PaintingNode ref =
+        parserState._definitions.getDrawable('url($xlinkHref)')!;
     final ParentNode group = ParentNode(
       id: parserState.attribute('id', def: ''),
-      children: <Node>[ref.adoptPaint(paint)],
       transform: transform,
+      pathFillType: parserState.parseFillRule() ?? parent.pathFillType,
     );
+    group.addChild(ref.adoptPaint(paint));
     parserState.checkForIri(group);
-    parent.children.add(group);
+    parent.addChild(
+      group,
+      clips: parserState.parseClipPath(),
+      mask: parserState.parseMask(),
+    );
     return null;
   }
 
@@ -434,7 +461,7 @@ class _Elements {
   static Future<void>? clipPath(SvgParser parserState, bool warningsAsErrors) {
     final String id = parserState.buildUrlIri();
 
-    final List<Path> paths = <Path>[];
+    final List<PathBuilder> pathBuilders = <PathBuilder>[];
     PathBuilder? currentPath;
     for (XmlEvent event in parserState._readSubtree()) {
       if (event is XmlEndElementEvent) {
@@ -457,12 +484,12 @@ class _Elements {
           if (currentPath != null &&
               nextPath.fillType != currentPath.fillType) {
             currentPath = nextPath;
-            paths.add(currentPath.toPath());
+            pathBuilders.add(currentPath);
           } else if (currentPath == null) {
             currentPath = nextPath;
-            paths.add(currentPath.toPath());
+            pathBuilders.add(currentPath);
           } else {
-            currentPath.addPath(nextPath.toPath());
+            currentPath.addPath(nextPath.toPath(reset: false));
           }
         } else if (event.name == 'use') {
           final String? xlinkHref = getHrefAttribute(parserState.attributes);
@@ -471,9 +498,9 @@ class _Elements {
 
           void extractPathsFromDrawable(Node? target) {
             if (target is PathNode) {
-              paths.add(target.path);
+              pathBuilders.add(PathBuilder.fromPath(target.path));
             } else if (target is ParentNode) {
-              target.children.forEach(extractPathsFromDrawable);
+              target.visitChildren(extractPathsFromDrawable);
             }
           }
 
@@ -487,7 +514,11 @@ class _Elements {
         }
       }
     }
-    parserState._definitions.addClipPath(id, paths);
+    parserState._definitions.addClipPath(
+        id,
+        pathBuilders
+            .map((PathBuilder builder) => builder.toPath())
+            .toList(growable: false));
     return null;
   }
 
@@ -652,12 +683,12 @@ class _Paths {
       parserState.attribute('r', def: '0'),
     )!;
     final Rect oval = Rect.fromCircle(cx, cy, r);
-    return (PathBuilder()..addOval(oval)).toPath();
+    return PathBuilder(parserState._activeFillType).addOval(oval).toPath();
   }
 
   static Path path(SvgParser parserState) {
     final String d = parserState.attribute('d', def: '')!;
-    return parseSvgPathData(d);
+    return parseSvgPathData(d, parserState._activeFillType);
   }
 
   static Path rect(SvgParser parserState) {
@@ -681,13 +712,14 @@ class _Paths {
     if (rxRaw != null && rxRaw != '') {
       final double rx = parserState.parseDoubleWithUnits(rxRaw)!;
       final double ry = parserState.parseDoubleWithUnits(ryRaw)!;
-
-      return (PathBuilder()
-            ..addRRect(Rect.fromLTRB(x, y, w - x, h - y), rx, ry))
+      return PathBuilder(parserState._activeFillType)
+          .addRRect(Rect.fromLTWH(x, y, w, h), rx, ry)
           .toPath();
     }
 
-    return (PathBuilder()..addRect(Rect.fromLTWH(x, y, w, h))).toPath();
+    return PathBuilder(parserState._activeFillType)
+        .addRect(Rect.fromLTWH(x, y, w, h))
+        .toPath();
   }
 
   static Path? polygon(SvgParser parserState) {
@@ -705,7 +737,7 @@ class _Paths {
     }
     final String path = 'M$points${close ? 'z' : ''}';
 
-    return parseSvgPathData(path);
+    return parseSvgPathData(path, parserState._activeFillType);
   }
 
   static Path ellipse(SvgParser parserState) {
@@ -723,7 +755,7 @@ class _Paths {
     )!;
 
     final Rect r = Rect.fromLTWH(cx - rx, cy - ry, rx * 2, ry * 2);
-    return (PathBuilder()..addOval(r)).toPath();
+    return PathBuilder(parserState._activeFillType).addOval(r).toPath();
   }
 
   static Path line(SvgParser parserState) {
@@ -740,9 +772,9 @@ class _Paths {
       parserState.attribute('y2', def: '0'),
     )!;
 
-    return (PathBuilder()
-          ..moveTo(x1, y1)
-          ..lineTo(x2, y2))
+    return PathBuilder(parserState._activeFillType)
+        .moveTo(x1, y1)
+        .lineTo(x2, y2)
         .toPath();
   }
 }
@@ -751,7 +783,7 @@ class _SvgGroupTuple {
   _SvgGroupTuple(this.name, this.drawable);
 
   final String name;
-  final ParentNode? drawable;
+  final ParentNode drawable;
 }
 
 /// Reads an SVG XML string and via the [parse] method creates a set of
@@ -779,6 +811,9 @@ class SvgParser {
 
   /// The current depth of the reader in the XML hierarchy.
   int depth = 0;
+
+  PathFillType get _activeFillType =>
+      parseFillRule() ?? currentGroup?.pathFillType ?? PathFillType.nonZero;
 
   void _discardSubtree() {
     final int subtreeStartDepth = depth;
@@ -889,7 +924,7 @@ class SvgParser {
   }
 
   /// Whether this [DrawableStyleable] belongs in the [DrawableDefinitions] or not.
-  bool checkForIri(Node? drawable) {
+  bool checkForIri(PaintingNode? drawable) {
     final String iri = buildUrlIri();
     if (iri != emptyUrlIri) {
       _definitions.addDrawable(iri, drawable!);
@@ -911,7 +946,7 @@ class SvgParser {
       return false;
     }
 
-    final ParentNode parent = _parentDrawables.last.drawable!;
+    final ParentNode parent = _parentDrawables.last.drawable;
     final Paint? parentStyle = parent.paint;
     Path path = pathFunc(this)!;
 
@@ -939,11 +974,12 @@ class SvgParser {
       paint: paint,
     );
     checkForIri(drawable);
-    parent.children.add(drawable);
+    parent.addChild(drawable, clips: parseClipPath(), mask: parseMask());
     return true;
   }
 
-  /// Potentially handles a starting element.
+  /// Potentially handles a starting element, if it was a singular shape or a
+  /// `<defs>` element.
   bool startElement(XmlStartElementEvent event) {
     if (event.name == 'defs') {
       if (!event.isSelfClosing) {
@@ -951,7 +987,6 @@ class SvgParser {
           event,
           ParentNode(
             id: '__defs__${event.hashCode}',
-            children: <Node>[],
             color: currentGroup?.color,
             transform: currentGroup?.transform,
           ),
@@ -964,6 +999,10 @@ class SvgParser {
 
   /// Handles the end of an XML element.
   void endElement(XmlEndElementEvent event) {
+    while (event.name == _parentDrawables.last.name &&
+        _parentDrawables.last.drawable is ClipNode) {
+      _parentDrawables.removeLast();
+    }
     if (event.name == _parentDrawables.last.name) {
       _parentDrawables.removeLast();
     }
@@ -980,25 +1019,7 @@ class SvgParser {
       // Throw error instead of log warning.
       throw UnimplementedError(errorMessage);
     }
-    if (event.name == 'style') {
-      // FlutterError.reportError(FlutterErrorDetails(
-      //   exception: UnimplementedError(
-      //       'The <style> element is not implemented in this library.'),
-      //   informationCollector: () => <DiagnosticsNode>[
-      //     ErrorDescription(
-      //         'Style elements are not supported by this library and the requested SVG may not '
-      //         'render as intended.'),
-      //     ErrorHint(
-      //         'If possible, ensure the SVG uses inline styles and/or attributes (which are '
-      //         'supported), or use a preprocessing utility such as svgcleaner to inline the '
-      //         'styles for you.'),
-      //     ErrorDescription(''),
-      //     DiagnosticsProperty<String>('Picture key', _key),
-      //   ],
-      //   library: 'SVG',
-      //   context: ErrorDescription('in parseSvgElement'),
-      // ));
-    } else if (_unhandledElements.add(event.name)) {
+    if (_unhandledElements.add(event.name)) {
       print(errorMessage);
     }
   }
@@ -1418,13 +1439,15 @@ class SvgParser {
   }
 
   /// Parses a `clipPath` element into a list of [Path]s.
-  List<Path>? parseClipPath() {
+  List<Path> parseClipPath() {
     final String? rawClipAttribute = getAttribute(attributes, 'clip-path');
     if (rawClipAttribute != '') {
-      return _definitions.getClipPath(rawClipAttribute!);
+      // If this returns null it should be an error, but for now match
+      // flutter_svg behavior.
+      return _definitions.getClipPath(rawClipAttribute!) ?? <Path>[];
     }
 
-    return null;
+    return <Path>[];
   }
 
   static const Map<String, BlendMode> _blendModes = <String, BlendMode>{
@@ -1480,7 +1503,6 @@ class SvgParser {
       blendMode: _blendModes[getAttribute(attributes, 'mix-blend-mode')!],
       stroke: stroke,
       fill: fill,
-      pathFillType: parseFillRule(),
     ).applyParent(parentStyle, leaf: leaf);
   }
 
@@ -1639,11 +1661,15 @@ void _reportMissingDef(String? key, String? href, String methodName) {
 
 class _DrawableDefinitionServer {
   static const String emptyUrlIri = 'url(#)';
-  final Map<String, Node> _drawables = <String, Node>{};
+  final Map<String, PaintingNode> _drawables = <String, PaintingNode>{};
   final Map<String, Shader> _shaders = <String, Shader>{};
   final Map<String, List<Path>> _clips = <String, List<Path>>{};
 
+<<<<<<< HEAD
   Node? getDrawable(String ref) => _drawables[ref];
+=======
+  PaintingNode? getDrawable(String ref) => _drawables[ref];
+>>>>>>> origin/main
   List<Path>? getClipPath(String ref) => _clips[ref];
   T? getGradient<T extends Shader>(String ref) => _shaders[ref] as T;
   void addGradient<T extends Shader>(String ref, T gradient) {
@@ -1654,7 +1680,7 @@ class _DrawableDefinitionServer {
     _clips[ref] = paths;
   }
 
-  void addDrawable(String ref, Node drawable) {
+  void addDrawable(String ref, PaintingNode drawable) {
     _drawables[ref] = drawable;
   }
 }

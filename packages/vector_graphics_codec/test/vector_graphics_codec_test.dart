@@ -5,6 +5,8 @@ import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
 const codec = VectorGraphicsCodec();
 const magicHeader = [98, 45, 136, 0, 1, 0, 0, 0];
+final mat4 =
+    Float64List.fromList([2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
 
 void bufferContains(VectorGraphicsBuffer buffer, List<int> expectedBytes) {
   final Uint8List data = buffer.done().buffer.asUint8List();
@@ -131,6 +133,63 @@ void main() {
     ]);
   });
 
+  test('Basic message encode and decode with stroked vertex and indexes', () {
+    final buffer = VectorGraphicsBuffer();
+    final TestListener listener = TestListener();
+    final int paintId = codec.writeStroke(buffer, 44, 1, 2, 3, 4.0, 6.0);
+    codec.writeDrawVertices(
+      buffer,
+      Float32List.fromList([
+        0.0,
+        2.0,
+        3.0,
+        4.0,
+        2.0,
+        4.0,
+      ]),
+      Uint16List.fromList([
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+      ]),
+      paintId,
+    );
+
+    codec.decode(buffer.done(), listener);
+
+    expect(listener.commands, [
+      OnPaintObject(
+        color: 44,
+        strokeCap: 1,
+        strokeJoin: 2,
+        blendMode: 3,
+        strokeMiterLimit: 4.0,
+        strokeWidth: 6.0,
+        paintStyle: 1,
+        id: paintId,
+        shaderId: null,
+      ),
+      OnDrawVertices([
+        0.0,
+        2.0,
+        3.0,
+        4.0,
+        2.0,
+        4.0,
+      ], [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+      ], paintId),
+    ]);
+  });
+
   test('Can encode opacity/save/restore layers', () {
     final buffer = VectorGraphicsBuffer();
     final TestListener listener = TestListener();
@@ -171,6 +230,7 @@ void main() {
       colors: Int32List.fromList([0xFFAABBAA]),
       offsets: Float32List.fromList([2.2, 1.2]),
       tileMode: 0,
+      transform: mat4,
     );
 
     codec.decode(buffer.done(), listener);
@@ -184,6 +244,7 @@ void main() {
         focalY: 1.0,
         colors: Int32List.fromList([0xFFAABBAA]),
         offsets: Float32List.fromList([2.2, 1.2]),
+        transform: mat4,
         tileMode: 0,
         id: shaderId,
       ),
@@ -203,6 +264,7 @@ void main() {
       colors: Int32List.fromList([0xFFAABBAA]),
       offsets: Float32List.fromList([2.2, 1.2]),
       tileMode: 0,
+      transform: mat4,
     );
 
     codec.decode(buffer.done(), listener);
@@ -215,10 +277,63 @@ void main() {
         toY: 1.0,
         colors: Int32List.fromList([0xFFAABBAA]),
         offsets: Float32List.fromList([2.2, 1.2]),
+        transform: mat4,
         tileMode: 0,
         id: shaderId,
       ),
     ]);
+  });
+
+  test('Can encode clips', () {
+    final buffer = VectorGraphicsBuffer();
+    final TestListener listener = TestListener();
+    final int pathId = codec.writeStartPath(buffer, 0);
+    codec
+      ..writeLineTo(buffer, 0, 10)
+      ..writeLineTo(buffer, 20, 10)
+      ..writeLineTo(buffer, 20, 0)
+      ..writeClose(buffer)
+      ..writeFinishPath(buffer);
+
+    codec.writeClipPath(buffer, pathId);
+    codec.writeRestoreLayer(buffer);
+    codec.decode(buffer.done(), listener);
+
+    expect(listener.commands, [
+      OnPathStart(pathId, 0),
+      const OnPathLineTo(0, 10),
+      const OnPathLineTo(20, 10),
+      const OnPathLineTo(20, 0),
+      const OnPathClose(),
+      const OnPathFinished(),
+      OnClipPath(pathId),
+      const OnRestoreLayer(),
+    ]);
+  });
+
+  test('Can encode masks', () {
+    final buffer = VectorGraphicsBuffer();
+    final TestListener listener = TestListener();
+    codec.writeMask(buffer);
+    codec.decode(buffer.done(), listener);
+    expect(listener.commands, [const OnMask()]);
+  });
+
+  test('Encodes a size', () {
+    final buffer = VectorGraphicsBuffer();
+    final TestListener listener = TestListener();
+
+    codec.writeSize(buffer, 20, 30);
+    codec.decode(buffer.done(), listener);
+
+    expect(listener.commands, [const OnSize(20, 30)]);
+  });
+
+  test('Only supports a single size', () {
+    final buffer = VectorGraphicsBuffer();
+
+    codec.writeSize(buffer, 20, 30);
+    expect(() => codec.writeSize(buffer, 1, 1), throwsStateError);
   });
 }
 
@@ -299,8 +414,18 @@ class TestListener extends VectorGraphicsCodecListener {
   }
 
   @override
+  void onMask() {
+    commands.add(const OnMask());
+  }
+
+  @override
   void onSaveLayer(int id) {
     commands.add(OnSaveLayer(id));
+  }
+
+  @override
+  void onClipPath(int pathId) {
+    commands.add(OnClipPath(pathId));
   }
 
   @override
@@ -312,6 +437,7 @@ class TestListener extends VectorGraphicsCodecListener {
     double? focalY,
     Int32List colors,
     Float32List? offsets,
+    Float64List? transform,
     int tileMode,
     int id,
   ) {
@@ -324,6 +450,7 @@ class TestListener extends VectorGraphicsCodecListener {
         focalY: focalY,
         colors: colors,
         offsets: offsets,
+        transform: transform,
         tileMode: tileMode,
         id: id,
       ),
@@ -338,6 +465,7 @@ class TestListener extends VectorGraphicsCodecListener {
     double toY,
     Int32List colors,
     Float32List? offsets,
+    Float64List? transform,
     int tileMode,
     int id,
   ) {
@@ -348,10 +476,20 @@ class TestListener extends VectorGraphicsCodecListener {
       toY: toY,
       colors: colors,
       offsets: offsets,
+      transform: transform,
       tileMode: tileMode,
       id: id,
     ));
   }
+
+  @override
+  void onSize(double width, double height) {
+    commands.add(OnSize(width, height));
+  }
+}
+
+class OnMask {
+  const OnMask();
 }
 
 class OnLinearGradient {
@@ -362,6 +500,7 @@ class OnLinearGradient {
     required this.toY,
     required this.colors,
     required this.offsets,
+    required this.transform,
     required this.tileMode,
     required this.id,
   });
@@ -372,6 +511,7 @@ class OnLinearGradient {
   final double toY;
   final Int32List colors;
   final Float32List? offsets;
+  final Float64List? transform;
   final int tileMode;
   final int id;
 
@@ -383,6 +523,7 @@ class OnLinearGradient {
         toY,
         Object.hashAll(colors),
         Object.hashAll(offsets ?? []),
+        Object.hashAll(transform ?? []),
         tileMode,
         id,
       );
@@ -396,6 +537,7 @@ class OnLinearGradient {
         other.toY == toY &&
         _listEquals(other.colors, colors) &&
         _listEquals(other.offsets, offsets) &&
+        _listEquals(other.transform, transform) &&
         other.tileMode == tileMode &&
         other.id == id;
   }
@@ -410,6 +552,7 @@ class OnRadialGradient {
     required this.focalY,
     required this.colors,
     required this.offsets,
+    required this.transform,
     required this.tileMode,
     required this.id,
   });
@@ -421,6 +564,7 @@ class OnRadialGradient {
   final double? focalY;
   final Int32List colors;
   final Float32List? offsets;
+  final Float64List? transform;
   final int tileMode;
   final int id;
 
@@ -433,6 +577,7 @@ class OnRadialGradient {
         focalY,
         Object.hashAll(colors),
         Object.hashAll(offsets ?? []),
+        Object.hashAll(transform ?? []),
         tileMode,
         id,
       );
@@ -447,6 +592,7 @@ class OnRadialGradient {
         other.focalX == focalY &&
         _listEquals(other.colors, colors) &&
         _listEquals(other.offsets, offsets) &&
+        _listEquals(other.transform, transform) &&
         other.tileMode == tileMode &&
         other.id == id;
   }
@@ -462,6 +608,18 @@ class OnSaveLayer {
 
   @override
   bool operator ==(Object other) => other is OnSaveLayer && other.id == id;
+}
+
+class OnClipPath {
+  const OnClipPath(this.id);
+
+  final int id;
+
+  @override
+  int get hashCode => id.hashCode;
+
+  @override
+  bool operator ==(Object other) => other is OnClipPath && other.id == id;
 }
 
 class OnRestoreLayer {
@@ -654,6 +812,23 @@ class OnPathStart {
 
   @override
   String toString() => 'OnPathStart($id, $fillType)';
+}
+
+class OnSize {
+  const OnSize(this.width, this.height);
+
+  final double width;
+  final double height;
+
+  @override
+  int get hashCode => Object.hash(width, height);
+
+  @override
+  bool operator ==(Object other) =>
+      other is OnSize && other.width == width && other.height == height;
+
+  @override
+  String toString() => 'OnSize($width, $height)';
 }
 
 bool _listEquals<E>(List<E>? left, List<E>? right) {

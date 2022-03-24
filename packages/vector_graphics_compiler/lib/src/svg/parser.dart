@@ -683,12 +683,12 @@ class _Paths {
       parserState.attribute('r', def: '0'),
     )!;
     final Rect oval = Rect.fromCircle(cx, cy, r);
-    return PathBuilder(parserState.activeFillType).addOval(oval).toPath();
+    return PathBuilder(parserState._activeFillType).addOval(oval).toPath();
   }
 
   static Path path(SvgParser parserState) {
     final String d = parserState.attribute('d', def: '')!;
-    return parseSvgPathData(d, parserState.activeFillType);
+    return parseSvgPathData(d, parserState._activeFillType);
   }
 
   static Path rect(SvgParser parserState) {
@@ -712,12 +712,12 @@ class _Paths {
     if (rxRaw != null && rxRaw != '') {
       final double rx = parserState.parseDoubleWithUnits(rxRaw)!;
       final double ry = parserState.parseDoubleWithUnits(ryRaw)!;
-      return PathBuilder(parserState.activeFillType)
+      return PathBuilder(parserState._activeFillType)
           .addRRect(Rect.fromLTWH(x, y, w, h), rx, ry)
           .toPath();
     }
 
-    return PathBuilder(parserState.activeFillType)
+    return PathBuilder(parserState._activeFillType)
         .addRect(Rect.fromLTWH(x, y, w, h))
         .toPath();
   }
@@ -737,7 +737,7 @@ class _Paths {
     }
     final String path = 'M$points${close ? 'z' : ''}';
 
-    return parseSvgPathData(path, parserState.activeFillType);
+    return parseSvgPathData(path, parserState._activeFillType);
   }
 
   static Path ellipse(SvgParser parserState) {
@@ -755,7 +755,7 @@ class _Paths {
     )!;
 
     final Rect r = Rect.fromLTWH(cx - rx, cy - ry, rx * 2, ry * 2);
-    return PathBuilder(parserState.activeFillType).addOval(r).toPath();
+    return PathBuilder(parserState._activeFillType).addOval(r).toPath();
   }
 
   static Path line(SvgParser parserState) {
@@ -772,7 +772,7 @@ class _Paths {
       parserState.attribute('y2', def: '0'),
     )!;
 
-    return PathBuilder(parserState.activeFillType)
+    return PathBuilder(parserState._activeFillType)
         .moveTo(x1, y1)
         .lineTo(x2, y2)
         .toPath();
@@ -812,7 +812,7 @@ class SvgParser {
   /// The current depth of the reader in the XML hierarchy.
   int depth = 0;
 
-  PathFillType get activeFillType =>
+  PathFillType get _activeFillType =>
       parseFillRule() ?? currentGroup?.pathFillType ?? PathFillType.nonZero;
 
   void _discardSubtree() {

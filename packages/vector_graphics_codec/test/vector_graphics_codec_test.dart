@@ -480,6 +480,7 @@ class TestListener extends VectorGraphicsCodecListener {
 class OnMask {
   const OnMask();
 }
+
 class OnLinearGradient {
   const OnLinearGradient({
     required this.fromX,

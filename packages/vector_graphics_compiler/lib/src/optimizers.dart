@@ -4,7 +4,6 @@ import 'package:tessellator/tessellator.dart';
 
 import 'geometry/path.dart';
 import 'geometry/vertices.dart';
-import 'paint.dart';
 import 'vector_instructions.dart';
 
 /// An optimization pass for a [VectorInstructions] object.
@@ -21,54 +20,10 @@ abstract class Optimizer {
   /// Takes `original` and produces a new object that is optimized.
   VectorInstructions optimize(VectorInstructions original);
 }
-<<<<<<< HEAD
 
-/// An optimizer that removes duplicate [Paint] objects and rewrites
-/// [DrawCommand]s to refer to the updated paint index.
-///
-/// The resulting [VectorInstructions.paints] is effectively the original paint
-/// list converted to a set and then back to a list.
-class PaintDeduplicator extends Optimizer {
-  /// Creates a new paint deduplicator.
-  const PaintDeduplicator();
-
-  @override
-  VectorInstructions optimize(VectorInstructions original) {
-    final VectorInstructions result = VectorInstructions(
-      width: original.width,
-      height: original.height,
-      paths: original.paths,
-      vertices: original.vertices,
-      paints: <Paint>[],
-      commands: <DrawCommand>[],
-    );
-
-    final Map<Paint, int> paints = <Paint, int>{};
-    for (final DrawCommand command in original.commands) {
-      if (command.paintId == -1) {
-        result.commands.add(command);
-        continue;
-      }
-      final Paint originalPaint = original.paints[command.paintId];
-      final int paintId = paints.putIfAbsent(
-        original.paints[command.paintId],
-        () {
-          result.paints.add(originalPaint);
-          return result.paints.length - 1;
-        },
-      );
-      result.commands.add(DrawCommand(
-        command.objectId,
-        paintId,
-        command.type,
-        command.debugString,
-      ));
-    }
-    return result;
-  }
-}
-
+/// Optimizes path fills into tessellated vertices.
 class PathTessellator extends Optimizer {
+  /// Creates an optimizer that optimizes path fills into vertices.
   const PathTessellator();
 
   @override
@@ -84,14 +39,14 @@ class PathTessellator extends Optimizer {
     );
 
     for (final DrawCommand command in original.commands) {
-      final Path originalPath = original.paths[command.objectId];
+      final Path originalPath = original.paths[command.objectId!];
       if (combinedPaths.containsKey(command.paintId)) {
-        combinedPaths[command.paintId] =
+        combinedPaths[command.paintId!] =
             (PathBuilder.fromPath(combinedPaths[command.paintId]!)
                   ..addPath(originalPath))
                 .toPath();
       } else {
-        combinedPaths[command.paintId] = originalPath;
+        combinedPaths[command.paintId!] = originalPath;
       }
     }
 
@@ -126,13 +81,11 @@ class PathTessellator extends Optimizer {
       final Float32List vertices = builder.tessellate(
         smoothing: const SmoothingApproximation(scale: 0.1),
       );
-      result.commands.add(DrawCommand(
-          result.vertices.length, entry.key, DrawCommandType.vertices, ''));
+      result.commands.add(DrawCommand(DrawCommandType.vertices,
+          objectId: result.vertices.length, paintId: entry.key));
       result.vertices.add(Vertices.fromFloat32List(vertices).createIndex());
       builder.dispose();
     }
     return result;
   }
 }
-=======
->>>>>>> origin/main

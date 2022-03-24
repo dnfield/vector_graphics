@@ -228,6 +228,7 @@ void main() {
       colors: Int32List.fromList([0xFFAABBAA]),
       offsets: Float32List.fromList([2.2, 1.2]),
       tileMode: 0,
+      transform: null,
     );
 
     codec.decode(buffer.done(), listener);
@@ -431,6 +432,7 @@ class TestListener extends VectorGraphicsCodecListener {
     double? focalY,
     Int32List colors,
     Float32List? offsets,
+    Float64List? transform,
     int tileMode,
     int id,
   ) {

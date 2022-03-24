@@ -75,6 +75,7 @@ Future<Uint8List> encodeSvg(String input, String filename) async {
             ? Float32List.fromList(shader.offsets!)
             : null,
         tileMode: shader.tileMode.index,
+        transform: shader.transform?.toMatrix4(),
       );
     } else {
       assert(false);

@@ -214,6 +214,7 @@ class VectorGraphicsCodec {
     required Float64List? transform,
     required int tileMode,
   }) {
+    assert(transform == null || transform.length == 16);
     if (buffer._decodePhase.index > _CurrentSection.shaders.index) {
       throw StateError('Shaders must be encoded together.');
     }
@@ -234,7 +235,7 @@ class VectorGraphicsCodec {
       buffer._putFloat32List(offsets);
     }
     if (transform != null) {
-      buffer._putInt32(transform.length);
+      buffer._putUint8(transform.length);
       buffer._putFloat64List(transform);
     } else {
       buffer._putInt32(0);
@@ -260,6 +261,7 @@ class VectorGraphicsCodec {
   }) {
     assert((focalX == null && focalY == null) ||
         (focalX != null && focalY != null));
+    assert(transform == null || transform.length == 16);
     if (buffer._decodePhase.index > _CurrentSection.shaders.index) {
       throw StateError('Shaders must be encoded together.');
     }
@@ -287,7 +289,7 @@ class VectorGraphicsCodec {
       buffer._putInt32(0);
     }
     if (transform != null) {
-      buffer._putInt32(transform.length);
+      buffer._putUint8(transform.length);
       buffer._putFloat64List(transform);
     } else {
       buffer._putInt32(0);
@@ -343,7 +345,7 @@ class VectorGraphicsCodec {
     final Int32List colors = buffer.getInt32List(colorLength);
     final int offsetLength = buffer.getInt32();
     final Float32List offsets = buffer.getFloat32List(offsetLength);
-    final int transformLength = buffer.getInt32();
+    final int transformLength = buffer.getUint8();
     final Float64List? transform =
         transformLength != 0 ? buffer.getFloat64List(transformLength) : null;
     final int tileMode = buffer.getUint8();
@@ -379,7 +381,7 @@ class VectorGraphicsCodec {
     final Int32List colors = buffer.getInt32List(colorsLength);
     final int offsetsLength = buffer.getInt32();
     final Float32List offsets = buffer.getFloat32List(offsetsLength);
-    final int transformLength = buffer.getInt32();
+    final int transformLength = buffer.getUint8();
     final Float64List? transform =
         transformLength != 0 ? buffer.getFloat64List(transformLength) : null;
     final int tileMode = buffer.getUint8();

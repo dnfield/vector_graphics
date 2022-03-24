@@ -140,6 +140,30 @@ class LinearGradient extends Shader {
 
   @override
   LinearGradient applyBounds(Rect bounds, AffineMatrix transform) {
+    if (unitMode == GradientUnitMode.userSpaceOnUse) {
+      return LinearGradient(
+        from: transform.transformPoint(
+          Point(from.x * bounds.width, from.y * bounds.height) +
+              Point(
+                bounds.left,
+                bounds.top,
+              ),
+        ),
+        to: transform.transformPoint(
+          Point(to.x * bounds.width, to.y * bounds.height) +
+              Point(
+                bounds.left,
+                bounds.top,
+              ),
+        ),
+        colors: colors,
+        offsets: offsets,
+        tileMode: tileMode,
+        transform: this.transform,
+        unitMode: unitMode,
+      );
+    }
+
     return LinearGradient(
       from: transform.transformPoint(
         Point(from.x * bounds.width, from.y * bounds.height) +
@@ -275,7 +299,7 @@ class RadialGradient extends Shader {
     if (unitMode == GradientUnitMode.userSpaceOnUse) {
       return RadialGradient(
         center: transform.transformPoint(center),
-        radius: radius,
+        radius: radius, // How to transform?
         colors: colors,
         offsets: offsets,
         tileMode: tileMode,

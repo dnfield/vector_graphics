@@ -211,6 +211,7 @@ class VectorGraphicsCodec {
     required double toY,
     required Int32List colors,
     required Float32List? offsets,
+    required Float64List? transform,
     required int tileMode,
   }) {
     if (buffer._decodePhase.index > _CurrentSection.shaders.index) {
@@ -231,6 +232,12 @@ class VectorGraphicsCodec {
     } else {
       buffer._putInt32(offsets.length);
       buffer._putFloat32List(offsets);
+    }
+    if (transform == null) {
+      buffer._putInt32(transform.length);
+      buffer._putFloat64List(transform);
+    } else {
+      buffer._putInt32(0);
     }
     buffer._putUint8(tileMode);
     return shaderId;
@@ -336,6 +343,9 @@ class VectorGraphicsCodec {
     final Int32List colors = buffer.getInt32List(colorLength);
     final int offsetLength = buffer.getInt32();
     final Float32List offsets = buffer.getFloat32List(offsetLength);
+    final int transformLength = buffer.getInt32();
+    final Float64List? transform =
+        transformLength == 0 ? buffer.getFloat64List(transformLength) : null;
     final int tileMode = buffer.getUint8();
     listener?.onLinearGradient(
       fromX,
@@ -344,6 +354,7 @@ class VectorGraphicsCodec {
       toY,
       colors,
       offsets,
+      transform,
       tileMode,
       id,
     );
@@ -369,7 +380,8 @@ class VectorGraphicsCodec {
     final int offsetsLength = buffer.getInt32();
     final Float32List offsets = buffer.getFloat32List(offsetsLength);
     final int transformLength = buffer.getInt32();
-    final Float64List transform = buffer.getFloat64List(transformLength);
+    final Float64List? transform =
+        transformLength == 0 ? buffer.getFloat64List(transformLength) : null;
     final int tileMode = buffer.getUint8();
     listener?.onRadialGradient(
       centerX,
@@ -379,7 +391,7 @@ class VectorGraphicsCodec {
       focalY,
       colors,
       offsets,
-      transformLength == 0 ? null : transform,
+      transform,
       tileMode,
       id,
     );
@@ -707,6 +719,7 @@ abstract class VectorGraphicsCodecListener {
     double toY,
     Int32List colors,
     Float32List? offsets,
+    Float64List? transform,
     int tileMode,
     int id,
   );

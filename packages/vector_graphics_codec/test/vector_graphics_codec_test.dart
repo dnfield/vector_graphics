@@ -261,6 +261,7 @@ void main() {
       colors: Int32List.fromList([0xFFAABBAA]),
       offsets: Float32List.fromList([2.2, 1.2]),
       tileMode: 0,
+      transform: null,
     );
 
     codec.decode(buffer.done(), listener);

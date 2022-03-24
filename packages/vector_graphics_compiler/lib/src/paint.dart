@@ -142,20 +142,8 @@ class LinearGradient extends Shader {
   LinearGradient applyBounds(Rect bounds, AffineMatrix transform) {
     if (unitMode == GradientUnitMode.userSpaceOnUse) {
       return LinearGradient(
-        from: transform.transformPoint(
-          Point(from.x * bounds.width, from.y * bounds.height) +
-              Point(
-                bounds.left,
-                bounds.top,
-              ),
-        ),
-        to: transform.transformPoint(
-          Point(to.x * bounds.width, to.y * bounds.height) +
-              Point(
-                bounds.left,
-                bounds.top,
-              ),
-        ),
+        from: transform.transformPoint(from),
+        to: transform.transformPoint(to),
         colors: colors,
         offsets: offsets,
         tileMode: tileMode,

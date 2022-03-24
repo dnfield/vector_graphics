@@ -233,7 +233,7 @@ class VectorGraphicsCodec {
       buffer._putInt32(offsets.length);
       buffer._putFloat32List(offsets);
     }
-    if (transform == null) {
+    if (transform != null) {
       buffer._putInt32(transform.length);
       buffer._putFloat64List(transform);
     } else {

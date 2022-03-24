@@ -285,25 +285,23 @@ class RadialGradient extends Shader {
 
   @override
   RadialGradient applyBounds(Rect bounds, AffineMatrix transform) {
-    final AffineMatrix appliedTransform = this.transform == null
-        ? transform
-        : transform.multiplied(this.transform!);
     if (unitMode == GradientUnitMode.userSpaceOnUse) {
       return RadialGradient(
-        center: appliedTransform.transformPoint(center),
+        center: transform.transformPoint(center),
         radius: radius,
         colors: colors,
         offsets: offsets,
         tileMode: tileMode,
+        transform: this.transform,
         focalPoint: focalPoint == null
             ? focalPoint
-            : appliedTransform.transformPoint(focalPoint!),
+            : transform.transformPoint(focalPoint!),
         unitMode: unitMode,
       );
     }
 
     return RadialGradient(
-      center: appliedTransform.transformPoint(
+      center: transform.transformPoint(
         Point(
               center.x * bounds.width,
               center.y * bounds.height,
@@ -317,9 +315,10 @@ class RadialGradient extends Shader {
       colors: colors,
       offsets: offsets,
       tileMode: tileMode,
+      transform: this.transform,
       focalPoint: focalPoint == null
           ? focalPoint
-          : appliedTransform.transformPoint(
+          : transform.transformPoint(
               Point(
                     focalPoint!.x * bounds.width,
                     focalPoint!.y * bounds.height,

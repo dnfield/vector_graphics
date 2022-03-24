@@ -284,7 +284,7 @@ class VectorGraphicsCodec {
       buffer._putUint8(transform.length);
       buffer._putFloat64List(transform);
     } else {
-      buffer._putInt32(0);
+      buffer._putUint8(0);
     }
     buffer._putUint8(tileMode);
     return shaderId;

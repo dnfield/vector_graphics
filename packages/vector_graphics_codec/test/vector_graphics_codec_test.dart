@@ -251,6 +251,41 @@ void main() {
     ]);
   });
 
+  test('Can encode a radial gradient (no matrix)', () {
+    final buffer = VectorGraphicsBuffer();
+    final TestListener listener = TestListener();
+
+    final int shaderId = codec.writeRadialGradient(
+      buffer,
+      centerX: 2.0,
+      centerY: 3.0,
+      radius: 5.0,
+      focalX: 1.0,
+      focalY: 1.0,
+      colors: Int32List.fromList([0xFFAABBAA]),
+      offsets: Float32List.fromList([2.2, 1.2]),
+      tileMode: 0,
+      transform: null,
+    );
+
+    codec.decode(buffer.done(), listener);
+
+    expect(listener.commands, [
+      OnRadialGradient(
+        centerX: 2.0,
+        centerY: 3.0,
+        radius: 5.0,
+        focalX: 1.0,
+        focalY: 1.0,
+        colors: Int32List.fromList([0xFFAABBAA]),
+        offsets: Float32List.fromList([2.2, 1.2]),
+        transform: null,
+        tileMode: 0,
+        id: shaderId,
+      ),
+    ]);
+  });
+
   test('Can encode a linear gradient', () {
     final buffer = VectorGraphicsBuffer();
     final TestListener listener = TestListener();

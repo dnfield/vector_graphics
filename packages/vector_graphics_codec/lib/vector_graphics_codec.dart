@@ -381,7 +381,7 @@ class VectorGraphicsCodec {
     final Float32List offsets = buffer.getFloat32List(offsetsLength);
     final int transformLength = buffer.getInt32();
     final Float64List? transform =
-        transformLength == 0 ? buffer.getFloat64List(transformLength) : null;
+        transformLength != 0 ? buffer.getFloat64List(transformLength) : null;
     final int tileMode = buffer.getUint8();
     listener?.onRadialGradient(
       centerX,

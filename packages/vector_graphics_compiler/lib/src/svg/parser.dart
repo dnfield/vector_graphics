@@ -363,7 +363,8 @@ class _Elements {
               parserState.currentGroup?.transform,
             ),
           );
-          nextPath.fillType = parserState._currentAttributes.clipRule ?? PathFillType.nonZero;
+          nextPath.fillType =
+              parserState._currentAttributes.clipRule ?? PathFillType.nonZero;
           if (currentPath != null &&
               nextPath.fillType != currentPath.fillType) {
             currentPath = nextPath;

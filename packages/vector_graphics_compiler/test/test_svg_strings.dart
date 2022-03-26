@@ -7,6 +7,7 @@ const List<String> allSvgTestStrings = <String>[
   groupMask,
   basicClip,
   multiClip,
+  blendAndMask,
   // Text currently unsupported
   // basicText,
 ];
@@ -838,5 +839,22 @@ const String basicText = '''
   <text x="40" y="35" class="heavy">cat</text>
   <text x="55" y="55" class="small">is</text>
   <text x="65" y="55" class="Rrrrr">Grumpy!</text>
+</svg>
+''';
+
+const String blendAndMask = '''
+<svg xmlns="http://www.w3.org/2000/svg"
+  xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 100 100">
+  <defs>
+    <linearGradient x1="46.9782516%" y1="60.9121966%" x2="60.4227947%" y2="90.6839734%" id="linearGradient-3">
+      <stop stop-color="white" offset="0%"/>
+      <stop stop-color="blue" offset="100%"/>
+    </linearGradient>
+  </defs>
+  <mask id="mask-2" fill="white">
+    <circle cx="50" cy="50" r="40"  fill="url(#linearGradient-3)" opacity="0.599190848" />
+  </mask>
+  <circle fill="lightblue" cx="50" cy="50" r="50" />
+  <circle cx="50" cy="50" r="50"  fill="url(#linearGradient-3)" opacity="0.599190848" style="mix-blend-mode: multiply;" mask="url(#mask-2)"/>
 </svg>
 ''';

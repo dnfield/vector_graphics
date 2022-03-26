@@ -109,17 +109,22 @@ class ParentNode extends AttributedNode {
   /// If `clips` is empty, the child is directly appended. Otherwise, a
   /// [ClipNode] is inserted.
   void addChild(
-    Node child, {
+    AttributedNode child, {
     List<Path> clips = const <Path>[],
     Node? mask,
   }) {
+    Node wrappedChild = child;
     if (clips.isNotEmpty) {
-      child = ClipNode(clips: clips, child: child);
+      wrappedChild = ClipNode(clips: clips, child: wrappedChild);
     }
     if (mask != null) {
-      child = MaskNode(mask: mask, child: child);
+      wrappedChild = MaskNode(
+        mask: mask,
+        child: wrappedChild,
+        blendMode: child.attributes.blendMode,
+      );
     }
-    _children.add(child);
+    _children.add(wrappedChild);
   }
 
   @override
@@ -198,8 +203,8 @@ class ClipNode extends Node {
 
 /// A parent node that applies a mask to its child.
 class MaskNode extends Node {
-  /// Creates a new mask node that applies [mask] to [child].
-  MaskNode({required this.child, required this.mask});
+  /// Creates a new mask node that applies [mask] to [child] using [blendMode].
+  MaskNode({required this.child, required this.mask, this.blendMode});
 
   /// The mask to apply.
   final Node mask;
@@ -207,11 +212,17 @@ class MaskNode extends Node {
   /// The child to mask.
   final Node child;
 
+  /// The blend mode to apply when saving a layer for the mask, if any.
+  final BlendMode? blendMode;
+
   @override
   void build(DrawCommandBuilder builder, AffineMatrix transform) {
     // Save layer expects to use the fill paint, and will unconditionally set
     // the color on the dart:ui.Paint object.
-    builder.addSaveLayer(const Paint(fill: Fill(color: Color.opaqueBlack)));
+    builder.addSaveLayer(Paint(
+      blendMode: blendMode,
+      fill: const Fill(color: Color.opaqueBlack),
+    ));
     child.build(builder, transform);
     {
       builder.addMask();

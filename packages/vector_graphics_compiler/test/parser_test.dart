@@ -5,6 +5,56 @@ import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 import 'test_svg_strings.dart';
 
 void main() {
+  test('Handles masks with blends and gradients correctly', () async {
+    final VectorInstructions instructions = await parse(blendAndMask);
+    expect(
+      instructions.paths,
+      <Path>[
+        PathBuilder().addOval(const Rect.fromCircle(50, 50, 50)).toPath(),
+        PathBuilder().addOval(const Rect.fromCircle(50, 50, 40)).toPath(),
+      ],
+    );
+
+    const LinearGradient gradient1 = LinearGradient(
+      from: Point(46.9782516, 60.9121966),
+      to: Point(60.42279469999999, 90.6839734),
+      colors: <Color>[Color(0xffffffff), Color(0xff0000ff)],
+      offsets: <double>[0.0, 1.0],
+      tileMode: TileMode.clamp,
+      unitMode: GradientUnitMode.userSpaceOnUse,
+    );
+    const LinearGradient gradient2 = LinearGradient(
+      from: Point(47.58260128, 58.72975728),
+      to: Point(58.338235759999996, 82.54717871999999),
+      colors: <Color>[Color(0xffffffff), Color(0xff0000ff)],
+      offsets: <double>[0.0, 1.0],
+      tileMode: TileMode.clamp,
+      unitMode: GradientUnitMode.userSpaceOnUse,
+    );
+    expect(instructions.paints, const <Paint>[
+      Paint(fill: Fill(color: Color(0xffadd8e6))),
+      Paint(
+        blendMode: BlendMode.multiply,
+        fill: Fill(color: Color(0xff000000)),
+      ),
+      Paint(
+        blendMode: BlendMode.multiply,
+        fill: Fill(color: Color(0x98ffffff), shader: gradient1),
+      ),
+      Paint(fill: Fill(color: Color(0x98ffffff), shader: gradient2)),
+    ]);
+
+    expect(instructions.commands, const <DrawCommand>[
+      DrawCommand(DrawCommandType.path, objectId: 0, paintId: 0),
+      DrawCommand(DrawCommandType.saveLayer, paintId: 1),
+      DrawCommand(DrawCommandType.path, objectId: 0, paintId: 2),
+      DrawCommand(DrawCommandType.mask),
+      DrawCommand(DrawCommandType.path, objectId: 1, paintId: 3),
+      DrawCommand(DrawCommandType.restore),
+      DrawCommand(DrawCommandType.restore)
+    ]);
+  });
+
   test('Handles masks correctly', () async {
     final VectorInstructions instructions = await parse(basicMask);
     expect(

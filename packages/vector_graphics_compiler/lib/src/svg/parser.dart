@@ -90,9 +90,9 @@ class _Elements {
     parent.addChild(
       group,
       clipId: parserState._currentAttributes.clipPathId,
-      clipServer: parserState._definitions.getClipPath,
+      clipResolver: parserState._definitions.getClipPath,
       maskId: parserState.attribute('mask'),
-      maskServer: parserState._definitions.getDrawable,
+      maskResolver: parserState._definitions.getDrawable,
     );
     parserState.addGroup(parserState._currentStartElement!, group);
     return null;
@@ -130,14 +130,18 @@ class _Elements {
       precalculatedTransform: transform,
     );
 
-    group.addChild(ref.applyAttributes(parserState._currentAttributes));
+    group.addChild(
+      ref.applyAttributes(parserState._currentAttributes),
+      clipResolver: parserState._definitions.getClipPath,
+      maskResolver: parserState._definitions.getDrawable,
+    );
     parserState.checkForIri(group);
     parent!.addChild(
       group,
       clipId: parserState._currentAttributes.clipPathId,
-      clipServer: parserState._definitions.getClipPath,
+      clipResolver: parserState._definitions.getClipPath,
       maskId: parserState.attribute('mask'),
-      maskServer: parserState._definitions.getDrawable,
+      maskResolver: parserState._definitions.getDrawable,
     );
     return null;
   }
@@ -831,9 +835,9 @@ class SvgParser {
     parent.addChild(
       drawable,
       clipId: _currentAttributes.clipPathId,
-      clipServer: _definitions.getClipPath,
+      clipResolver: _definitions.getClipPath,
       maskId: attribute('mask'),
-      maskServer: _definitions.getDrawable,
+      maskResolver: _definitions.getDrawable,
     );
     return true;
   }

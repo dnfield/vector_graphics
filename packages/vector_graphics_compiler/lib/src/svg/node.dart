@@ -5,6 +5,11 @@ import '../geometry/path.dart';
 import '../paint.dart';
 import 'parser.dart' show SvgAttributes;
 
+/// Signature of a method that resolves a string identifier to an object.
+///
+/// Used by [ClipNode] and [MaskNode] to defer resolution of clips and masks.
+typedef Resolver<T> = T Function(String id);
+
 /// A node in a tree of graphics operations.
 ///
 /// Nodes describe painting attributes, clips, transformations, paths, and
@@ -112,18 +117,20 @@ class ParentNode extends AttributedNode {
     AttributedNode child, {
     String? clipId,
     String? maskId,
-    ClipServer? clipServer,
-    MaskServer? maskServer,
+    required Resolver<List<Path>> clipResolver,
+    required Resolver<AttributedNode> maskResolver,
   }) {
     Node wrappedChild = child;
     if (clipId != null) {
       wrappedChild = ClipNode(
-          clipServer: clipServer!, clipId: clipId, child: wrappedChild);
+        resolver: clipResolver,
+        clipId: clipId,
+        child: wrappedChild,
+      );
     }
     if (maskId != null) {
-      assert(maskServer != null);
       wrappedChild = MaskNode(
-        maskServer: maskServer!,
+        resolver: maskResolver,
         maskId: maskId,
         child: wrappedChild,
         blendMode: child.attributes.blendMode,
@@ -176,20 +183,18 @@ class ParentNode extends AttributedNode {
   }
 }
 
-typedef ClipServer = List<Path> Function(String clipId);
-typedef MaskServer = Node Function(String maskId);
-
 /// A parent node that applies a clip to its children.
 class ClipNode extends Node {
-  /// Creates a new clip node that applies [clips] to [child].
+  /// Creates a new clip node that applies clip paths to [child].
   ClipNode({
-    required this.clipServer,
+    required this.resolver,
     required this.child,
     required this.clipId,
     String? id,
   });
 
-  final ClipServer clipServer;
+  /// Called by [build] to resolve [clipId] to a list of paths.
+  final Resolver<List<Path>> resolver;
 
   /// The clips to apply to the child node.
   ///
@@ -203,7 +208,7 @@ class ClipNode extends Node {
 
   @override
   void build(DrawCommandBuilder builder, AffineMatrix transform) {
-    for (final Path clip in clipServer(clipId)) {
+    for (final Path clip in resolver(clipId)) {
       final Path transformedClip = clip.transformed(transform);
       builder.addClip(transformedClip);
       child.build(builder, transform);
@@ -219,7 +224,7 @@ class MaskNode extends Node {
     required this.child,
     required this.maskId,
     this.blendMode,
-    required this.maskServer,
+    required this.resolver,
   });
 
   /// The mask to apply.
@@ -231,7 +236,8 @@ class MaskNode extends Node {
   /// The blend mode to apply when saving a layer for the mask, if any.
   final BlendMode? blendMode;
 
-  final MaskServer maskServer;
+  /// Called by [build] to resolve [maskId] to an [AttributedNode].
+  final Resolver<AttributedNode> resolver;
 
   @override
   void build(DrawCommandBuilder builder, AffineMatrix transform) {
@@ -244,7 +250,7 @@ class MaskNode extends Node {
     child.build(builder, transform);
     {
       builder.addMask();
-      maskServer(maskId).build(builder, child.concatTransform(transform));
+      resolver(maskId).build(builder, child.concatTransform(transform));
       builder.restore();
     }
     builder.restore();

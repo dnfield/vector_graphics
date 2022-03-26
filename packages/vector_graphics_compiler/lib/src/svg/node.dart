@@ -1,23 +1,17 @@
-import 'package:vector_graphics_compiler/src/svg/parser.dart';
-
+import '../draw_command_builder.dart';
 import '../geometry/basic_types.dart';
 import '../geometry/matrix.dart';
 import '../geometry/path.dart';
 import '../paint.dart';
+import 'parser.dart' show SvgAttributes;
 
 /// A node in a tree of graphics operations.
 ///
 /// Nodes describe painting attributes, clips, transformations, paths, and
 /// vertices to draw in depth-first order.
 abstract class Node {
-  /// Constructs a new tree node with [id].
-  const Node({this.id});
-
-  /// An identifier for this path, generally taken from the original SVG file.
-  ///
-  /// This ID is unique for conformant SVGs. However, uniqueness is not enforced
-  /// or guaranteed.
-  final String? id;
+  /// Allows subclasses to be const.
+  const Node();
 
   /// Subclasses that have additional transformation information will
   /// concatenate their transform to the supplied `currentTransform`.
@@ -35,24 +29,19 @@ abstract class Node {
   void build(DrawCommandBuilder builder, AffineMatrix transform);
 }
 
-/// A node that has painting properties in the tree of graphics operations.
-abstract class PaintingNode extends Node {
+/// A node that has attributes in the tree of graphics operations.
+abstract class AttributedNode extends Node {
   /// Constructs a new tree node with [id] and [paint].
-  const PaintingNode({
-    String? id,
-    this.paint,
-  }) : super(id: id);
+  const AttributedNode(this.attributes);
 
   /// A collection of painting attributes.
   ///
-  /// Painting attributes inherit down the tree. Leaf nodes have non-null paints
-  /// and must not have empty fills or strokes, but may have a null fill or a
-  /// null stroke.
-  final Paint? paint;
+  /// Painting attributes inherit down the tree.
+  final SvgAttributes attributes;
 
   /// Creates a new compatible node with this as if the `newPaint` had
   /// the current paint applied as a parent.
-  Node adoptPaint(Paint? newPaint);
+  AttributedNode applyAttributes(SvgAttributes newAttributes);
 }
 
 /// A graphics node describing a viewport area, which has a [width] and [height]
@@ -65,19 +54,12 @@ class ViewportNode extends ParentNode {
   /// Creates a new viewport node.
   ///
   /// See [ViewportNode].
-  ViewportNode({
-    String? id,
+  ViewportNode(
+    SvgAttributes attributes, {
     required this.width,
     required this.height,
-    Paint? paint,
-    AffineMatrix? transform,
-    PathFillType? pathFillType,
-  }) : super(
-          id: id,
-          paint: paint,
-          transform: transform,
-          pathFillType: pathFillType,
-        );
+    required AffineMatrix transform,
+  }) : super(attributes, precalculatedTransform: transform);
 
   /// The width of the viewport in pixels.
   final double width;
@@ -87,36 +69,22 @@ class ViewportNode extends ParentNode {
 
   /// The viewport rect described by [width] and [height].
   Rect get viewport => Rect.fromLTWH(0, 0, width, height);
-
-  @override
-  Node adoptPaint(Paint? newPaint) {
-    return ViewportNode(
-      width: width,
-      height: height,
-      id: id,
-      transform: transform,
-      paint: newPaint?.applyParent(paint),
-    ).._children.addAll(_children);
-  }
 }
 
 /// The signature for a visitor callback to [ParentNode.visitChildren].
 typedef NodeCallback = void Function(Node child);
 
-/// A node that contains children, transformed by [transform] and provided a
-/// default [color].
-class ParentNode extends PaintingNode {
+/// A node that contains children, transformed by [transform].
+class ParentNode extends AttributedNode {
   /// Creates a new [ParentNode].
-  ParentNode({
-    String? id,
-    Paint? paint,
-    this.transform,
-    this.color,
-    this.pathFillType,
-  }) : super(id: id, paint: paint);
+  ParentNode(
+    SvgAttributes attributes, {
+    AffineMatrix? precalculatedTransform,
+  })  : transform = precalculatedTransform ?? attributes.transform,
+        super(attributes);
 
   /// The transform to apply to this subtree, if any.
-  final AffineMatrix? transform;
+  final AffineMatrix transform;
 
   /// The child nodes of this node.
   final List<Node> _children = <Node>[];
@@ -125,11 +93,7 @@ class ParentNode extends PaintingNode {
   ///
   /// This color will be applied to any [Stroke] or [Fill] properties on child
   /// paints.
-  final Color? color;
-
-  /// The path fill type, if any, to pass on to children for inheritence
-  /// purposes.
-  final PathFillType? pathFillType;
+  // final Color? color;
 
   /// Calls `visitor` for each child node of this parent group.
   ///
@@ -160,53 +124,43 @@ class ParentNode extends PaintingNode {
 
   @override
   AffineMatrix concatTransform(AffineMatrix currentTransform) {
-    if (transform == null) {
+    if (transform == AffineMatrix.identity) {
       return currentTransform;
     }
-    return currentTransform.multiplied(transform!);
+    return currentTransform.multiplied(transform);
   }
 
   @override
-  Node adoptPaint(Paint? newPaint) {
+  AttributedNode applyAttributes(SvgAttributes newAttributes) {
     return ParentNode(
-      id: id,
-      transform: transform,
-      color: color,
-      paint: newPaint?.applyParent(paint),
+      newAttributes.applyParent(attributes),
+      precalculatedTransform: transform,
     ).._children.addAll(_children);
   }
 
-  // Whether or not a save layer should be inserted at this node.
-  bool _requiresSaveLayer() {
-    final Paint? localPaint = paint;
-    if (localPaint == null) {
-      return false;
+  Paint? _createLayerPaint() {
+    if (attributes.blendMode != null) {
+      return Paint(
+        blendMode: attributes.blendMode,
+        fill: attributes.fill!.toFill(Rect.largest, transform) ??
+            const Fill(color: Color.opaqueBlack),
+      );
     }
-    final Fill? fill = localPaint.fill;
-    if (fill == null) {
-      return false;
-    }
-    if (fill.shader != null) {
-      return true;
-    }
-    if (localPaint.blendMode == null) {
-      return false;
-    }
-    return fill.color == null || fill.color != const Color(0xFF000000);
+    return null;
   }
 
   @override
   void build(DrawCommandBuilder builder, AffineMatrix transform) {
-    final bool requiresLayer = _requiresSaveLayer();
-    if (requiresLayer) {
-      builder.addSaveLayer(paint!);
+    final Paint? layerPaint = _createLayerPaint();
+    if (layerPaint != null) {
+      builder.addSaveLayer(layerPaint);
     }
 
     for (final Node child in _children) {
       child.build(builder, concatTransform(transform));
     }
 
-    if (requiresLayer) {
+    if (layerPaint != null) {
       builder.restore();
     }
   }
@@ -219,8 +173,7 @@ class ClipNode extends Node {
       : assert(
           clips.isNotEmpty,
           'Do not use a ClipNode without any clip paths.',
-        ),
-        super(id: id);
+        );
 
   /// The clips to apply to the child node.
   ///
@@ -246,8 +199,7 @@ class ClipNode extends Node {
 /// A parent node that applies a mask to its child.
 class MaskNode extends Node {
   /// Creates a new mask node that applies [mask] to [child].
-  MaskNode({required this.child, required this.mask, String? id})
-      : super(id: id);
+  MaskNode({required this.child, required this.mask});
 
   /// The mask to apply.
   final Node mask;
@@ -274,32 +226,32 @@ class MaskNode extends Node {
 ///
 /// Leaf nodes get added with all paint and transform accumulations from their
 /// parents applied.
-class PathNode extends PaintingNode {
-  /// Creates a new leaf node for the graphics tree with the specified [path],
-  /// [id], and [paint].
-  PathNode(
-    this.path, {
-    String? id,
-    required Paint paint,
-  })  : assert(
-          paint != Paint.empty,
-          'Do not use empty paints on leaf nodes',
-        ),
-        assert(
-          paint.fill != Fill.empty || paint.stroke != Stroke.empty,
-          'Do not use empty fills on leaf nodes',
-        ),
-        super(id: id, paint: paint);
+class PathNode extends AttributedNode {
+  /// Creates a new leaf node for the graphics tree with the specified [path]
+  /// and attributes
+  PathNode(this.path, SvgAttributes attributes) : super(attributes);
 
   /// The description of the geometry this leaf node draws.
   final Path path;
 
+  Paint? _paint(Rect bounds, AffineMatrix transform) {
+    final Fill? fill = attributes.fill?.toFill(bounds, transform);
+    final Stroke? stroke = attributes.stroke?.toStroke(bounds, transform);
+    if (fill == null && stroke == null) {
+      return null;
+    }
+    return Paint(
+      blendMode: attributes.blendMode,
+      fill: fill,
+      stroke: stroke,
+    );
+  }
+
   @override
-  Node adoptPaint(Paint? newPaint) {
+  AttributedNode applyAttributes(SvgAttributes newAttributes) {
     return PathNode(
       path,
-      id: id,
-      paint: newPaint?.applyParent(paint!) ?? paint!,
+      attributes.applyParent(newAttributes),
     );
   }
 
@@ -307,6 +259,9 @@ class PathNode extends PaintingNode {
   void build(DrawCommandBuilder builder, AffineMatrix transform) {
     final Path transformedPath = path.transformed(transform);
     final Rect bounds = transformedPath.bounds();
-    builder.addPath(transformedPath, paint!.applyBounds(bounds, transform), id);
+    final Paint? paint = _paint(bounds, transform);
+    if (paint != null) {
+      builder.addPath(transformedPath, paint, attributes.id);
+    }
   }
 }

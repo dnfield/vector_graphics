@@ -156,11 +156,17 @@ class ParentNode extends AttributedNode {
   }
 
   Paint? _createLayerPaint() {
-    if (attributes.blendMode != null) {
+    bool needsLayer = attributes.blendMode != null;
+    needsLayer = attributes.opacity != null &&
+        attributes.opacity != 1.0 &&
+        attributes.opacity != 0.0;
+    if (needsLayer) {
       return Paint(
         blendMode: attributes.blendMode,
         fill: attributes.fill!.toFill(Rect.largest, transform) ??
-            const Fill(color: Color.opaqueBlack),
+            Fill(
+              color: Color.opaqueBlack.withOpacity(attributes.opacity ?? 1.0),
+            ),
       );
     }
     return null;

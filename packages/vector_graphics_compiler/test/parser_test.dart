@@ -5,6 +5,25 @@ import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 import 'test_svg_strings.dart';
 
 void main() {
+  test('group opacity results in save layer', () async {
+    final VectorInstructions instructions = await parse(groupOpacity);
+    expect(instructions.paths, <Path>[
+      PathBuilder().addOval(const Rect.fromCircle(80, 100, 50)).toPath(),
+      PathBuilder().addOval(const Rect.fromCircle(120, 100, 50)).toPath(),
+    ]);
+    expect(instructions.paints, const <Paint>[
+      Paint(fill: Fill(color: Color(0x7f000000))),
+      Paint(fill: Fill(color: Color(0x7fff0000))),
+      Paint(fill: Fill(color: Color(0x7f008000))),
+    ]);
+    expect(instructions.commands, const <DrawCommand>[
+      DrawCommand(DrawCommandType.saveLayer, paintId: 0),
+      DrawCommand(DrawCommandType.path, objectId: 0, paintId: 1),
+      DrawCommand(DrawCommandType.path, objectId: 1, paintId: 2),
+      DrawCommand(DrawCommandType.restore),
+    ]);
+  });
+
   test('xlink gradient Out of order', () async {
     final VectorInstructions instructions = await parse(xlinkGradient);
     final VectorInstructions instructions2 = await parse(xlinkGradientOoO);

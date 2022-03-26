@@ -88,11 +88,16 @@ const String basicOpacity = '''
 ''';
 
 const String groupOpacity = '''
-<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400">
-    <g id="g2" opacity="0.3">
-        <circle r="40" /><rect width="80" height="60" />
-        <circle r="40" /><rect width="80" height="60" />
-    </g>
+<?xml version="1.0" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg viewBox="0 0 200 200"
+     xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <!-- Group opacity .5, semi-transparent green over red -->
+  <g opacity=".5" >
+    <circle cx="80" cy="100" r="50" fill="red" opacity=".5"  />
+    <circle cx="120" cy="100" r="50" fill="green" opacity=".5"  />
+  </g>
 </svg>
 ''';
 

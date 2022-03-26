@@ -109,7 +109,7 @@ class LinearGradient extends Shader {
     required this.from,
     required this.to,
     required this.colors,
-    this.offsets,
+    required this.offsets,
     required this.tileMode,
     this.unitMode = GradientUnitMode.objectBoundingBox,
     this.transform,
@@ -126,7 +126,7 @@ class LinearGradient extends Shader {
 
   /// The positions to apply [colors] to. If specified, must be the same length
   /// as [colors]. If not specified, [colors] must be two colors.
-  final List<double>? offsets;
+  final List<double> offsets;
 
   /// Specifies the meaning of [from] and [to].
   final TileMode tileMode;
@@ -178,7 +178,7 @@ class LinearGradient extends Shader {
 
   @override
   int get hashCode => Object.hash(from, to, Object.hashAll(colors),
-      Object.hashAll(offsets ?? <double>[]), tileMode, unitMode);
+      Object.hashAll(offsets), tileMode, unitMode);
 
   @override
   bool operator ==(Object other) {
@@ -249,7 +249,7 @@ class RadialGradient extends Shader {
     required this.center,
     required this.radius,
     required this.colors,
-    this.offsets,
+    required this.offsets,
     required this.tileMode,
     this.transform,
     this.focalPoint,
@@ -267,7 +267,7 @@ class RadialGradient extends Shader {
 
   /// The positions to apply [colors] to. If specified, must be the same length
   /// as [colors]. If not specified, [colors] must be two colors.
-  final List<double>? offsets;
+  final List<double> offsets;
 
   /// Specifies the meaning of [from] and [to].
   final TileMode tileMode;
@@ -333,15 +333,8 @@ class RadialGradient extends Shader {
   }
 
   @override
-  int get hashCode => Object.hash(
-      center,
-      radius,
-      Object.hashAll(colors),
-      Object.hashAll(offsets ?? <double>[]),
-      tileMode,
-      transform,
-      focalPoint,
-      unitMode);
+  int get hashCode => Object.hash(center, radius, Object.hashAll(colors),
+      Object.hashAll(offsets), tileMode, transform, focalPoint, unitMode);
 
   @override
   bool operator ==(Object other) {

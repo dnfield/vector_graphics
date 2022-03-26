@@ -206,7 +206,7 @@ class _Elements {
             ref.unitMode == GradientUnitMode.objectBoundingBox;
       }
       colors.addAll(ref.colors);
-      offsets.addAll(ref.offsets!);
+      offsets.addAll(ref.offsets);
     } else {
       parseStops(parserState, colors, offsets);
     }
@@ -288,7 +288,7 @@ class _Elements {
             ref.unitMode == GradientUnitMode.objectBoundingBox;
       }
       colors.addAll(ref.colors);
-      offsets.addAll(ref.offsets!);
+      offsets.addAll(ref.offsets);
     } else {
       parseStops(parserState, colors, offsets);
     }

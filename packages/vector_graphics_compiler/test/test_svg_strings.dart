@@ -8,6 +8,8 @@ const List<String> allSvgTestStrings = <String>[
   basicClip,
   multiClip,
   blendAndMask,
+  outOfOrderGradientDef,
+  xlinkGradient,
   // Text currently unsupported
   // basicText,
 ];
@@ -856,5 +858,43 @@ const String blendAndMask = '''
   </mask>
   <circle fill="lightblue" cx="50" cy="50" r="50" />
   <circle cx="50" cy="50" r="50"  fill="url(#linearGradient-3)" opacity="0.599190848" style="mix-blend-mode: multiply;" mask="url(#mask-2)"/>
+</svg>
+''';
+
+const String outOfOrderGradientDef = '''
+<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 20 20">
+    <path fill="url(#paint0_linear)" d="M10 20c5.523 0 10-4.477 10-10S15.523 0 10 0 0 4.477 0 10s4.477 10 10 10z"/>
+    <defs>
+        <linearGradient id="paint0_linear" x1="10" x2="10" y1="0" y2="19.852" gradientUnits="userSpaceOnUse">
+            <stop stop-color="blue"/>
+            <stop offset="1" stop-color="yellow"/>
+        </linearGradient>
+    </defs>
+</svg>
+''';
+
+const String xlinkGradient = '''
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 94.4 94.4">
+  <defs>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#0f12cb"/>
+      <stop offset="1" stop-color="#fded3a"/>
+    </linearGradient>
+    <linearGradient id="b" x1="-157.994" x2="-9.071" y1="122.753" y2="122.753" gradientUnits="userSpaceOnUse" xlink:href="#a"/>
+  </defs>
+  <circle cx="-83.533" cy="122.753" r="74.461" fill="url(#b)" transform="matrix(.63388 0 0 .63388 100.15 -30.611)"/>
+</svg>
+''';
+
+const String xlinkGradientOoO = '''
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 94.4 94.4">
+  <defs>
+    <linearGradient id="b" x1="-157.994" x2="-9.071" y1="122.753" y2="122.753" gradientUnits="userSpaceOnUse" xlink:href="#a"/>
+    <linearGradient id="a">
+      <stop offset="0" stop-color="#0f12cb"/>
+      <stop offset="1" stop-color="#fded3a"/>
+    </linearGradient>
+  </defs>
+  <circle cx="-83.533" cy="122.753" r="74.461" fill="url(#b)" transform="matrix(.63388 0 0 .63388 100.15 -30.611)"/>
 </svg>
 ''';

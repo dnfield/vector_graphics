@@ -89,8 +89,10 @@ class _Elements {
     final ParentNode group = ParentNode(parserState._currentAttributes);
     parent.addChild(
       group,
-      clips: parserState.parseClipPath(),
-      mask: parserState.parseMask(),
+      clipId: parserState._currentAttributes.clipPathId,
+      clipServer: parserState._definitions.getClipPath,
+      maskId: parserState.attribute('mask'),
+      maskServer: parserState._definitions.getDrawable,
     );
     parserState.addGroup(parserState._currentStartElement!, group);
     return null;
@@ -122,7 +124,7 @@ class _Elements {
     );
 
     final AttributedNode ref =
-        parserState._definitions.getDrawable('url($xlinkHref)')!;
+        parserState._definitions.getDrawable('url($xlinkHref)');
     final ParentNode group = ParentNode(
       parserState._currentAttributes,
       precalculatedTransform: transform,
@@ -132,8 +134,10 @@ class _Elements {
     parserState.checkForIri(group);
     parent!.addChild(
       group,
-      clips: parserState.parseClipPath(),
-      mask: parserState.parseMask(),
+      clipId: parserState._currentAttributes.clipPathId,
+      clipServer: parserState._definitions.getClipPath,
+      maskId: parserState.attribute('mask'),
+      maskServer: parserState._definitions.getDrawable,
     );
     return null;
   }
@@ -190,18 +194,15 @@ class _Elements {
 
     if (parserState._currentStartElement!.isSelfClosing) {
       final String? href = parserState._currentAttributes.href;
-      final RadialGradient? ref =
+      final RadialGradient ref =
           parserState._definitions.getGradient<RadialGradient>('url($href)');
-      if (ref == null) {
-        _reportMissingDef(parserState._key, href, 'radialGradient');
-      } else {
-        if (gradientUnits == null) {
-          isObjectBoundingBox =
-              ref.unitMode == GradientUnitMode.objectBoundingBox;
-        }
-        colors.addAll(ref.colors);
-        offsets.addAll(ref.offsets!);
+
+      if (gradientUnits == null) {
+        isObjectBoundingBox =
+            ref.unitMode == GradientUnitMode.objectBoundingBox;
       }
+      colors.addAll(ref.colors);
+      offsets.addAll(ref.offsets!);
     } else {
       parseStops(parserState, colors, offsets);
     }
@@ -276,18 +277,14 @@ class _Elements {
     final List<double> offsets = <double>[];
     if (parserState._currentStartElement!.isSelfClosing) {
       final String? href = parserState._currentAttributes.href;
-      final LinearGradient? ref =
+      final LinearGradient ref =
           parserState._definitions.getGradient<LinearGradient>('url($href)');
-      if (ref == null) {
-        _reportMissingDef(parserState._key, href, 'linearGradient');
-      } else {
-        if (gradientUnits == null) {
-          isObjectBoundingBox =
-              ref.unitMode == GradientUnitMode.objectBoundingBox;
-        }
-        colors.addAll(ref.colors);
-        offsets.addAll(ref.offsets!);
+      if (gradientUnits == null) {
+        isObjectBoundingBox =
+            ref.unitMode == GradientUnitMode.objectBoundingBox;
       }
+      colors.addAll(ref.colors);
+      offsets.addAll(ref.offsets!);
     } else {
       parseStops(parserState, colors, offsets);
     }
@@ -827,15 +824,17 @@ class SvgParser {
       return true;
     }
     final ParentNode parent = _parentDrawables.last.drawable;
-    Path path = pathFunc(this)!;
-
-    if (_currentAttributes.transform != AffineMatrix.identity) {
-      path = path.transformed(_currentAttributes.transform);
-    }
+    final Path path = pathFunc(this)!;
 
     final PathNode drawable = PathNode(path, _currentAttributes);
     checkForIri(drawable);
-    parent.addChild(drawable, clips: parseClipPath(), mask: parseMask());
+    parent.addChild(
+      drawable,
+      clipId: _currentAttributes.clipPathId,
+      clipServer: _definitions.getClipPath,
+      maskId: attribute('mask'),
+      maskServer: _definitions.getDrawable,
+    );
     return true;
   }
 
@@ -1110,7 +1109,7 @@ class SvgParser {
     if (id != null) {
       // If this returns null it should be an error, but for now match
       // flutter_svg behavior.
-      return _definitions.getClipPath(id) ?? <Path>[];
+      return _definitions.getClipPath(id);
     }
 
     return <Path>[];
@@ -1446,27 +1445,15 @@ class SvgParser {
   }
 }
 
-// TODO(dnfield): remove this, support OoO defs.
-void _reportMissingDef(String? key, String? href, String methodName) {
-  throw Exception(<String>[
-    'Failed to find definition for $href',
-    'This library only supports <defs> and xlink:href references that '
-        'are defined ahead of their references.',
-    'This error can be caused when the desired definition is defined after the element '
-        'referring to it (e.g. at the end of the file), or defined in another file.',
-    'This error is treated as non-fatal, but your SVG file will likely not render as intended',
-  ].join('\n,'));
-}
-
 class _DrawableDefinitionServer {
   static const String emptyUrlIri = 'url(#)';
   final Map<String, AttributedNode> _drawables = <String, AttributedNode>{};
   final Map<String, Shader> _shaders = <String, Shader>{};
   final Map<String, List<Path>> _clips = <String, List<Path>>{};
 
-  AttributedNode? getDrawable(String ref) => _drawables[ref];
-  List<Path>? getClipPath(String ref) => _clips[ref];
-  T? getGradient<T extends Shader>(String ref) => _shaders[ref] as T;
+  AttributedNode getDrawable(String ref) => _drawables[ref]!;
+  List<Path> getClipPath(String ref) => _clips[ref]!;
+  T getGradient<T extends Shader>(String ref) => _shaders[ref]! as T;
   void addGradient<T extends Shader>(String ref, T gradient) {
     _shaders[ref] = gradient;
   }
@@ -1620,7 +1607,7 @@ class SvgAttributes {
   /// The raw identifier for clip path(s) to apply.
   final String? clipPathId;
 
-  /// The `@mix-blend-mode` attribute.
+  /// The `mix-blend-mode` attribute.
   final BlendMode? blendMode;
 
   /// Creates a new set of attributes as if this inherited from `parent`.
@@ -1696,7 +1683,7 @@ class SvgStrokeAttributes {
     if (shaderId != null) {
       shader = _definitions!
           .getGradient<Shader>(shaderId!)
-          ?.applyBounds(shaderBounds, transform);
+          .applyBounds(shaderBounds, transform);
     }
     return Stroke(
       color: color,
@@ -1736,7 +1723,7 @@ class SvgFillAttributes {
     if (shaderId != null) {
       shader = _definitions!
           .getGradient<Shader>(shaderId!)
-          ?.applyBounds(shaderBounds, transform);
+          .applyBounds(shaderBounds, transform);
     }
     return Fill(color: color, shader: shader);
   }

@@ -5,6 +5,71 @@ import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 import 'test_svg_strings.dart';
 
 void main() {
+  test('xlink gradient Out of order', () async {
+    final VectorInstructions instructions = await parse(xlinkGradient);
+    final VectorInstructions instructions2 = await parse(xlinkGradientOoO);
+
+    expect(instructions, instructions2);
+  }, skip: true); // Does not work yet.
+
+  test('xlink gradient with transform', () async {
+    final VectorInstructions instructions = await parse(xlinkGradient);
+    expect(instructions.paths, <Path>[
+      PathBuilder()
+          .addOval(const Rect.fromCircle(-83.533, 122.753, 74.461))
+          .toPath()
+          .transformed(
+              const AffineMatrix(.63388, 0, 0, .63388, 100.15, -30.611)),
+    ]);
+
+    expect(instructions.paints, const <Paint>[
+      Paint(
+        fill: Fill(
+          color: Color(0xffffffff),
+          shader: LinearGradient(
+            from: Point(0.000763280000001032, 47.19967163999999),
+            to: Point(94.40007452, 47.19967163999999),
+            colors: <Color>[Color(0xff0f12cb), Color(0xfffded3a)],
+            offsets: <double>[0.0, 1.0],
+            tileMode: TileMode.clamp,
+            unitMode: GradientUnitMode.userSpaceOnUse,
+          ),
+        ),
+      )
+    ]);
+
+    expect(instructions.commands, const <DrawCommand>[
+      DrawCommand(DrawCommandType.path, objectId: 0, paintId: 0),
+    ]);
+  });
+
+  test('Out of order def', () async {
+    final VectorInstructions instructions = await parse(outOfOrderGradientDef);
+    expect(instructions.paths, <Path>[
+      parseSvgPathData(
+          'M10 20c5.523 0 10-4.477 10-10S15.523 0 10 0 0 4.477 0 10s4.477 10 10 10z'),
+    ]);
+    expect(instructions.paints, const <Paint>[
+      Paint(
+        fill: Fill(
+          color: Color(0xffffffff),
+          shader: LinearGradient(
+            from: Point(10.0, 0.0),
+            to: Point(10.0, 19.852),
+            colors: <Color>[Color(0xff0000ff), Color(0xffffff00)],
+            offsets: <double>[0.0, 1.0],
+            tileMode: TileMode.clamp,
+            unitMode: GradientUnitMode.userSpaceOnUse,
+          ),
+        ),
+      )
+    ]);
+
+    expect(instructions.commands, const <DrawCommand>[
+      DrawCommand(DrawCommandType.path, objectId: 0, paintId: 0),
+    ]);
+  });
+
   test('Handles masks with blends and gradients correctly', () async {
     final VectorInstructions instructions = await parse(blendAndMask);
     expect(

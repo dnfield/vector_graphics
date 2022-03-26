@@ -110,16 +110,21 @@ class ParentNode extends AttributedNode {
   /// [ClipNode] is inserted.
   void addChild(
     AttributedNode child, {
-    List<Path> clips = const <Path>[],
-    Node? mask,
+    String? clipId,
+    String? maskId,
+    ClipServer? clipServer,
+    MaskServer? maskServer,
   }) {
     Node wrappedChild = child;
-    if (clips.isNotEmpty) {
-      wrappedChild = ClipNode(clips: clips, child: wrappedChild);
+    if (clipId != null) {
+      wrappedChild = ClipNode(
+          clipServer: clipServer!, clipId: clipId, child: wrappedChild);
     }
-    if (mask != null) {
+    if (maskId != null) {
+      assert(maskServer != null);
       wrappedChild = MaskNode(
-        mask: mask,
+        maskServer: maskServer!,
+        maskId: maskId,
         child: wrappedChild,
         blendMode: child.attributes.blendMode,
       );
@@ -171,28 +176,34 @@ class ParentNode extends AttributedNode {
   }
 }
 
+typedef ClipServer = List<Path> Function(String clipId);
+typedef MaskServer = Node Function(String maskId);
+
 /// A parent node that applies a clip to its children.
 class ClipNode extends Node {
   /// Creates a new clip node that applies [clips] to [child].
-  ClipNode({required this.child, required this.clips, String? id})
-      : assert(
-          clips.isNotEmpty,
-          'Do not use a ClipNode without any clip paths.',
-        );
+  ClipNode({
+    required this.clipServer,
+    required this.child,
+    required this.clipId,
+    String? id,
+  });
+
+  final ClipServer clipServer;
 
   /// The clips to apply to the child node.
   ///
   /// Normally, there will only be one clip to apply. However, if multiple paths
   /// with differeing [PathFillType]s are used, multiple clips must be
   /// specified.
-  final List<Path> clips;
+  final String clipId;
 
   /// The child to clip.
   final Node child;
 
   @override
   void build(DrawCommandBuilder builder, AffineMatrix transform) {
-    for (final Path clip in clips) {
+    for (final Path clip in clipServer(clipId)) {
       final Path transformedClip = clip.transformed(transform);
       builder.addClip(transformedClip);
       child.build(builder, transform);
@@ -204,16 +215,23 @@ class ClipNode extends Node {
 /// A parent node that applies a mask to its child.
 class MaskNode extends Node {
   /// Creates a new mask node that applies [mask] to [child] using [blendMode].
-  MaskNode({required this.child, required this.mask, this.blendMode});
+  MaskNode({
+    required this.child,
+    required this.maskId,
+    this.blendMode,
+    required this.maskServer,
+  });
 
   /// The mask to apply.
-  final Node mask;
+  final String maskId;
 
   /// The child to mask.
   final Node child;
 
   /// The blend mode to apply when saving a layer for the mask, if any.
   final BlendMode? blendMode;
+
+  final MaskServer maskServer;
 
   @override
   void build(DrawCommandBuilder builder, AffineMatrix transform) {
@@ -226,7 +244,7 @@ class MaskNode extends Node {
     child.build(builder, transform);
     {
       builder.addMask();
-      mask.build(builder, child.concatTransform(transform));
+      maskServer(maskId).build(builder, child.concatTransform(transform));
       builder.restore();
     }
     builder.restore();
@@ -268,6 +286,7 @@ class PathNode extends AttributedNode {
 
   @override
   void build(DrawCommandBuilder builder, AffineMatrix transform) {
+    transform = transform.multiplied(attributes.transform);
     final Path transformedPath = path.transformed(transform);
     final Rect bounds = transformedPath.bounds();
     final Paint? paint = _paint(bounds, transform);

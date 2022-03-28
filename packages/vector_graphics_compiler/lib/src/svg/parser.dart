@@ -1692,6 +1692,7 @@ class SvgStrokeAttributes {
     return Stroke(
       color: color,
       shader: shader,
+      join: join,
       cap: cap,
       miterLimit: miterLimit,
       width: width,

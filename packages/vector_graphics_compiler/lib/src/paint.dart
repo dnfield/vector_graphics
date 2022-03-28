@@ -81,6 +81,7 @@ class Color {
 abstract class Gradient {
   /// Allows subclasses to be const.
   const Gradient._(
+    this.id,
     this.colors,
     this.offsets,
     this.tileMode,
@@ -88,27 +89,33 @@ abstract class Gradient {
     this.transform,
   );
 
+  /// The reference identifier for this gradient.
+  final String id;
+
   /// The colors to blend from the start to end points.
-  final List<Color> colors;
+  final List<Color>? colors;
 
   /// The positions to apply [colors] to. Must be the same length as [colors].
-  final List<double> offsets;
+  final List<double>? offsets;
 
   /// Specifies the meaning of [from] and [to].
-  final TileMode tileMode;
+  final TileMode? tileMode;
 
   /// Whether the coordinates in this gradient should be transformed by the
   /// space this object occupies or by the root bounds.
-  final GradientUnitMode unitMode;
+  final GradientUnitMode? unitMode;
 
   /// The transform, if any, to apply to the gradient.
   final AffineMatrix? transform;
 
   /// Apply the bounds and transform the the shader.
   Gradient applyBounds(Rect bounds, AffineMatrix transform);
+
+  /// Creates a new gradient
+  Gradient applyProperties(Gradient ref);
 }
 
-/// A [Shader] that describes a linear gradient from [from] to [to].
+/// A [Gradient] that describes a linear gradient from [from] to [to].
 ///
 /// If [offsets] is provided, `offsets[i]` is a number from 0.0 to 1.0
 /// that specifies where `offsets[i]` begins in the gradient. If [offsets] is
@@ -128,14 +135,15 @@ abstract class Gradient {
 class LinearGradient extends Gradient {
   /// Creates a new linear gradient shader.
   const LinearGradient({
+    required String id,
     required this.from,
     required this.to,
-    required List<Color> colors,
-    required List<double> offsets,
-    required TileMode tileMode,
-    GradientUnitMode unitMode = GradientUnitMode.objectBoundingBox,
+    List<Color>? colors,
+    List<double>? offsets,
+    TileMode? tileMode,
+    GradientUnitMode? unitMode,
     AffineMatrix? transform,
-  }) : super._(colors, offsets, tileMode, unitMode, transform);
+  }) : super._(id, colors, offsets, tileMode, unitMode, transform);
 
   /// The start point of the gradient, as specified by [tileMode].
   final Point from;
@@ -145,9 +153,11 @@ class LinearGradient extends Gradient {
 
   @override
   LinearGradient applyBounds(Rect bounds, AffineMatrix transform) {
+    assert(offsets != null);
+    assert(colors != null);
     AffineMatrix accumulatedTransform = this.transform ?? AffineMatrix.identity;
 
-    switch (unitMode) {
+    switch (unitMode ?? GradientUnitMode.objectBoundingBox) {
       case GradientUnitMode.objectBoundingBox:
         accumulatedTransform = accumulatedTransform
             .translated(bounds.left, bounds.top)
@@ -161,22 +171,44 @@ class LinearGradient extends Gradient {
     }
 
     return LinearGradient(
+      id: id,
       from: accumulatedTransform.transformPoint(from),
       to: accumulatedTransform.transformPoint(to),
       colors: colors,
       offsets: offsets,
-      tileMode: tileMode,
+      tileMode: tileMode ?? TileMode.clamp,
       unitMode: GradientUnitMode.transformed,
     );
   }
 
   @override
-  int get hashCode => Object.hash(from, to, Object.hashAll(colors),
-      Object.hashAll(offsets), tileMode, unitMode);
+  LinearGradient applyProperties(Gradient ref) {
+    return LinearGradient(
+      id: id,
+      from: from,
+      to: to,
+      colors: colors ?? ref.colors,
+      offsets: offsets ?? ref.offsets,
+      tileMode: tileMode ?? ref.tileMode,
+      unitMode: unitMode ?? ref.unitMode,
+      transform: transform ?? ref.transform,
+    );
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      from,
+      to,
+      Object.hashAll(colors ?? <Color>[]),
+      Object.hashAll(offsets ?? <double>[]),
+      tileMode,
+      unitMode);
 
   @override
   bool operator ==(Object other) {
     return other is LinearGradient &&
+        other.id == id &&
         other.from == from &&
         other.to == to &&
         listEquals(other.colors, colors) &&
@@ -188,14 +220,16 @@ class LinearGradient extends Gradient {
   @override
   String toString() {
     return '''
-Gradient.linear(
-  const Offset(${from.x}, ${from.y}),
-  const Offset(${to.x}, ${to.y}),
-  $colors,
-  $offsets,
-  $tileMode,
-  ${transform == null ? 'null' : 'Float64List.fromList(${transform!.toMatrix4()})'},
-);
+LinearGradient(
+  id: $id,
+  from: $from,
+  to: $to,
+  colors: <Color>$colors,
+  offsets: <double>$offsets,
+  tileMode: $tileMode,
+  transform: ${transform == null ? 'null' : 'Float64List.fromList(${transform!.toMatrix4()})'},
+  unitMode: $unitMode,
+)
 ''';
   }
 }
@@ -235,23 +269,23 @@ enum GradientUnitMode {
 /// If [focalPoint] is provided and not equal to [center] and [focalRadius]
 /// is provided and not equal to 0.0, the generated shader will be a two point
 /// conical radial gradient, with [focalPoint] being the center of the focal
-/// circle and [focalRadius] being the radius of that circle. If [focal] is
-/// provided and not equal to [center], at least one of the two offsets must
-/// not be equal to [Point.zero].
+/// circle. If [focalPoint] is provided and not equal to [center], at least one
+/// of the two offsets must not be equal to [Point.zero].
 class RadialGradient extends Gradient {
   /// Creates a new radial gradient object with the specified properties.
   ///
   /// See [RadialGradient].
   const RadialGradient({
+    required String id,
     required this.center,
     required this.radius,
-    required List<Color> colors,
-    required List<double> offsets,
-    required TileMode tileMode,
+    List<Color>? colors,
+    List<double>? offsets,
+    TileMode? tileMode,
     AffineMatrix? transform,
     this.focalPoint,
-    GradientUnitMode unitMode = GradientUnitMode.objectBoundingBox,
-  }) : super._(colors, offsets, tileMode, unitMode, transform);
+    GradientUnitMode? unitMode,
+  }) : super._(id, colors, offsets, tileMode, unitMode, transform);
 
   /// The central point of the gradient.
   final Point center;
@@ -265,12 +299,15 @@ class RadialGradient extends Gradient {
 
   @override
   RadialGradient applyBounds(Rect bounds, AffineMatrix transform) {
+    assert(offsets != null);
+    assert(colors != null);
     return RadialGradient(
+      id: id,
       center: transform.transformPoint(center),
       radius: radius,
       colors: colors,
       offsets: offsets,
-      tileMode: tileMode,
+      tileMode: tileMode ?? TileMode.clamp,
       transform: this.transform,
       focalPoint: transform.transformPoint(focalPoint ?? center),
       unitMode: GradientUnitMode.transformed,
@@ -278,12 +315,36 @@ class RadialGradient extends Gradient {
   }
 
   @override
-  int get hashCode => Object.hash(center, radius, Object.hashAll(colors),
-      Object.hashAll(offsets), tileMode, transform, focalPoint, unitMode);
+  RadialGradient applyProperties(Gradient ref) {
+    return RadialGradient(
+      id: id,
+      center: center,
+      radius: radius,
+      focalPoint: focalPoint,
+      colors: colors ?? ref.colors,
+      offsets: offsets ?? ref.offsets,
+      transform: transform ?? ref.transform,
+      unitMode: unitMode ?? ref.unitMode,
+      tileMode: tileMode ?? ref.tileMode,
+    );
+  }
+
+  @override
+  int get hashCode => Object.hash(
+      id,
+      center,
+      radius,
+      Object.hashAll(colors ?? <Color>[]),
+      Object.hashAll(offsets ?? <double>[]),
+      tileMode,
+      transform,
+      focalPoint,
+      unitMode);
 
   @override
   bool operator ==(Object other) {
     return other is RadialGradient &&
+        other.id == id &&
         other.center == center &&
         other.radius == radius &&
         other.focalPoint == focalPoint &&
@@ -297,16 +358,17 @@ class RadialGradient extends Gradient {
   @override
   String toString() {
     return '''
-Gradient.radial(
-  const Offset(${center.x}, ${center.y}),
-  $radius,
-  $colors,
-  $offsets,
-  $tileMode,
-  ${transform == null ? 'null' : 'Float64List.fromList(<double>${transform!.toMatrix4()})'},
-  ${focalPoint == null ? 'null' : 'const Offset(${focalPoint!.x}, ${focalPoint!.y})'},
-  0.0,
-);
+RadialGradient(
+  id: $id,
+  center: $center,
+  radius: $radius,
+  colors: <Color>$colors,
+  offsets: <double>$offsets,
+  tileMode: $tileMode,
+  transform: ${transform == null ? 'null' : 'Float64List.fromList(<double>${transform!.toMatrix4()})'},
+  focalPoint: $focalPoint,
+  unitMode: $unitMode,
+)
 ''';
   }
 }
@@ -442,41 +504,6 @@ class Stroke {
   /// The width of the stroke, if [style] is [PaintingStyle.stroke].
   final double? width;
 
-  /// Creates a string with the dart:ui code to represent this stroke and any
-  /// shaders it contains as a ui.Paint.
-  String toFlutterPaintString(String shaderName, String paintName,
-      [BlendMode? blendMode]) {
-    final StringBuffer buffer = StringBuffer();
-    if (shader != null) {
-      buffer.writeln('final $shaderName = $shader');
-    }
-    buffer.write('final $paintName = Paint()');
-    if ((blendMode ?? BlendMode.srcOver) != BlendMode.srcOver) {
-      buffer.write('\n  ..blendMode = $blendMode');
-    }
-    if ((color ?? Color.opaqueBlack) != Color.opaqueBlack) {
-      buffer.write('\n  ..color = $color');
-    }
-    if (shader != null) {
-      buffer.write('\n  ..shader = $shaderName');
-    }
-    if ((cap ?? StrokeCap.butt) != StrokeCap.butt) {
-      buffer.write('\n  ..strokeCap = $cap');
-    }
-    if ((join ?? StrokeJoin.miter) != StrokeJoin.miter) {
-      buffer.write('\n  ..strokeJoin = $join');
-    }
-    if ((miterLimit ?? 4) != 4) {
-      buffer.write('\n  ..strokeMiterLimit = $miterLimit');
-    }
-    if ((width ?? 0) > 0) {
-      buffer.write('\n  ..strokeWidth = $width');
-    }
-    buffer.write('\n  ..style = ${PaintingStyle.stroke}');
-    buffer.writeln(';');
-    return buffer.toString();
-  }
-
   @override
   int get hashCode => Object.hash(
       PaintingStyle.stroke, color, shader, cap, join, miterLimit, width);
@@ -544,28 +571,6 @@ class Fill {
 
   /// The [Gradient] to use when filling.
   final Gradient? shader;
-
-  /// Creates a string with the dart:ui code to represent this fill and any
-  /// shaders it contains as a ui.Paint.
-  String toFlutterPaintString(String shaderName, String paintName,
-      [BlendMode? blendMode]) {
-    final StringBuffer buffer = StringBuffer();
-    if (shader != null) {
-      buffer.writeln('final $shaderName = $shader');
-    }
-    buffer.write('final $paintName = Paint()');
-    if ((blendMode ?? BlendMode.srcOver) != BlendMode.srcOver) {
-      buffer.write('\n  ..blendMode = $blendMode');
-    }
-    if ((color ?? Color.opaqueBlack) != Color.opaqueBlack) {
-      buffer.write('\n  ..color = $color');
-    }
-    if (shader != null) {
-      buffer.write('\n  ..shader = $shaderName');
-    }
-    buffer.writeln(';');
-    return buffer.toString();
-  }
 
   @override
   int get hashCode => Object.hash(PaintingStyle.fill, color, shader);

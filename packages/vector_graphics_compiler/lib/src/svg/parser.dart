@@ -181,25 +181,25 @@ class _Elements {
     SvgParser parserState,
     bool warningsAsErrors,
   ) {
-    final String? gradientUnits = parserState.attribute('gradientUnits');
-    final bool isObjectBoundingBox = gradientUnits != 'userSpaceOnUse';
-
+    final GradientUnitMode? unitMode = parserState.parseGradientUnitMode();
     final String? rawCx = parserState.attribute('cx', def: '50%');
     final String? rawCy = parserState.attribute('cy', def: '50%');
     final String? rawR = parserState.attribute('r', def: '50%');
     final String? rawFx = parserState.attribute('fx', def: rawCx);
     final String? rawFy = parserState.attribute('fy', def: rawCy);
-    final TileMode spreadMethod = parserState.parseTileMode();
+    final TileMode? spreadMethod = parserState.parseTileMode();
     final String id = parserState.buildUrlIri();
     final AffineMatrix? originalTransform = parseTransform(
       parserState.attribute('gradientTransform'),
     );
 
-    final List<double> offsets = <double>[];
-    final List<Color> colors = <Color>[];
+    List<double>? offsets;
+    List<Color>? colors;
 
     final bool defer = parserState._currentStartElement!.isSelfClosing;
     if (!defer) {
+      offsets = <double>[];
+      colors = <Color>[];
       parseStops(parserState, colors, offsets);
     }
 
@@ -210,16 +210,14 @@ class _Elements {
     final double fy = parseDecimalOrPercentage(rawFy!);
 
     parserState._definitions.addGradient(
-      id,
       RadialGradient(
+        id: id,
         center: Point(cx, cy),
         radius: r,
         focalPoint: (fx != cx || fy != cy) ? Point(fx, fy) : null,
         colors: colors,
         offsets: offsets,
-        unitMode: isObjectBoundingBox
-            ? GradientUnitMode.objectBoundingBox
-            : GradientUnitMode.userSpaceOnUse,
+        unitMode: unitMode,
         tileMode: spreadMethod,
         transform: originalTransform,
       ),
@@ -232,9 +230,7 @@ class _Elements {
     SvgParser parserState,
     bool warningsAsErrors,
   ) {
-    final String? gradientUnits = parserState.attribute('gradientUnits');
-    final bool isObjectBoundingBox = gradientUnits != 'userSpaceOnUse';
-
+    final GradientUnitMode? unitMode = parserState.parseGradientUnitMode();
     final String x1 = parserState.attribute('x1', def: '0%')!;
     final String x2 = parserState.attribute('x2', def: '100%')!;
     final String y1 = parserState.attribute('y1', def: '0%')!;
@@ -243,12 +239,15 @@ class _Elements {
     final AffineMatrix? originalTransform = parseTransform(
       parserState.attribute('gradientTransform'),
     );
-    final TileMode spreadMethod = parserState.parseTileMode();
+    final TileMode? spreadMethod = parserState.parseTileMode();
 
-    final List<Color> colors = <Color>[];
-    final List<double> offsets = <double>[];
+    List<double>? offsets;
+    List<Color>? colors;
+
     final bool defer = parserState._currentStartElement!.isSelfClosing;
     if (!defer) {
+      offsets = <double>[];
+      colors = <Color>[];
       parseStops(parserState, colors, offsets);
     }
 
@@ -262,16 +261,14 @@ class _Elements {
     );
 
     parserState._definitions.addGradient(
-      id,
       LinearGradient(
+        id: id,
         from: fromPoint,
         to: toPoint,
         colors: colors,
         offsets: offsets,
         tileMode: spreadMethod,
-        unitMode: isObjectBoundingBox
-            ? GradientUnitMode.objectBoundingBox
-            : GradientUnitMode.userSpaceOnUse,
+        unitMode: unitMode,
         transform: originalTransform,
       ),
       parserState._currentAttributes.href,
@@ -970,8 +967,8 @@ class SvgParser {
   static const String emptyUrlIri = _Resolver.emptyUrlIri;
 
   /// Parses a `spreadMethod` attribute into a [TileMode].
-  TileMode parseTileMode() {
-    final String? spreadMethod = attribute('spreadMethod', def: 'pad');
+  TileMode? parseTileMode() {
+    final String? spreadMethod = attribute('spreadMethod');
     switch (spreadMethod) {
       case 'pad':
         return TileMode.clamp;
@@ -979,9 +976,20 @@ class SvgParser {
         return TileMode.repeated;
       case 'reflect':
         return TileMode.mirror;
-      default:
-        return TileMode.clamp;
     }
+    return null;
+  }
+
+  /// Parses the `@gradientUnits` attribute.
+  GradientUnitMode? parseGradientUnitMode() {
+    final String? gradientUnits = attribute('gradientUnits');
+    switch (gradientUnits) {
+      case 'userSpaceOnUse':
+        return GradientUnitMode.userSpaceOnUse;
+      case 'objectBoundingBox':
+        return GradientUnitMode.objectBoundingBox;
+    }
+    return null;
   }
 
   StrokeCap? _parseCap(
@@ -1422,19 +1430,17 @@ class _Resolver {
   }
 
   void addGradient<T extends Gradient>(
-    String ref,
     T gradient,
     String? href,
   ) {
     assert(!_sealed);
-    _shaders[ref] = gradient;
+    _shaders[gradient.id] = gradient;
     if (href != null) {
       href = 'url($href)';
-      final Gradient? ref = _shaders[href];
-      if (ref != null) {
+      final Gradient? gradientRef = _shaders[href];
+      if (gradientRef != null) {
         // Gradient is defined after its reference.
-        gradient.colors.addAll(ref.colors);
-        gradient.offsets.addAll(ref.offsets);
+        _shaders[gradient.id] = gradient.applyProperties(gradientRef);
       } else {
         // Gradient is defined before its reference, check later when that
         // reference has been parsed.
@@ -1442,9 +1448,8 @@ class _Resolver {
       }
     } else {
       for (final Gradient deferred
-          in _deferredShaders.remove(ref) ?? <Gradient>[]) {
-        deferred.colors.addAll(gradient.colors);
-        deferred.offsets.addAll(gradient.offsets);
+          in _deferredShaders.remove(gradient.id) ?? <Gradient>[]) {
+        _shaders[deferred.id] = deferred.applyProperties(gradient);
       }
     }
   }

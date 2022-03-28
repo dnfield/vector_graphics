@@ -123,15 +123,17 @@ class _Elements {
       )!,
     );
 
-    final AttributedNode ref =
-        parserState._definitions.getDrawable('url($xlinkHref)');
     final ParentNode group = ParentNode(
       parserState._currentAttributes,
       precalculatedTransform: transform,
     );
 
     group.addChild(
-      ref.applyAttributes(parserState._currentAttributes),
+      DeferredNode(
+        parserState._currentAttributes,
+        refId: 'url($xlinkHref)',
+        resolver: parserState._definitions.getDrawable,
+      ),
       clipResolver: parserState._definitions.getClipPath,
       maskResolver: parserState._definitions.getDrawable,
     );
@@ -180,7 +182,7 @@ class _Elements {
     bool warningsAsErrors,
   ) {
     final String? gradientUnits = parserState.attribute('gradientUnits');
-    bool isObjectBoundingBox = gradientUnits != 'userSpaceOnUse';
+    final bool isObjectBoundingBox = gradientUnits != 'userSpaceOnUse';
 
     final String? rawCx = parserState.attribute('cx', def: '50%');
     final String? rawCy = parserState.attribute('cy', def: '50%');
@@ -196,58 +198,23 @@ class _Elements {
     final List<double> offsets = <double>[];
     final List<Color> colors = <Color>[];
 
-    if (parserState._currentStartElement!.isSelfClosing) {
-      final String? href = parserState._currentAttributes.href;
-      final RadialGradient ref =
-          parserState._definitions.getGradient<RadialGradient>('url($href)');
-
-      if (gradientUnits == null) {
-        isObjectBoundingBox =
-            ref.unitMode == GradientUnitMode.objectBoundingBox;
-      }
-      colors.addAll(ref.colors);
-      offsets.addAll(ref.offsets);
-    } else {
+    final bool defer = parserState._currentStartElement!.isSelfClosing;
+    if (!defer) {
       parseStops(parserState, colors, offsets);
     }
 
-    late double cx, cy, r, fx, fy;
-    if (isObjectBoundingBox) {
-      cx = parseDecimalOrPercentage(rawCx!);
-      cy = parseDecimalOrPercentage(rawCy!);
-      r = parseDecimalOrPercentage(rawR!);
-      fx = parseDecimalOrPercentage(rawFx!);
-      fy = parseDecimalOrPercentage(rawFy!);
-    } else {
-      cx = isPercentage(rawCx!)
-          ? parsePercentage(rawCx) * parserState.rootBounds.width +
-              parserState.rootBounds.left
-          : parserState.parseDoubleWithUnits(rawCx)!;
-      cy = isPercentage(rawCy!)
-          ? parsePercentage(rawCy) * parserState.rootBounds.height +
-              parserState.rootBounds.top
-          : parserState.parseDoubleWithUnits(rawCy)!;
-      r = isPercentage(rawR!)
-          ? parsePercentage(rawR) *
-              ((parserState.rootBounds.height + parserState.rootBounds.width) /
-                  2)
-          : parserState.parseDoubleWithUnits(rawR)!;
-      fx = isPercentage(rawFx!)
-          ? parsePercentage(rawFx) * parserState.rootBounds.width +
-              parserState.rootBounds.left
-          : parserState.parseDoubleWithUnits(rawFx)!;
-      fy = isPercentage(rawFy!)
-          ? parsePercentage(rawFy) * parserState.rootBounds.height +
-              parserState.rootBounds.top
-          : parserState.parseDoubleWithUnits(rawFy)!;
-    }
+    final double cx = parseDecimalOrPercentage(rawCx!);
+    final double cy = parseDecimalOrPercentage(rawCy!);
+    final double r = parseDecimalOrPercentage(rawR!);
+    final double fx = parseDecimalOrPercentage(rawFx!);
+    final double fy = parseDecimalOrPercentage(rawFy!);
 
     parserState._definitions.addGradient(
       id,
       RadialGradient(
         center: Point(cx, cy),
         radius: r,
-        focalPoint: (fx != cx || fy != cy) ? Point(fx, fy) : Point(cx, cy),
+        focalPoint: (fx != cx || fy != cy) ? Point(fx, fy) : null,
         colors: colors,
         offsets: offsets,
         unitMode: isObjectBoundingBox
@@ -256,6 +223,7 @@ class _Elements {
         tileMode: spreadMethod,
         transform: originalTransform,
       ),
+      parserState._currentAttributes.href,
     );
     return null;
   }
@@ -265,7 +233,7 @@ class _Elements {
     bool warningsAsErrors,
   ) {
     final String? gradientUnits = parserState.attribute('gradientUnits');
-    bool isObjectBoundingBox = gradientUnits != 'userSpaceOnUse';
+    final bool isObjectBoundingBox = gradientUnits != 'userSpaceOnUse';
 
     final String x1 = parserState.attribute('x1', def: '0%')!;
     final String x2 = parserState.attribute('x2', def: '100%')!;
@@ -279,53 +247,19 @@ class _Elements {
 
     final List<Color> colors = <Color>[];
     final List<double> offsets = <double>[];
-    if (parserState._currentStartElement!.isSelfClosing) {
-      final String? href = parserState._currentAttributes.href;
-      final LinearGradient ref =
-          parserState._definitions.getGradient<LinearGradient>('url($href)');
-      if (gradientUnits == null) {
-        isObjectBoundingBox =
-            ref.unitMode == GradientUnitMode.objectBoundingBox;
-      }
-      colors.addAll(ref.colors);
-      offsets.addAll(ref.offsets);
-    } else {
+    final bool defer = parserState._currentStartElement!.isSelfClosing;
+    if (!defer) {
       parseStops(parserState, colors, offsets);
     }
 
-    Point fromPoint, toPoint;
-    if (isObjectBoundingBox) {
-      fromPoint = Point(
-        parseDecimalOrPercentage(x1),
-        parseDecimalOrPercentage(y1),
-      );
-      toPoint = Point(
-        parseDecimalOrPercentage(x2),
-        parseDecimalOrPercentage(y2),
-      );
-    } else {
-      fromPoint = Point(
-        isPercentage(x1)
-            ? parsePercentage(x1) * parserState.rootBounds.width +
-                parserState.rootBounds.left
-            : parserState.parseDoubleWithUnits(x1)!,
-        isPercentage(y1)
-            ? parsePercentage(y1) * parserState.rootBounds.height +
-                parserState.rootBounds.top
-            : parserState.parseDoubleWithUnits(y1)!,
-      );
-
-      toPoint = Point(
-        isPercentage(x2)
-            ? parsePercentage(x2) * parserState.rootBounds.width +
-                parserState.rootBounds.left
-            : parserState.parseDoubleWithUnits(x2)!,
-        isPercentage(y2)
-            ? parsePercentage(y2) * parserState.rootBounds.height +
-                parserState.rootBounds.top
-            : parserState.parseDoubleWithUnits(y2)!,
-      );
-    }
+    final Point fromPoint = Point(
+      parseDecimalOrPercentage(x1),
+      parseDecimalOrPercentage(y1),
+    );
+    final Point toPoint = Point(
+      parseDecimalOrPercentage(x2),
+      parseDecimalOrPercentage(y2),
+    );
 
     parserState._definitions.addGradient(
       id,
@@ -340,6 +274,7 @@ class _Elements {
             : GradientUnitMode.userSpaceOnUse,
         transform: originalTransform,
       ),
+      parserState._currentAttributes.href,
     );
 
     return null;
@@ -430,7 +365,7 @@ class _Elements {
     //     parserState.attribute('height', def: '0'),
     //   )!,
     // );
-    // // final Image image = await resolveImage(href);
+    // final Image image = await resolveImage(href);
     // final ParentNode parent = parserState._parentDrawables.last.drawable!;
     // final DrawableStyle? parentStyle = parent.paint;
     // final DrawableRasterImage drawable = DrawableRasterImage(
@@ -458,10 +393,10 @@ class _Elements {
     //   return;
     // }
 
-    // // <text>, <tspan> -> Collect styles
-    // // <tref> TBD - looks like Inkscape supports it, but no browser does.
-    // // XmlNodeType.TEXT/CDATA -> DrawableText
-    // // Track the style(s) and offset(s) for <text> and <tspan> elements
+    // <text>, <tspan> -> Collect styles
+    // <tref> TBD - looks like Inkscape supports it, but no browser does.
+    // XmlNodeType.TEXT/CDATA -> DrawableText
+    // Track the style(s) and offset(s) for <text> and <tspan> elements
     // final Queue<_TextInfo> textInfos = ListQueue<_TextInfo>();
     // double lastTextWidth = 0;
 
@@ -692,7 +627,7 @@ class SvgParser {
   final Iterator<XmlEvent> _eventIterator;
   final String? _key;
   final bool _warningsAsErrors;
-  final _DrawableDefinitionServer _definitions = _DrawableDefinitionServer();
+  final _Resolver _definitions = _Resolver();
   final Queue<_SvgGroupTuple> _parentDrawables = ListQueue<_SvgGroupTuple>(10);
   ViewportNode? _root;
   SvgAttributes _currentAttributes = SvgAttributes.empty;
@@ -781,6 +716,8 @@ class SvgParser {
     if (_root == null) {
       throw StateError('Invalid SVG data');
     }
+    _definitions._seal();
+
     final DrawCommandBuilder builder = DrawCommandBuilder();
     _root!.build(builder, AffineMatrix.identity);
     return builder.toInstructions(_root!.width, _root!.height);
@@ -1030,7 +967,7 @@ class SvgParser {
   String buildUrlIri() => 'url(#${_currentAttributes.id})';
 
   /// An empty IRI.
-  static const String emptyUrlIri = _DrawableDefinitionServer.emptyUrlIri;
+  static const String emptyUrlIri = _Resolver.emptyUrlIri;
 
   /// Parses a `spreadMethod` attribute into a [TileMode].
   TileMode parseTileMode() {
@@ -1449,24 +1386,76 @@ class SvgParser {
   }
 }
 
-class _DrawableDefinitionServer {
+class _Resolver {
   static const String emptyUrlIri = 'url(#)';
   final Map<String, AttributedNode> _drawables = <String, AttributedNode>{};
-  final Map<String, Shader> _shaders = <String, Shader>{};
+  final Map<String, Gradient> _shaders = <String, Gradient>{};
   final Map<String, List<Path>> _clips = <String, List<Path>>{};
 
-  AttributedNode getDrawable(String ref) => _drawables[ref]!;
-  List<Path> getClipPath(String ref) => _clips[ref]!;
-  T getGradient<T extends Shader>(String ref) => _shaders[ref]! as T;
-  void addGradient<T extends Shader>(String ref, T gradient) {
+  bool _sealed = false;
+  void _seal() {
+    assert(_deferredShaders.isEmpty);
+    _sealed = true;
+  }
+
+  AttributedNode getDrawable(String ref) {
+    assert(_sealed);
+    return _drawables[ref]!;
+  }
+
+  List<Path> getClipPath(String ref) {
+    assert(_sealed);
+    return _clips[ref]!;
+  }
+
+  T getGradient<T extends Gradient>(String ref) {
+    assert(_sealed);
+    return _shaders[ref]! as T;
+  }
+
+  final Map<String, List<Gradient>> _deferredShaders =
+      <String, List<Gradient>>{};
+
+  void addDeferredGradient<T extends Gradient>(String ref, T gradient) {
+    assert(!_sealed);
+    _deferredShaders.putIfAbsent(ref, () => <T>[]).add(gradient);
+  }
+
+  void addGradient<T extends Gradient>(
+    String ref,
+    T gradient,
+    String? href,
+  ) {
+    assert(!_sealed);
     _shaders[ref] = gradient;
+    if (href != null) {
+      href = 'url($href)';
+      final Gradient? ref = _shaders[href];
+      if (ref != null) {
+        // Gradient is defined after its reference.
+        gradient.colors.addAll(ref.colors);
+        gradient.offsets.addAll(ref.offsets);
+      } else {
+        // Gradient is defined before its reference, check later when that
+        // reference has been parsed.
+        addDeferredGradient(href, gradient);
+      }
+    } else {
+      for (final Gradient deferred
+          in _deferredShaders.remove(ref) ?? <Gradient>[]) {
+        deferred.colors.addAll(gradient.colors);
+        deferred.offsets.addAll(gradient.offsets);
+      }
+    }
   }
 
   void addClipPath(String ref, List<Path> paths) {
+    assert(!_sealed);
     _clips[ref] = paths;
   }
 
   void addDrawable(String ref, AttributedNode drawable) {
+    assert(!_sealed);
     _drawables[ref] = drawable;
   }
 }
@@ -1653,7 +1642,7 @@ class SvgStrokeAttributes {
   /// be.
   static const SvgStrokeAttributes none = SvgStrokeAttributes._(null);
 
-  final _DrawableDefinitionServer? _definitions;
+  final _Resolver? _definitions;
 
   /// The color to use for stroking. _Does_ include the opacity value. Only
   /// opacity is used if the [shaderId] is not null.
@@ -1683,10 +1672,10 @@ class SvgStrokeAttributes {
       return null;
     }
 
-    Shader? shader;
+    Gradient? shader;
     if (shaderId != null) {
       shader = _definitions!
-          .getGradient<Shader>(shaderId!)
+          .getGradient<Gradient>(shaderId!)
           .applyBounds(shaderBounds, transform);
     }
     return Stroke(
@@ -1706,7 +1695,7 @@ class SvgFillAttributes {
   /// Specifies that fills should not be drawn, even if they otherwise would be.
   static const SvgFillAttributes none = SvgFillAttributes._(null);
 
-  final _DrawableDefinitionServer? _definitions;
+  final _Resolver? _definitions;
 
   /// The color to use for filling. _Does_ include the opacity value. Only
   /// opacity is used if the [shaderId] is not null.
@@ -1723,10 +1712,10 @@ class SvgFillAttributes {
     if (_definitions == null) {
       return null;
     }
-    Shader? shader;
+    Gradient? shader;
     if (shaderId != null) {
       shader = _definitions!
-          .getGradient<Shader>(shaderId!)
+          .getGradient<Gradient>(shaderId!)
           .applyBounds(shaderBounds, transform);
     }
     return Fill(color: color, shader: shader);

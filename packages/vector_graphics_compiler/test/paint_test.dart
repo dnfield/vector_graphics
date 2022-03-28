@@ -113,7 +113,9 @@ void main() {
     );
 
     final LinearGradient transformed = gradient.applyBounds(
-        const Rect.fromLTWH(5, 5, 100, 100), AffineMatrix.identity);
+      const Rect.fromLTWH(5, 5, 100, 100),
+      AffineMatrix.identity,
+    );
 
     expect(transformed.from, const Point(5, 5));
     expect(transformed.to, const Point(105, 105));
@@ -131,7 +133,9 @@ void main() {
     );
 
     final LinearGradient transformed = gradient.applyBounds(
-        const Rect.fromLTWH(5, 5, 100, 100), AffineMatrix.identity);
+      const Rect.fromLTWH(5, 5, 100, 100),
+      AffineMatrix.identity,
+    );
 
     expect(transformed.from, const Point(0, 0));
     expect(transformed.to, const Point(1, 1));
@@ -149,7 +153,9 @@ void main() {
     );
 
     final LinearGradient transformed = gradient.applyBounds(
-        const Rect.fromLTWH(5, 5, 100, 100), AffineMatrix.identity);
+      const Rect.fromLTWH(5, 5, 100, 100),
+      AffineMatrix.identity,
+    );
 
     expect(transformed.from, const Point(0, 0));
     expect(transformed.to, const Point(2, 2));
@@ -167,7 +173,9 @@ void main() {
     );
 
     final RadialGradient transformed = gradient.applyBounds(
-        const Rect.fromLTWH(5, 5, 100, 100), AffineMatrix.identity);
+      const Rect.fromLTWH(5, 5, 100, 100),
+      AffineMatrix.identity.translated(5, 5).scaled(100, 100),
+    );
 
     expect(transformed.center, const Point(55, 55));
     expect(transformed.focalPoint, const Point(65, 65));
@@ -186,7 +194,9 @@ void main() {
     );
 
     final RadialGradient transformed = gradient.applyBounds(
-        const Rect.fromLTWH(5, 5, 100, 100), AffineMatrix.identity);
+      const Rect.fromLTWH(5, 5, 100, 100),
+      AffineMatrix.identity,
+    );
 
     expect(transformed.center, const Point(0.5, 0.5));
     expect(transformed.focalPoint, const Point(0.6, 0.6));

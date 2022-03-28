@@ -47,10 +47,10 @@ Future<Uint8List> encodeSvg(String input, String filename) async {
 
   final Map<int, int> fillIds = <int, int>{};
   final Map<int, int> strokeIds = <int, int>{};
-  final Map<Shader, int> shaderIds = <Shader, int>{};
+  final Map<Gradient, int> shaderIds = <Gradient, int>{};
 
   for (final Paint paint in instructions.paints) {
-    final Shader? shader = paint.fill?.shader;
+    final Gradient? shader = paint.fill?.shader;
     if (shader == null) {
       continue;
     }

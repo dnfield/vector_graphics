@@ -28,8 +28,20 @@ void main() {
     final VectorInstructions instructions = await parse(xlinkGradient);
     final VectorInstructions instructions2 = await parse(xlinkGradientOoO);
 
-    expect(instructions, instructions2);
-  }, skip: true); // Does not work yet.
+    expect(instructions.paints, instructions2.paints);
+    expect(instructions.paths, instructions2.paths);
+    expect(instructions.commands, instructions2.commands);
+  });
+
+  test('xlink use Out of order', () async {
+    final VectorInstructions instructions = await parse(simpleUseCircles);
+    final VectorInstructions instructions2 = await parse(simpleUseCirclesOoO);
+
+    // Use toSet to ignore ordering differences.
+    expect(instructions.paints.toSet(), instructions2.paints.toSet());
+    expect(instructions.paths.toSet(), instructions2.paths.toSet());
+    expect(instructions.commands.toSet(), instructions2.commands.toSet());
+  });
 
   test('xlink gradient with transform', () async {
     final VectorInstructions instructions = await parse(xlinkGradient);
@@ -51,7 +63,7 @@ void main() {
             colors: <Color>[Color(0xff0f12cb), Color(0xfffded3a)],
             offsets: <double>[0.0, 1.0],
             tileMode: TileMode.clamp,
-            unitMode: GradientUnitMode.userSpaceOnUse,
+            unitMode: GradientUnitMode.transformed,
           ),
         ),
       )
@@ -78,7 +90,7 @@ void main() {
             colors: <Color>[Color(0xff0000ff), Color(0xffffff00)],
             offsets: <double>[0.0, 1.0],
             tileMode: TileMode.clamp,
-            unitMode: GradientUnitMode.userSpaceOnUse,
+            unitMode: GradientUnitMode.transformed,
           ),
         ),
       )
@@ -105,7 +117,7 @@ void main() {
       colors: <Color>[Color(0xffffffff), Color(0xff0000ff)],
       offsets: <double>[0.0, 1.0],
       tileMode: TileMode.clamp,
-      unitMode: GradientUnitMode.userSpaceOnUse,
+      unitMode: GradientUnitMode.transformed,
     );
     const LinearGradient gradient2 = LinearGradient(
       from: Point(47.58260128, 58.72975728),
@@ -113,7 +125,7 @@ void main() {
       colors: <Color>[Color(0xffffffff), Color(0xff0000ff)],
       offsets: <double>[0.0, 1.0],
       tileMode: TileMode.clamp,
-      unitMode: GradientUnitMode.userSpaceOnUse,
+      unitMode: GradientUnitMode.transformed,
     );
     expect(instructions.paints, const <Paint>[
       Paint(fill: Fill(color: Color(0xffadd8e6))),

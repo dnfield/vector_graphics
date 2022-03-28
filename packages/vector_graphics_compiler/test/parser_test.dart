@@ -12,12 +12,17 @@ void main() {
 </svg>
 ''';
     final VectorInstructions instructions = await parse(svg);
-    expect(instructions.paints.single, const Paint(stroke: Stroke(
-      color: Color(0xffff0000),
-      cap: StrokeCap.round,
-      join: StrokeJoin.round,
-      width: 2.7,
-    )));
+    expect(
+      instructions.paints.single,
+      const Paint(
+        stroke: Stroke(
+          color: Color(0xffff0000),
+          cap: StrokeCap.round,
+          join: StrokeJoin.round,
+          width: 2.7,
+        ),
+      ),
+    );
   });
 
   test('group opacity results in save layer', () async {

@@ -130,5 +130,6 @@ void main() {
 
     expect(transformed.center, const Point(0.5, 0.5));
     expect(transformed.focalPoint, const Point(0.6, 0.6));
+    expect(transformed.transform, AffineMatrix.identity);
   });
 }

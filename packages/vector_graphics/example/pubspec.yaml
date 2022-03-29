@@ -6,9 +6,11 @@ environment:
   sdk: ">=2.16.0 <3.0.0"
 
 dependencies:
+  http: any
   flutter:
     sdk: flutter
-  vector_graphics: 0.0.1
+  vector_graphics: any
+  vector_graphics_compiler: any
 
 
 dev_dependencies:
@@ -26,6 +28,8 @@ flutter:
 
 # Comment out before publishing
 dependency_overrides:
+  vector_graphics_compiler:
+    path: ../../vector_graphics_compiler
   vector_graphics_codec:
     path: ../../vector_graphics_codec
   vector_graphics:

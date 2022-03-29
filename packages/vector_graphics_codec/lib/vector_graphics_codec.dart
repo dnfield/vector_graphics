@@ -1,7 +1,5 @@
 import 'dart:typed_data';
 
-const int _kMaxUint16 = 65535;
-
 /// The [VectorGraphicsCodec] provides support for both encoding and
 /// decoding the vector_graphics binary format.
 class VectorGraphicsCodec {
@@ -9,6 +7,14 @@ class VectorGraphicsCodec {
   ///
   /// The codec is stateless and the const constructor should be preferred.
   const VectorGraphicsCodec();
+
+  /// The maximum supported value for an id.
+  ///
+  /// The codec does not support encoding more than this many paths, paints,
+  /// or shaders in a single buffer.
+  ///
+  /// Vertices are written inline and not subject to this constraint.
+  static const int kMaxId = 65535;
 
   static const int _pathTag = 27;
   static const int _fillPaintTag = 28;
@@ -164,7 +170,7 @@ class VectorGraphicsCodec {
     // Index Buffer (If non zero)
     // Paint Id.
     buffer._putUint8(_drawVerticesTag);
-    buffer._putUint16(paintId ?? _kMaxUint16);
+    buffer._putUint16(paintId ?? kMaxId);
     buffer._putUint16(vertices.length);
     buffer._putFloat32List(vertices);
     if (indices != null) {
@@ -196,11 +202,12 @@ class VectorGraphicsCodec {
     }
     buffer._decodePhase = _CurrentSection.paints;
     final int paintId = buffer._nextPaintId++;
+    assert(paintId < kMaxId);
     buffer._putUint8(_fillPaintTag);
     buffer._putUint32(color);
     buffer._putUint8(blendMode);
     buffer._putUint16(paintId);
-    buffer._putUint16(shaderId ?? _kMaxUint16);
+    buffer._putUint16(shaderId ?? kMaxId);
     return paintId;
   }
 
@@ -220,6 +227,7 @@ class VectorGraphicsCodec {
     }
     buffer._decodePhase = _CurrentSection.shaders;
     final int shaderId = buffer._nextShaderId++;
+    assert(shaderId < kMaxId);
     buffer._putUint8(_linearGradientTag);
     buffer._putUint16(shaderId);
     buffer._putFloat32(fromX);
@@ -261,6 +269,7 @@ class VectorGraphicsCodec {
     }
     buffer._decodePhase = _CurrentSection.shaders;
     final int shaderId = buffer._nextShaderId++;
+    assert(shaderId < kMaxId);
     buffer._putUint8(_radialGradientTag);
     buffer._putUint16(shaderId);
     buffer._putFloat32(centerX);
@@ -315,6 +324,7 @@ class VectorGraphicsCodec {
     }
     buffer._decodePhase = _CurrentSection.paints;
     final int paintId = buffer._nextPaintId++;
+    assert(paintId < kMaxId);
     buffer._putUint8(_strokePaintTag);
     buffer._putUint32(color);
     buffer._putUint8(strokeCap);
@@ -405,7 +415,7 @@ class VectorGraphicsCodec {
       strokeWidth: null,
       paintStyle: 0, // Fill
       id: id,
-      shaderId: shaderId == _kMaxUint16 ? null : shaderId,
+      shaderId: shaderId == kMaxId ? null : shaderId,
     );
   }
 
@@ -447,6 +457,7 @@ class VectorGraphicsCodec {
     }
     buffer._decodePhase = _CurrentSection.paths;
     buffer._currentPathId = buffer._nextPathId++;
+    assert(buffer._nextPathId < kMaxId);
     buffer._putUint8(_pathTag);
     buffer._putUint8(fillType);
     buffer._putUint16(buffer._currentPathId);
@@ -584,7 +595,7 @@ class VectorGraphicsCodec {
       indices = buffer.getUint16List(indexLength);
     }
     listener?.onDrawVertices(
-        vertices, indices, paintId != _kMaxUint16 ? paintId : null);
+        vertices, indices, paintId != kMaxId ? paintId : null);
   }
 
   void _readSaveLayer(

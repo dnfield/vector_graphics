@@ -6,6 +6,89 @@ import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 import 'test_svg_strings.dart';
 
 void main() {
+  test('focal radial', () async {
+    final VectorInstructions instructions = await parse(focalRadial);
+
+    expect(
+      instructions.paints.single,
+      const Paint(
+        stroke: Stroke(color: Color(0xff000000)),
+        fill: Fill(
+          color: Color(0xffffffff),
+          shader: RadialGradient(
+            id: 'url(#radial)',
+            center: Point(0.5, 0.5),
+            radius: 0.5,
+            colors: <Color>[
+              Color(0xffff0000),
+              Color(0xff008000),
+              Color(0xff0000ff)
+            ],
+            offsets: <double>[0.0, 0.5, 1.0],
+            tileMode: TileMode.clamp,
+            transform: AffineMatrix(
+              120.0,
+              0.0,
+              0.0,
+              120.0,
+              10.0,
+              10.0,
+              120.0,
+            ),
+            focalPoint: Point(0.5, 0.15),
+            unitMode: GradientUnitMode.transformed,
+          ),
+        ),
+      ),
+    );
+    expect(
+      instructions.paths.single,
+      PathBuilder().addRect(const Rect.fromLTWH(10, 10, 120, 120)).toPath(),
+    );
+  });
+
+  test('Transformed userSpaceOnUse radial', () async {
+    final VectorInstructions instructions = await parse(xformUsosRadial);
+    expect(
+      instructions.paints.single,
+      const Paint(
+        fill: Fill(
+          color: Color(0xffffffff),
+          shader: RadialGradient(
+            id: 'url(#paint0_radial)',
+            center: Point(0.0, 0.0),
+            radius: 1.0,
+            colors: <Color>[Color(0xcc47e9ff), Color(0x00414cbe)],
+            offsets: <double>[0.0, 1.0],
+            tileMode: TileMode.clamp,
+            transform: AffineMatrix(
+              -433.0004488023628,
+              -350.99987486173313,
+              350.99987486173313,
+              -433.0004488023628,
+              432.9999999999999,
+              547.0000000000001,
+              557.396,
+            ),
+            unitMode: GradientUnitMode.transformed,
+          ),
+        ),
+      ),
+    );
+    expect(
+      instructions.paths.single,
+      PathBuilder()
+          .addRect(const Rect.fromLTWH(667, 667, 667, 667))
+          .toPath()
+          .transformed(
+            AffineMatrix.identity
+                .translated(667, 667)
+                .rotated(radians(180))
+                .translated(-667, -667),
+          ),
+    );
+  });
+
   test('Transformed objectBoundingBox gradient onto transformed path',
       () async {
     final VectorInstructions instructions = await parse(xformObbGradient);

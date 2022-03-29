@@ -942,3 +942,32 @@ const String xformObbGradient = '''
     <rect x="300" y="0" width="500" height="400" transform="translate(0 100) rotate(45, 250, 250)" fill="url(#paint1_linear)"/>
 </svg>
 ''';
+
+const String xformUsosRadial = '''
+<svg viewBox="0 0 667 667" fill="none"
+    xmlns="http://www.w3.org/2000/svg">
+    <defs>
+        <radialGradient id="paint0_radial" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(901 787) rotate(39.029) scale(557.396)">
+            <stop stop-color="#47E9FF" stop-opacity="0.8"/>
+            <stop offset="1" stop-color="#414CBE" stop-opacity="0"/>
+        </radialGradient>
+    </defs>
+    <rect x="667" y="667" width="667" height="667" transform="rotate(180 667 667)" fill="url(#paint0_radial)"/>
+</svg>
+''';
+
+const String focalRadial = '''
+<svg viewBox="0 0 150 150"  xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="radial"
+      cx="50%" cy="50%" fx="50%" fy="15%" r="50%">
+      <stop offset="0%" style="stop-color: red;"/>
+      <stop offset="50%" style="stop-color: green;"/>
+      <stop offset="100%" style="stop-color: blue;"/>
+    </radialGradient>
+
+    </defs>
+    <rect x="10" y="10" width="120" height="120"
+      style="fill: url(#radial); stroke: black;"/>
+</svg>
+''';

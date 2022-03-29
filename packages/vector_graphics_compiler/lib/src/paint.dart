@@ -159,12 +159,13 @@ class LinearGradient extends Gradient {
 
     switch (unitMode ?? GradientUnitMode.objectBoundingBox) {
       case GradientUnitMode.objectBoundingBox:
-        accumulatedTransform = accumulatedTransform
+        accumulatedTransform = transform
             .translated(bounds.left, bounds.top)
-            .scaled(bounds.width, bounds.height);
+            .scaled(bounds.width, bounds.height)
+            .multiplied(accumulatedTransform);
         break;
       case GradientUnitMode.userSpaceOnUse:
-        accumulatedTransform = accumulatedTransform.multiplied(transform);
+        accumulatedTransform = transform.multiplied(accumulatedTransform);
         break;
       case GradientUnitMode.transformed:
         break;

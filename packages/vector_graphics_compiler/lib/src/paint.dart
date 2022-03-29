@@ -156,7 +156,6 @@ class LinearGradient extends Gradient {
     assert(offsets != null);
     assert(colors != null);
     AffineMatrix accumulatedTransform = this.transform ?? AffineMatrix.identity;
-
     switch (unitMode ?? GradientUnitMode.objectBoundingBox) {
       case GradientUnitMode.objectBoundingBox:
         accumulatedTransform = transform
@@ -220,18 +219,15 @@ class LinearGradient extends Gradient {
 
   @override
   String toString() {
-    return '''
-LinearGradient(
-  id: $id,
-  from: $from,
-  to: $to,
-  colors: <Color>$colors,
-  offsets: <double>$offsets,
-  tileMode: $tileMode,
-  transform: ${transform == null ? 'null' : 'Float64List.fromList(${transform!.toMatrix4()})'},
-  unitMode: $unitMode,
-)
-''';
+    return 'LinearGradient('
+        "id: '$id', "
+        'from: $from, '
+        'to: $to, '
+        'colors: <Color>$colors, '
+        'offsets: <double>$offsets, '
+        'tileMode: $tileMode, '
+        '${transform == null ? '' : 'Float64List.fromList(${transform!.toMatrix4()}), '}'
+        'unitMode: $unitMode)';
   }
 }
 

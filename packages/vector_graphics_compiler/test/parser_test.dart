@@ -1,10 +1,46 @@
 import 'package:test/test.dart';
+import 'package:vector_graphics_compiler/src/svg/numbers.dart';
 
 import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 
 import 'test_svg_strings.dart';
 
 void main() {
+  test('Transformed objectBoundingBox gradient onto transformed path',
+      () async {
+    final VectorInstructions instructions = await parse(xformObbGradient);
+    expect(
+      instructions.paints.single,
+      const Paint(
+        fill: Fill(
+          color: Color(0xffffffff),
+          shader: LinearGradient(
+            id: 'url(#paint1_linear)',
+            from: Point(405.5634918610405, 547.9898987322333),
+            to: Point(440.9188309203679, 866.1879502661797),
+            colors: <Color>[Color(0x7f0000ff), Color(0x19ff0000)],
+            offsets: <double>[0.0, 1.0],
+            tileMode: TileMode.clamp,
+            unitMode: GradientUnitMode.transformed,
+          ),
+        ),
+      ),
+    );
+    expect(
+      instructions.paths.single,
+      PathBuilder()
+          .addRect(const Rect.fromLTWH(300, 0, 500, 400))
+          .toPath()
+          .transformed(
+            AffineMatrix.identity
+                .translated(0, 100)
+                .translated(250, 250)
+                .rotated(radians(45))
+                .translated(-250, -250),
+          ),
+    );
+  });
+
   test('Opaque blend mode gets a save layer', () async {
     const String svg = '''
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">

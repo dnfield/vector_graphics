@@ -930,3 +930,15 @@ const String linearGradientThatInheritsUnitMode = '''
   <path d="M412 256.565v155.9h-824v-99.456l334.7-90.165a677.363 677.363 0 01183.33-23.69c35.17.36 73.37 3.551 110.06 12.051z" fill="url(#d)" />
 </svg>
 ''';
+
+const String xformObbGradient = '''
+<svg viewBox="0 0 667 667" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <linearGradient id="paint1_linear" x1="0%" y1="0%" x2="50%" y2="50%" gradientTransform="translate(0.4 0.7)">
+        <stop stop-color="blue" stop-opacity="0.5"/>
+        <stop offset="1" stop-color="red" stop-opacity="0.1"/>
+      </linearGradient>
+    </defs>
+    <rect x="300" y="0" width="500" height="400" transform="translate(0 100) rotate(45, 250, 250)" fill="url(#paint1_linear)"/>
+</svg>
+''';

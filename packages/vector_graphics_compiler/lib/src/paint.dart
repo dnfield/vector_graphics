@@ -567,7 +567,7 @@ class Stroke {
 class Fill {
   /// Creates a new immutable set of drawing attributes for a [Paint].
   const Fill({
-    this.color,
+    this.color = Color.opaqueBlack,
     this.shader,
   });
 

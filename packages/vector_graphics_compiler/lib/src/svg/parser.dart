@@ -395,12 +395,14 @@ class _Elements {
       if (event is XmlTextEvent) {
         rawX = parserState.attribute('x') ?? rawX;
         rawY = parserState.attribute('y') ?? rawY;
-        final bool absolute = !isPercentage(rawX); // TODO: do we need to handle mixed case.
+        final bool absolute =
+            !isPercentage(rawX); // TODO: do we need to handle mixed case.
         final double x = parseDecimalOrPercentage(rawX);
         final double y = parseDecimalOrPercentage(rawY);
         final SvgAttributes moreAttributes = parserState._currentAttributes;
         parserState.currentGroup!.addChild(
-          TextNode(event.text.trim(), Point(x, y), absolute, moreAttributes.applyParent(attributes)),
+          TextNode(event.text.trim(), Point(x, y), absolute,
+              moreAttributes.applyParent(attributes)),
           clipResolver: parserState._definitions.getClipPath,
           maskResolver: parserState._definitions.getDrawable,
         );

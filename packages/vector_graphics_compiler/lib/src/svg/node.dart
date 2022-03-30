@@ -401,13 +401,14 @@ class TextNode extends AttributedNode {
   double _computeFontSize() {
     final String? fontSize = attributes.fontSize;
     if (fontSize == null) {
-      return 1.0; // TODO what is default
+      // Default font size if unspecified: https://www.w3.org/TR/css-fonts-3/#font-size-prop
+      return _kTextSizeMap['medium']!;
     }
     if (_kTextSizeMap.containsKey(fontSize)) {
       return _kTextSizeMap[fontSize]!;
     }
     // TODO support units.
-    return double.tryParse(fontSize) ?? 12;
+    return double.parse(fontSize);
   }
 
   int _computeFontWeight() {

@@ -1274,3 +1274,21 @@ class TextConfig {
   /// If `null` this implies no transform.
   final AffineMatrix? transform;
 }
+
+enum FontWeight {
+  w100,
+  w200,
+  w300,
+  w400,
+  w500,
+  w600,
+  w700,
+  w800,
+  w900,
+}
+
+/// The default font weight.
+const FontWeight normalFontWeight = FontWeight.w400;
+
+/// A commonly used font weight that is heavier than normal.
+const FontWeight boldFontWeight = FontWeight.w700;

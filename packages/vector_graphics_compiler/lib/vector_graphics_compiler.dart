@@ -211,14 +211,14 @@ Future<Uint8List> encodeSvg(String input, String filename) async {
         if (fillIds.containsKey(command.paintId)) {
           codec.writeDrawText(
             buffer,
-            pathIds[command.objectId]!,
+            command.objectId!,
             fillIds[command.paintId]!,
           );
         }
         if (strokeIds.containsKey(command.paintId)) {
           codec.writeDrawText(
             buffer,
-            pathIds[command.objectId]!,
+            command.objectId!,
             strokeIds[command.paintId]!,
           );
         }

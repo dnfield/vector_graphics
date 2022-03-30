@@ -387,6 +387,23 @@ class _Elements {
     if (parserState._currentStartElement!.isSelfClosing) {
       return;
     }
+    final String rawDx = parserState.attribute('x', def: '0')!;
+    final String rawDy = parserState.attribute('y', def: '0')!;
+    final bool absolute =
+        !isPercentage(rawDx); // TODO: do we need to handle mixed case.
+    final double dx = parseDecimalOrPercentage(rawDx);
+    final double dy = parseDecimalOrPercentage(rawDy);
+    final SvgAttributes attributes = parserState._currentAttributes;
+
+    for (XmlEvent event in parserState._readSubtree()) {
+      if (event is XmlTextEvent) {
+        parserState.currentGroup!.addChild(
+          TextNode(event.text, Point(dx, dy), absolute, attributes),
+          clipResolver: parserState._definitions.getClipPath,
+          maskResolver: parserState._definitions.getDrawable,
+        );
+      }
+    }
   }
 }
 

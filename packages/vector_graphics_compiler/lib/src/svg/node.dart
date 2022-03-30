@@ -15,8 +15,8 @@ typedef Resolver<T> = T Function(String id);
 /// Nodes describe painting attributes, clips, transformations, paths, and
 /// vertices to draw in depth-first order.
 abstract class Node {
-  /// Allows subclasses to be const.
-  const Node();
+  /// This node's parent, or `null` if it is the root element.
+  Node? parent;
 
   /// Subclasses that have additional transformation information will
   /// concatenate their transform to the supplied `currentTransform`.
@@ -32,12 +32,15 @@ abstract class Node {
   /// nodes in the tree. It may be [AffineMatrix.identity] to indicate that no
   /// additional transformation is needed.
   void build(DrawCommandBuilder builder, AffineMatrix transform);
+
+  /// Look up the bounds for the nearest sized parent.
+  Rect nearestParentBounds() => parent?.nearestParentBounds() ?? Rect.zero;
 }
 
 /// A node that has attributes in the tree of graphics operations.
 abstract class AttributedNode extends Node {
   /// Constructs a new tree node with [id] and [paint].
-  const AttributedNode(this.attributes);
+  AttributedNode(this.attributes);
 
   /// A collection of painting attributes.
   ///
@@ -74,6 +77,9 @@ class ViewportNode extends ParentNode {
 
   /// The viewport rect described by [width] and [height].
   Rect get viewport => Rect.fromLTWH(0, 0, width, height);
+
+  @override
+  Rect nearestParentBounds() => viewport;
 }
 
 /// The signature for a visitor callback to [ParentNode.visitChildren].
@@ -122,20 +128,25 @@ class ParentNode extends AttributedNode {
   }) {
     Node wrappedChild = child;
     if (clipId != null) {
+      final Node childNode = wrappedChild;
       wrappedChild = ClipNode(
         resolver: clipResolver,
         clipId: clipId,
         child: wrappedChild,
       );
+      childNode.parent = wrappedChild;
     }
     if (maskId != null) {
+      final Node childNode = wrappedChild;
       wrappedChild = MaskNode(
         resolver: maskResolver,
         maskId: maskId,
         child: wrappedChild,
         blendMode: child.attributes.blendMode,
       );
+      childNode.parent = wrappedChild;
     }
+    wrappedChild.parent = this;
     _children.add(wrappedChild);
   }
 
@@ -348,17 +359,21 @@ class DeferredNode extends AttributedNode {
 /// parents applied.
 class TextNode extends AttributedNode {
   /// Create a new [TextNode] with the given [text].
-  TextNode(this.text, this.dx, this.dy, SvgAttributes attributes)
-      : super(attributes);
+  TextNode(
+    this.text,
+    this.baseline,
+    this.absolute,
+    SvgAttributes attributes,
+  ) : super(attributes);
 
   /// The text this node contains.
   final String text;
 
-  /// The x coordinate of the starting point of the text baseline.
-  final double dx;
+  /// The x, y coordinate of the starting point of the text baseline.
+  final Point baseline;
 
-  /// The y coordinate of the starting point of the text baseline.
-  final double dy;
+  /// Whether the [baseline] is in absolute or relative units.
+  final bool absolute;
 
   Paint? _paint(Rect bounds, AffineMatrix transform) {
     final Fill? fill = attributes.fill?.toFill(bounds, transform);
@@ -373,33 +388,89 @@ class TextNode extends AttributedNode {
     );
   }
 
-  TextConfig _textConfig(AffineMatrix transform) {
-    transform = transform.multiplied(attributes.transform);
+  static final Map<String, double> _kTextSizeMap = <String, double>{
+    'xx-small': 10,
+    'x-small': 12,
+    'small': 14,
+    'medium': 18,
+    'large': 22,
+    'x-large': 26,
+    'xx-large': 32,
+  };
+
+  double _computeFontSize() {
+    final String? fontSize = attributes.fontSize;
+    if (fontSize == null) {
+      return 1.0; // TODO what is default
+    }
+    if (_kTextSizeMap.containsKey(fontSize)) {
+      return _kTextSizeMap[fontSize]!;
+    }
+    // TODO support units.
+    return double.tryParse(fontSize) ?? 12;
+  }
+
+  int _computeFontWeight() {
+    final String? fontWeightValue = attributes.fontWeight;
+    if (fontWeightValue == null || fontWeightValue == 'normal') {
+      return normalFontWeight.index;
+    }
+    if (fontWeightValue == 'bold') {
+      return boldFontWeight.index;
+    }
+    switch (fontWeightValue) {
+      case '100':
+        return FontWeight.w100.index;
+      case '200':
+        return FontWeight.w200.index;
+      case '300':
+        return FontWeight.w300.index;
+      case '400':
+        return FontWeight.w400.index;
+      case '500':
+        return FontWeight.w500.index;
+      case '600':
+        return FontWeight.w600.index;
+      case '700':
+        return FontWeight.w700.index;
+      case '800':
+        return FontWeight.w800.index;
+      case '900':
+        return FontWeight.w900.index;
+    }
+    throw StateError('Invalid "font-weight": $fontWeightValue');
+  }
+
+  TextConfig _textConfig(Rect bounds, AffineMatrix transform) {
+    final Point newBaseline = absolute
+        ? baseline
+        : Point(baseline.x * bounds.width, baseline.y * bounds.height);
     return TextConfig(
-        text,
-        Point(dx, dy),
-        attributes.fontFamily ?? '',
-        int.tryParse(attributes.fontWeight ?? '') ?? 500,
-        double.tryParse(attributes.fontSize ?? '') ?? 16,
-        transform);
+      text,
+      transform.transformPoint(newBaseline),
+      attributes.fontFamily ?? '',
+      _computeFontWeight(),
+      _computeFontSize(),
+      attributes.transform,
+    );
   }
 
   @override
   AttributedNode applyAttributes(SvgAttributes newAttributes) {
     return TextNode(
       text,
-      dx,
-      dy,
+      baseline,
+      absolute,
       attributes.applyParent(newAttributes),
     );
   }
 
   @override
   void build(DrawCommandBuilder builder, AffineMatrix transform) {
-    // TODO - bounds should come from the first parent viewbox.
-    final Paint? paint = _paint(Rect.largest, transform);
-    final TextConfig textConfig = _textConfig(transform);
-    if (paint != null) {
+    final Rect bounds = nearestParentBounds();
+    final Paint? paint = _paint(bounds, transform);
+    final TextConfig textConfig = _textConfig(bounds, transform);
+    if (paint != null && textConfig.text.isNotEmpty) {
       builder.addText(textConfig, paint, attributes.id);
     }
   }

@@ -60,7 +60,7 @@ class DrawCommandBuilder {
     final int paintId = _getOrGenerateId(paint, _paints);
     final int styleId = _getOrGenerateId(textConfig, _text);
     _commands.add(DrawCommand(
-      DrawCommandType.path,
+      DrawCommandType.text,
       objectId: styleId,
       paintId: paintId,
       debugString: debugString,
@@ -74,6 +74,7 @@ class DrawCommandBuilder {
       height: height,
       paints: _paints.keys.toList(),
       paths: _paths.keys.toList(),
+      text: _text.keys.toList(),
       commands: _commands,
     );
   }

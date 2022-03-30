@@ -264,7 +264,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     double fontSize,
     int id,
   ) {
-    assert(_textConfig.length == id, 'Expect ID to be ${_textConfig.length}');
+    // assert(_textConfig.length == id, 'Expect ID to be ${_textConfig.length}');
     _textConfig.add(_TextConfig(
         text, fontFamily, dx, dy, ui.FontWeight.values[fontWeight], fontSize));
   }

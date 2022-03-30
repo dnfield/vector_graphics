@@ -17,7 +17,7 @@ import 'theme.dart';
 
 final Set<String> _unhandledElements = <String>{'title', 'desc'};
 
-typedef _ParseFunc = Future<void>? Function(
+typedef _ParseFunc = void Function(
     SvgParser parserState, bool warningsAsErrors);
 typedef _PathFunc = Path? Function(SvgParser parserState);
 
@@ -689,14 +689,14 @@ class SvgParser {
   }
 
   /// Drive the XML reader to EOF and produce [VectorInstructions].
-  Future<VectorInstructions> parse() async {
+  VectorInstructions parse({required bool optimize}) {
     for (XmlEvent event in _readSubtree()) {
       if (event is XmlStartElementEvent) {
         if (startElement(event)) {
           continue;
         }
         final _ParseFunc? parseFunc = _svgElementParsers[event.name];
-        await parseFunc?.call(this, _warningsAsErrors);
+        parseFunc?.call(this, _warningsAsErrors);
         if (parseFunc == null) {
           if (!event.isSelfClosing) {
             _discardSubtree();
@@ -714,8 +714,8 @@ class SvgParser {
       throw StateError('Invalid SVG data');
     }
     _definitions._seal();
-
-    final DrawCommandBuilder builder = DrawCommandBuilder();
+    final DrawCommandBuilder builder =
+        optimize ? DedupDrawCommandBuilder() : FastDrawCommandBuilder();
     _root!.build(builder, AffineMatrix.identity);
     return builder.toInstructions(_root!.width, _root!.height);
   }
@@ -1235,7 +1235,12 @@ class SvgParser {
   Map<String, String> _createAttributeMap(List<XmlEventAttribute> attributes) {
     final Map<String, String> attributeMap = <String, String>{};
     if (_parentDrawables.isNotEmpty && currentGroup != null) {
-      attributeMap.addEntries(currentGroup!.attributes.heritable);
+      final Map<String, String> parentAttributes = currentGroup!.attributes.raw;
+      for (final String key in parentAttributes.keys) {
+        if (SvgAttributes.kHeritableProps.contains(key)) {
+          attributeMap[key] = parentAttributes[key]!;
+        }
+      }
     }
 
     for (final XmlEventAttribute attribute in attributes) {
@@ -1519,7 +1524,7 @@ class SvgAttributes {
   /// set += '};';
   /// console.log(set);
   /// ```
-  static const Set<String> _heritableProps = <String>{
+  static const Set<String> kHeritableProps = <String>{
     'writing-mode',
     'glyph-orientation-vertical',
     'glyph-orientation-horizontal',
@@ -1564,11 +1569,11 @@ class SvgAttributes {
   };
 
   /// The properties in [raw] that are heritable per the SVG 1.1 specification.
-  Iterable<MapEntry<String, String>> get heritable {
-    return raw.entries.where((MapEntry<String, String> entry) {
-      return _heritableProps.contains(entry.key);
-    });
-  }
+  // Iterable<MapEntry<String, String>> get heritable {
+  //   return raw.entries.where((MapEntry<String, String> entry) {
+  //     return _heritableProps.contains(entry.key);
+  //   });
+  // }
 
   /// The `@id` attribute.
   final String? id;
@@ -1611,7 +1616,8 @@ class SvgAttributes {
   /// Creates a new set of attributes as if this inherited from `parent`.
   SvgAttributes applyParent(SvgAttributes parent) {
     final Map<String, String> newRaw = <String, String>{
-      ...Map<String, String>.fromEntries(parent.heritable),
+      for (String key in parent.raw.keys)
+        if (kHeritableProps.contains(key)) key: parent.raw[key]!,
       ...raw,
     };
     return SvgAttributes._(

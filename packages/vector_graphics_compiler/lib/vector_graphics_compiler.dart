@@ -20,14 +20,15 @@ export 'src/svg/theme.dart';
 export 'src/vector_instructions.dart';
 
 /// Parses an SVG string into a [VectorInstructions] object.
-Future<VectorInstructions> parse(
+VectorInstructions parse(
   String xml, {
   String key = '',
   bool warningsAsErrors = false,
   SvgTheme theme = const SvgTheme(),
-}) async {
+  bool optimize = true,
+}) {
   final SvgParser parser = SvgParser(xml, theme, key, warningsAsErrors);
-  return await parser.parse();
+  return parser.parse(optimize: optimize);
 }
 
 Float64List? _encodeMatrix(AffineMatrix? matrix) {
@@ -81,10 +82,12 @@ void _encodeShader(
 }
 
 /// Encode an SVG [input] string into a vector_graphics binary format.
-Future<Uint8List> encodeSvg(String input, String filename) async {
+ByteData encodeSvg(String input, String filename, {bool optimize = true}) {
   const VectorGraphicsCodec codec = VectorGraphicsCodec();
-  final VectorInstructions instructions = await parse(input, key: filename);
-  final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
+  final VectorInstructions instructions =
+      parse(input, key: filename, optimize: optimize);
+  final VectorGraphicsBuffer buffer =
+      VectorGraphicsBuffer(initialCapacty: input.length);
 
   codec.writeSize(buffer, instructions.width, instructions.height);
 
@@ -197,5 +200,5 @@ Future<Uint8List> encodeSvg(String input, String filename) async {
         break;
     }
   }
-  return buffer.done().buffer.asUint8List();
+  return buffer.done();
 }

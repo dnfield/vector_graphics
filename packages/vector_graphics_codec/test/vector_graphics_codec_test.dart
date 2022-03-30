@@ -4,12 +4,12 @@ import 'package:test/test.dart';
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
 const codec = VectorGraphicsCodec();
-const magicHeader = [98, 45, 136, 0, 1, 0, 0, 0];
 final mat4 =
     Float64List.fromList([2, 0, 0, 0, 0, 2, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
 
 void bufferContains(VectorGraphicsBuffer buffer, List<int> expectedBytes) {
-  final Uint8List data = buffer.done().buffer.asUint8List();
+  final ByteData done = buffer.done();
+  final Uint8List data = done.buffer.asUint8List(0, done.lengthInBytes);
   expect(data, equals(expectedBytes));
 }
 

@@ -34,7 +34,7 @@ void main() {
   testWidgets('Can endcode and decode simple SVGs with no errors',
       (WidgetTester tester) async {
     for (final String svg in allSvgTestStrings) {
-      final Uint8List bytes = await encodeSvg(svg, 'test.svg');
+      final ByteData bytes = encodeSvg(svg, 'test.svg');
 
       await tester.pumpWidget(Center(
           child: VectorGraphic(
@@ -60,7 +60,7 @@ void main() {
 </svg>
 ''';
 
-    final Uint8List bytes = await encodeSvg(svg, 'test');
+    final ByteData bytes = encodeSvg(svg, 'test');
     const VectorGraphicsCodec codec = VectorGraphicsCodec();
     final TestListener listener = TestListener();
     codec.decode(bytes.buffer.asByteData(), listener);

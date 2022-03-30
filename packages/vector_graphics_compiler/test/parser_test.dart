@@ -7,7 +7,7 @@ import 'test_svg_strings.dart';
 
 void main() {
   test('focal radial', () async {
-    final VectorInstructions instructions = await parse(focalRadial);
+    final VectorInstructions instructions = parse(focalRadial);
 
     expect(
       instructions.paints.single,
@@ -48,7 +48,7 @@ void main() {
   });
 
   test('Transformed userSpaceOnUse radial', () async {
-    final VectorInstructions instructions = await parse(xformUsosRadial);
+    final VectorInstructions instructions = parse(xformUsosRadial);
     expect(
       instructions.paints.single,
       const Paint(
@@ -91,7 +91,7 @@ void main() {
 
   test('Transformed objectBoundingBox gradient onto transformed path',
       () async {
-    final VectorInstructions instructions = await parse(xformObbGradient);
+    final VectorInstructions instructions = parse(xformObbGradient);
     expect(
       instructions.paints.single,
       const Paint(
@@ -133,7 +133,7 @@ void main() {
   </g>
 </svg>
 ''';
-    final VectorInstructions instructions = await parse(svg);
+    final VectorInstructions instructions = parse(svg);
 
     expect(instructions.paints, const <Paint>[
       Paint(fill: Fill(color: Color(0xffff0000))),
@@ -154,7 +154,7 @@ void main() {
   <path fill="none" stroke="red" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.7" d="M70.822 65.557l5.376 5.296 8.389-8.676" />
 </svg>
 ''';
-    final VectorInstructions instructions = await parse(svg);
+    final VectorInstructions instructions = parse(svg);
     expect(
       instructions.paints.single,
       const Paint(
@@ -170,7 +170,7 @@ void main() {
 
   test('gradients can handle inheriting unit mode', () async {
     final VectorInstructions instructions =
-        await parse(linearGradientThatInheritsUnitMode);
+        parse(linearGradientThatInheritsUnitMode);
     expect(instructions.paints, const <Paint>[
       Paint(
         fill: Fill(
@@ -218,7 +218,7 @@ void main() {
   });
 
   test('group opacity results in save layer', () async {
-    final VectorInstructions instructions = await parse(groupOpacity);
+    final VectorInstructions instructions = parse(groupOpacity);
     expect(instructions.paths, <Path>[
       PathBuilder().addOval(const Rect.fromCircle(80, 100, 50)).toPath(),
       PathBuilder().addOval(const Rect.fromCircle(120, 100, 50)).toPath(),
@@ -237,8 +237,8 @@ void main() {
   });
 
   test('xlink gradient Out of order', () async {
-    final VectorInstructions instructions = await parse(xlinkGradient);
-    final VectorInstructions instructions2 = await parse(xlinkGradientOoO);
+    final VectorInstructions instructions = parse(xlinkGradient);
+    final VectorInstructions instructions2 = parse(xlinkGradientOoO);
 
     expect(instructions.paints, instructions2.paints);
     expect(instructions.paths, instructions2.paths);
@@ -246,8 +246,8 @@ void main() {
   });
 
   test('xlink use Out of order', () async {
-    final VectorInstructions instructions = await parse(simpleUseCircles);
-    final VectorInstructions instructions2 = await parse(simpleUseCirclesOoO);
+    final VectorInstructions instructions = parse(simpleUseCircles);
+    final VectorInstructions instructions2 = parse(simpleUseCirclesOoO);
 
     // Use toSet to ignore ordering differences.
     expect(instructions.paints.toSet(), instructions2.paints.toSet());
@@ -256,7 +256,7 @@ void main() {
   });
 
   test('xlink gradient with transform', () async {
-    final VectorInstructions instructions = await parse(xlinkGradient);
+    final VectorInstructions instructions = parse(xlinkGradient);
     expect(instructions.paths, <Path>[
       PathBuilder()
           .addOval(const Rect.fromCircle(-83.533, 122.753, 74.461))
@@ -288,7 +288,7 @@ void main() {
   });
 
   test('Out of order def', () async {
-    final VectorInstructions instructions = await parse(outOfOrderGradientDef);
+    final VectorInstructions instructions = parse(outOfOrderGradientDef);
     expect(instructions.paths, <Path>[
       parseSvgPathData(
           'M10 20c5.523 0 10-4.477 10-10S15.523 0 10 0 0 4.477 0 10s4.477 10 10 10z'),
@@ -316,7 +316,7 @@ void main() {
   });
 
   test('Handles masks with blends and gradients correctly', () async {
-    final VectorInstructions instructions = await parse(blendAndMask);
+    final VectorInstructions instructions = parse(blendAndMask);
     expect(
       instructions.paths,
       <Path>[
@@ -368,7 +368,7 @@ void main() {
   });
 
   test('Handles masks correctly', () async {
-    final VectorInstructions instructions = await parse(basicMask);
+    final VectorInstructions instructions = parse(basicMask);
     expect(
       instructions.paths,
       <Path>[
@@ -400,7 +400,7 @@ void main() {
   });
 
   test('Masks on groups', () async {
-    final VectorInstructions instructions = await parse(groupMask);
+    final VectorInstructions instructions = parse(groupMask);
     expect(instructions.paths, <Path>[
       parseSvgPathData(
               'M 17.438 8.438 C 17.748 8.438 18 8.69 18 9 L 18 16.313 C 17.99834725871 17.24440923535 17.24341005121 17.99889920517 16.312 18 L 1.688 18 C 0.75620021668 17.99889792932 0.00110207068 17.24379978332 0 16.312 L 0 9 C 0.01271270943 8.69855860173 0.26079065383 8.46072235233 0.5625 8.46072235233 C 0.86420934617 8.46072235233 1.11228729057 8.69855860173 1.125 9 L 1.125 16.313 C 1.125 16.622 1.377 16.875 1.688 16.875 L 16.312 16.875 C 16.622 16.875 16.875 16.622 16.875 16.312 L 16.875 9 C 16.875 8.69 17.127 8.437 17.438 8.437 Z M 9 0 C 9.169 0 9.316 0.079 9.418 0.196 L 9.423 0.192 L 13.361 4.692 C 13.443 4.795 13.5 4.921 13.5 5.062 C 13.5 5.373 13.248 5.625 12.937 5.625 C 12.77572417052 5.6238681172 12.62300981305 5.55226042805 12.519 5.429 L 12.514 5.433 L 9.563 2.06 L 9.563 11.812 C 9.56299999183 12.12293630838 9.31093630838 12.3749999852 9 12.3749999852 C 8.68906369162 12.3749999852 8.43700000817 12.12293630838 8.437 11.812 L 8.437 2.06 L 5.486 5.433 C 5.37775998399 5.5529360201 5.22453705399 5.62248401669 5.063 5.625 C 4.75206368585 5.625 4.5 5.37293631415 4.5 5.062 C 4.5 4.921 4.557 4.795 4.644 4.696 L 4.639 4.692 L 8.577 0.192 C 8.68524001601 0.0720639799 8.83846294601 0.00251598331 9 0 Z',
@@ -440,7 +440,7 @@ void main() {
   <rect x="11" y="36" width="31" height="20" fill="red" />
 </svg>
 ''';
-    final VectorInstructions instructions = await parse(svg);
+    final VectorInstructions instructions = parse(svg);
     expect(instructions.paths, <Path>[
       PathBuilder()
           .addRect(const Rect.fromLTWH(11, 36, 31, 20))
@@ -455,7 +455,7 @@ void main() {
   <rect x="11" y="36" width="31" height="20" rx="2.5" fill="red" />
 </svg>
 ''';
-    final VectorInstructions instructions = await parse(svg);
+    final VectorInstructions instructions = parse(svg);
     expect(instructions.paths, <Path>[
       PathBuilder()
           .addRRect(const Rect.fromLTWH(11, 36, 31, 20), 2.5, 2.5)
@@ -464,7 +464,7 @@ void main() {
   });
 
   test('Combines clips where possible', () async {
-    final VectorInstructions instructions = await parse(basicClip);
+    final VectorInstructions instructions = parse(basicClip);
     expect(instructions.paths, <Path>[
       PathBuilder()
           .addOval(const Rect.fromCircle(30, 30, 20))
@@ -480,7 +480,7 @@ void main() {
   });
 
   test('Does not combine clips with multiple fill rules', () async {
-    final VectorInstructions instructions = await parse(multiClip);
+    final VectorInstructions instructions = parse(multiClip);
     expect(instructions.paths, <Path>[
       parseSvgPathData(
           'M 250,75 L 323,301 131,161 369,161 177,301 z', PathFillType.evenOdd),
@@ -506,7 +506,7 @@ void main() {
   });
 
   test('Path with empty paint does not draw anything', () async {
-    final VectorInstructions instructions = await parse(
+    final VectorInstructions instructions = parse(
       '''
 <svg xmlns="http://www.w3.org/2000/svg" height="24" viewBox="0 0 192 192" width="24">
   <path fill="none" d="M0 0h192v192H0z" />
@@ -518,7 +518,7 @@ void main() {
   });
 
   test('Use circles test', () async {
-    final VectorInstructions instructions = await parse(
+    final VectorInstructions instructions = parse(
       simpleUseCircles,
       key: 'useCircles',
       warningsAsErrors: true,
@@ -590,7 +590,7 @@ void main() {
   });
 
   test('Ghostscript Tiger - dedupes paints', () async {
-    final VectorInstructions instructions = await parse(
+    final VectorInstructions instructions = parse(
       ghostscriptTiger,
       key: 'ghostscriptTiger',
       warningsAsErrors: true,

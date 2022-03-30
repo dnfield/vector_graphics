@@ -590,6 +590,7 @@ class VectorGraphicsCodec {
     // font-family
     if (fontFamily != null) {
       final Uint8List encoded = utf8.encode(fontFamily) as Uint8List;
+      buffer._putUint16(encoded.length);
       buffer._putUint8List(encoded);
     } else {
       buffer._putUint16(0);

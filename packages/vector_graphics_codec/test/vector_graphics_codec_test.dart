@@ -437,6 +437,48 @@ void main() {
     codec.writeSize(buffer, 20, 30);
     expect(() => codec.writeSize(buffer, 1, 1), throwsStateError);
   });
+
+  test('Encodes text', () {
+    final buffer = VectorGraphicsBuffer();
+    final TestListener listener = TestListener();
+
+    final int paintId = codec.writeFill(buffer, 0xFFAABBAA, 0);
+    final int textId = codec.writeTextConfig(
+      buffer: buffer,
+      text: 'Hello',
+      fontFamily: 'Roboto',
+      dx: 10,
+      dy: 12,
+      fontWeight: 0,
+      fontSize: 16,
+    );
+    codec.writeDrawText(buffer, textId, paintId);
+    codec.decode(buffer.done(), listener);
+
+    expect(listener.commands, [
+      OnPaintObject(
+        color: 0xFFAABBAA,
+        strokeCap: null,
+        strokeJoin: null,
+        blendMode: 0,
+        strokeMiterLimit: null,
+        strokeWidth: null,
+        paintStyle: 0,
+        id: paintId,
+        shaderId: null,
+      ),
+      OnTextConfig(
+        'Hello',
+        10,
+        12,
+        16,
+        'Roboto',
+        0,
+        textId,
+      ),
+      OnDrawText(textId, paintId),
+    ]);
+  });
 }
 
 class TestListener extends VectorGraphicsCodecListener {
@@ -585,6 +627,32 @@ class TestListener extends VectorGraphicsCodecListener {
   @override
   void onSize(double width, double height) {
     commands.add(OnSize(width, height));
+  }
+
+  @override
+  void onTextConfig(
+    String text,
+    String? fontFamily,
+    double dx,
+    double dy,
+    int fontWeight,
+    double fontSize,
+    int id,
+  ) {
+    commands.add(OnTextConfig(
+      text,
+      dx,
+      dy,
+      fontSize,
+      fontFamily,
+      fontWeight,
+      id,
+    ));
+  }
+
+  @override
+  void onDrawText(int textId, int paintId) {
+    commands.add(OnDrawText(textId, paintId));
   }
 }
 
@@ -938,6 +1006,62 @@ class OnSize {
 
   @override
   String toString() => 'OnSize($width, $height)';
+}
+
+class OnTextConfig {
+  const OnTextConfig(
+    this.text,
+    this.dx,
+    this.dy,
+    this.fontSize,
+    this.fontFamily,
+    this.fontWeight,
+    this.id,
+  );
+
+  final String text;
+  final double dx;
+  final double dy;
+  final double fontSize;
+  final String? fontFamily;
+  final int fontWeight;
+  final int id;
+
+  @override
+  int get hashCode =>
+      Object.hash(text, dx, dy, fontSize, fontFamily, fontWeight, id);
+
+  @override
+  bool operator ==(Object other) =>
+      other is OnTextConfig &&
+      other.text == text &&
+      other.dx == dx &&
+      other.dy == dy &&
+      other.fontSize == fontSize &&
+      other.fontFamily == fontFamily &&
+      other.fontWeight == fontWeight &&
+      other.id == id;
+
+  @override
+  String toString() =>
+      'OnTextConfig($text, $dx, $dy, $fontSize, $fontFamily, $fontWeight, $id)';
+}
+
+class OnDrawText {
+  const OnDrawText(this.textId, this.paintId);
+
+  final int textId;
+  final int paintId;
+
+  @override
+  int get hashCode => Object.hash(textId, paintId);
+
+  @override
+  bool operator ==(Object other) =>
+      other is OnDrawText && other.textId == textId && other.paintId == paintId;
+
+  @override
+  String toString() => 'OnDrawText($textId, $paintId)';
 }
 
 bool _listEquals<E>(List<E>? left, List<E>? right) {

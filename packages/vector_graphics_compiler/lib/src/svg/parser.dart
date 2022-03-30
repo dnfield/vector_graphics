@@ -383,107 +383,10 @@ class _Elements {
     SvgParser parserState,
     bool warningsAsErrors,
   ) async {
-    throw UnsupportedError('TODO');
-    // assert(parserState != null); // ignore: unnecessary_null_comparison
-    // assert(parserState.currentGroup != null);
-    // if (parserState._currentStartElement!.isSelfClosing) {
-    //   return;
-    // }
-
-    // <text>, <tspan> -> Collect styles
-    // <tref> TBD - looks like Inkscape supports it, but no browser does.
-    // XmlNodeType.TEXT/CDATA -> DrawableText
-    // Track the style(s) and offset(s) for <text> and <tspan> elements
-    // final Queue<_TextInfo> textInfos = ListQueue<_TextInfo>();
-    // double lastTextWidth = 0;
-
-    // void _processText(String value) {
-    //   if (value.isEmpty) {
-    //     return;
-    //   }
-    //   assert(textInfos.isNotEmpty);
-    //   final _TextInfo lastTextInfo = textInfos.last;
-    //   // final Paragraph fill = createParagraph(
-    //   //   value,
-    //   //   lastTextInfo.style,
-    //   //   lastTextInfo.style.fill,
-    //   // );
-    //   // final Paragraph stroke = createParagraph(
-    //   //   value,
-    //   //   lastTextInfo.style,
-    //   //   DrawablePaint.isEmpty(lastTextInfo.style.stroke)
-    //   //       ? transparentStroke
-    //   //       : lastTextInfo.style.stroke,
-    //   // );
-    //   // parserState.currentGroup!.children!.add(
-    //   //   DrawableText(
-    //   //     parserState.attribute('id', def: ''),
-    //   //     fill,
-    //   //     stroke,
-    //   //     lastTextInfo.offset,
-    //   //     lastTextInfo.style.textStyle!.anchor ??
-    //   //         DrawableTextAnchorPosition.start,
-    //   //     transform: lastTextInfo.transform?.storage,
-    //   //   ),
-    //   // );
-    //   // lastTextWidth = fill.maxIntrinsicWidth;
-    // }
-
-    // void _processStartElement(XmlStartElementEvent event) {
-    //   _TextInfo? lastTextInfo;
-    //   if (textInfos.isNotEmpty) {
-    //     lastTextInfo = textInfos.last;
-    //   }
-    //   final Point currentPoint = _parseCurrentPoint(
-    //     parserState,
-    //     lastTextInfo?.offset.translate(lastTextWidth, 0),
-    //   );
-    //   AffineMatrix? transform =
-    //       parseTransform(parserState.attribute('transform'));
-    //   if (lastTextInfo?.transform != null) {
-    //     if (transform == null) {
-    //       transform = lastTextInfo!.transform;
-    //     } else {
-    //       transform = lastTextInfo!.transform!.multiplied(transform);
-    //     }
-    //   }
-
-    //   final DrawableStyle? parentStyle =
-    //       lastTextInfo?.style ?? parserState.currentGroup!.style;
-
-    //   textInfos.add(_TextInfo(
-    //     parserState.parseStyle(
-    //       parserState.rootBounds,
-    //       parentStyle,
-    //     ),
-    //     currentPoint,
-    //     transform,
-    //   ));
-    //   if (event.isSelfClosing) {
-    //     textInfos.removeLast();
-    //   }
-    // }
-
-    // _processStartElement(parserState._currentStartElement!);
-
-    // for (XmlEvent event in parserState._readSubtree()) {
-    //   if (event is XmlCDATAEvent) {
-    //     _processText(event.text.trim());
-    //   } else if (event is XmlTextEvent) {
-    //     final String? space =
-    //         getAttribute(parserState.attributes, 'space');
-    //     if (space != 'preserve') {
-    //       _processText(event.text.trim());
-    //     } else {
-    //       _processText(event.text.replaceAll(_trimPattern, ''));
-    //     }
-    //   }
-    //   if (event is XmlStartElementEvent) {
-    //     _processStartElement(event);
-    //   } else if (event is XmlEndElementEvent) {
-    //     textInfos.removeLast();
-    //   }
-    // }
+    assert(parserState.currentGroup != null);
+    if (parserState._currentStartElement!.isSelfClosing) {
+      return;
+    }
   }
 }
 
@@ -1390,6 +1293,9 @@ class SvgParser {
       blendMode: _blendModes[attributeMap['mix-blend-mode']],
       transform:
           parseTransform(attributeMap['transform']) ?? AffineMatrix.identity,
+      fontFamily: attributeMap['font-family'],
+      fontWeight: attributeMap['font-weight'],
+      fontSize: attributeMap['font-size'],
     );
   }
 }
@@ -1488,6 +1394,9 @@ class SvgAttributes {
     this.clipRule,
     this.clipPathId,
     this.blendMode,
+    this.fontFamily,
+    this.fontWeight,
+    this.fontSize,
   });
 
   /// The empty set of properties.
@@ -1608,6 +1517,15 @@ class SvgAttributes {
   /// The `mix-blend-mode` attribute.
   final BlendMode? blendMode;
 
+  /// The `font-family` attribute, as a raw string.
+  final String? fontFamily;
+
+  /// The `font-weight` attribute, as a raw string.
+  final String? fontWeight;
+
+  /// The `font-size` attribute, as a raw string.
+  final String? fontSize;
+
   /// Creates a new set of attributes as if this inherited from `parent`.
   SvgAttributes applyParent(SvgAttributes parent) {
     final Map<String, String> newRaw = <String, String>{
@@ -1627,6 +1545,9 @@ class SvgAttributes {
       clipRule: parent.clipRule ?? clipRule,
       clipPathId: parent.clipPathId ?? clipPathId,
       blendMode: parent.blendMode ?? blendMode,
+      fontFamily: parent.fontFamily ?? fontFamily,
+      fontWeight: parent.fontWeight ?? fontWeight,
+      fontSize: parent.fontSize ?? fontSize,
     );
   }
 }

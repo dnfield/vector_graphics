@@ -32,9 +32,12 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
 
   final ui.PictureRecorder _recorder;
   final ui.Canvas _canvas;
+
   final List<ui.Paint> _paints = <ui.Paint>[];
   final List<ui.Path> _paths = <ui.Path>[];
   final List<ui.Shader> _shaders = <ui.Shader>[];
+  final List<_TextConfig> _textConfig = <_TextConfig>[];
+
   ui.Path? _currentPath;
   ui.Size _size = ui.Size.zero;
   bool _done = false;
@@ -48,6 +51,10 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
       0, 0, 0, 0, 0,
       0.2126, 0.7152, 0.0722, 0, 0,
     ]); //convert to grayscale (https://www.w3.org/Graphics/Color/sRGB) and use them as transparency
+  static const ui.ParagraphConstraints _infiniteParagraphConstraints =
+      ui.ParagraphConstraints(
+    width: double.infinity,
+  );
 
   /// Convert the vector graphics asset this listener decoded into a [ui.Picture].
   ///
@@ -246,4 +253,56 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     _canvas.clipRect(ui.Offset.zero & ui.Size(width, height));
     _size = ui.Size(width, height);
   }
+
+  @override
+  void onTextConfig(
+    String text,
+    String? fontFamily,
+    double dx,
+    double dy,
+    int fontWeight,
+    double fontSize,
+    int id,
+  ) {
+    assert(_textConfig.length == id, 'Expect ID to be ${_textConfig.length}');
+    _textConfig.add(_TextConfig(
+        text, fontFamily, dx, dy, ui.FontWeight.values[fontWeight], fontSize));
+  }
+
+  @override
+  void onDrawText(int textId, int paintId) {
+    final ui.Paint paint = _paints[paintId];
+    final _TextConfig textConfig = _textConfig[textId];
+    final ui.ParagraphBuilder builder =
+        ui.ParagraphBuilder(ui.ParagraphStyle());
+    builder.pushStyle(ui.TextStyle(
+      foreground: paint,
+      fontWeight: textConfig.fontWeight,
+      fontSize: textConfig.fontSize,
+      fontFamily: textConfig.fontFamily,
+    ));
+    builder.addText(textConfig.text);
+
+    final ui.Paragraph paragraph = builder.build();
+    paragraph.layout(_infiniteParagraphConstraints);
+    _canvas.drawParagraph(paragraph, ui.Offset(textConfig.dx, textConfig.dy));
+  }
+}
+
+class _TextConfig {
+  const _TextConfig(
+    this.text,
+    this.fontFamily,
+    this.dx,
+    this.dy,
+    this.fontWeight,
+    this.fontSize,
+  );
+
+  final String text;
+  final String? fontFamily;
+  final double fontSize;
+  final double dx;
+  final double dy;
+  final ui.FontWeight fontWeight;
 }

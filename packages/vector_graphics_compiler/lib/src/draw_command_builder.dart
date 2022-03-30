@@ -6,6 +6,7 @@ import 'vector_instructions.dart';
 class DrawCommandBuilder {
   final Map<Paint, int> _paints = <Paint, int>{};
   final Map<Path, int> _paths = <Path, int>{};
+  final Map<TextConfig, int> _text = <TextConfig, int>{};
   final List<DrawCommand> _commands = <DrawCommand>[];
 
   int _getOrGenerateId<T>(T object, Map<T, int> map) =>
@@ -45,6 +46,22 @@ class DrawCommandBuilder {
     _commands.add(DrawCommand(
       DrawCommandType.path,
       objectId: pathId,
+      paintId: paintId,
+      debugString: debugString,
+    ));
+  }
+
+  /// Adds a text to the current draw command stack.
+  void addText(
+    TextConfig textConfig,
+    Paint paint,
+    String? debugString,
+  ) {
+    final int paintId = _getOrGenerateId(paint, _paints);
+    final int styleId = _getOrGenerateId(textConfig, _text);
+    _commands.add(DrawCommand(
+      DrawCommandType.path,
+      objectId: styleId,
       paintId: paintId,
       debugString: debugString,
     ));

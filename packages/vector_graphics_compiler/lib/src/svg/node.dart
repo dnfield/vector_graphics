@@ -341,3 +341,66 @@ class DeferredNode extends AttributedNode {
     concreteRef.build(builder, transform);
   }
 }
+
+/// A leaf node in the tree that represents inline text.
+///
+/// Leaf nodes get added with all paint and transform accumulations from their
+/// parents applied.
+class TextNode extends AttributedNode {
+  /// Create a new [TextNode] with the given [text].
+  TextNode(this.text, this.dx, this.dy, SvgAttributes attributes)
+      : super(attributes);
+
+  /// The text this node contains.
+  final String text;
+
+  /// The x coordinate of the starting point of the text baseline.
+  final double dx;
+
+  /// The y coordinate of the starting point of the text baseline.
+  final double dy;
+
+  Paint? _paint(Rect bounds, AffineMatrix transform) {
+    final Fill? fill = attributes.fill?.toFill(bounds, transform);
+    final Stroke? stroke = attributes.stroke?.toStroke(bounds, transform);
+    if (fill == null && stroke == null) {
+      return null;
+    }
+    return Paint(
+      blendMode: attributes.blendMode,
+      fill: fill,
+      stroke: stroke,
+    );
+  }
+
+  TextConfig _textConfig(AffineMatrix transform) {
+    transform = transform.multiplied(attributes.transform);
+    return TextConfig(
+        text,
+        Point(dx, dy),
+        attributes.fontFamily ?? '',
+        int.tryParse(attributes.fontWeight ?? '') ?? 500,
+        double.tryParse(attributes.fontSize ?? '') ?? 16,
+        transform);
+  }
+
+  @override
+  AttributedNode applyAttributes(SvgAttributes newAttributes) {
+    return TextNode(
+      text,
+      dx,
+      dy,
+      attributes.applyParent(newAttributes),
+    );
+  }
+
+  @override
+  void build(DrawCommandBuilder builder, AffineMatrix transform) {
+    // TODO - bounds should come from the first parent viewbox.
+    final Paint? paint = _paint(Rect.largest, transform);
+    final TextConfig textConfig = _textConfig(transform);
+    if (paint != null) {
+      builder.addText(textConfig, paint, attributes.id);
+    }
+  }
+}

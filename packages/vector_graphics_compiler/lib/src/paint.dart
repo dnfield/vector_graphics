@@ -1241,3 +1241,36 @@ enum TileMode {
   /// ![](https://flutter.github.io/assets-for-api-docs/assets/dart-ui/tile_mode_decal_sweep.png)
   decal,
 }
+
+/// Additional text specific configuration that is added to the encoding.
+class TextConfig {
+  /// Create a new [TextStyle] object.
+  const TextConfig(
+    this.text,
+    this.baselineStart,
+    this.fontFamily,
+    this.fontWeight,
+    this.fontSize,
+    this.transform,
+  );
+
+  /// The text to be rendered.
+  final String text;
+
+  /// The coordinate of the starting point of the text baseline.
+  final Point baselineStart;
+
+  /// The size of the font, only supported as absolute size.
+  final double fontSize;
+
+  /// The name of the font family to select for rendering.
+  final String fontFamily;
+
+  /// The font weight, converted to a weight constant.
+  final int fontWeight;
+
+  /// A transform applied to the rendered font.
+  ///
+  /// If `null` this implies no transform.
+  final AffineMatrix? transform;
+}

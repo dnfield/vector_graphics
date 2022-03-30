@@ -470,7 +470,7 @@ class TextNode extends AttributedNode {
     final Rect bounds = nearestParentBounds();
     final Paint? paint = _paint(bounds, transform);
     final TextConfig textConfig = _textConfig(bounds, transform);
-    if (paint != null && textConfig.text.isNotEmpty) {
+    if (paint != null && textConfig.text.trim().isNotEmpty) {
       builder.addText(textConfig, paint, attributes.id);
     }
   }

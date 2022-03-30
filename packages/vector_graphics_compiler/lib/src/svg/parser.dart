@@ -387,18 +387,20 @@ class _Elements {
     if (parserState._currentStartElement!.isSelfClosing) {
       return;
     }
-    final String rawDx = parserState.attribute('x', def: '0')!;
-    final String rawDy = parserState.attribute('y', def: '0')!;
-    final bool absolute =
-        !isPercentage(rawDx); // TODO: do we need to handle mixed case.
-    final double dx = parseDecimalOrPercentage(rawDx);
-    final double dy = parseDecimalOrPercentage(rawDy);
+    String rawX = parserState.attribute('x', def: '0')!;
+    String rawY = parserState.attribute('y', def: '0')!;
     final SvgAttributes attributes = parserState._currentAttributes;
 
     for (XmlEvent event in parserState._readSubtree()) {
       if (event is XmlTextEvent) {
+        rawX = parserState.attribute('x') ?? rawX;
+        rawY = parserState.attribute('y') ?? rawY;
+        final bool absolute = !isPercentage(rawX); // TODO: do we need to handle mixed case.
+        final double x = parseDecimalOrPercentage(rawX);
+        final double y = parseDecimalOrPercentage(rawY);
+        final SvgAttributes moreAttributes = parserState._currentAttributes;
         parserState.currentGroup!.addChild(
-          TextNode(event.text, Point(dx, dy), absolute, attributes),
+          TextNode(event.text.trim(), Point(x, y), absolute, moreAttributes.applyParent(attributes)),
           clipResolver: parserState._definitions.getClipPath,
           maskResolver: parserState._definitions.getDrawable,
         );

@@ -285,7 +285,8 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
 
     final ui.Paragraph paragraph = builder.build();
     paragraph.layout(_infiniteParagraphConstraints);
-    _canvas.drawParagraph(paragraph, ui.Offset(textConfig.dx, textConfig.dy));
+    _canvas.drawParagraph(
+        paragraph, ui.Offset(textConfig.dx, textConfig.dy - paragraph.alphabeticBaseline));
   }
 }
 

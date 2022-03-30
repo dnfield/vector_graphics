@@ -22,7 +22,6 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
-    - assets/bars.bin
     - assets/tiger.bin # ghostscript tiger
 
 

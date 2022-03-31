@@ -125,7 +125,7 @@ void main() {
       bundle: testBundle,
       child: VectorGraphic(
         key: key,
-        loader: const AssetBytesLoader(assetName: 'foo.svg'),
+        loader: const AssetBytesLoader('foo.svg'),
       ),
     ));
 
@@ -136,7 +136,7 @@ void main() {
       bundle: testBundle,
       child: VectorGraphic(
         key: key,
-        loader: const AssetBytesLoader(assetName: 'foo.svg'),
+        loader: const AssetBytesLoader('foo.svg'),
       ),
     ));
 
@@ -152,7 +152,7 @@ void main() {
       bundle: testBundle,
       child: VectorGraphic(
         key: key,
-        loader: const AssetBytesLoader(assetName: 'foo.svg'),
+        loader: const AssetBytesLoader('foo.svg'),
       ),
     ));
 
@@ -162,7 +162,7 @@ void main() {
       bundle: testBundle,
       child: VectorGraphic(
         key: key,
-        loader: const AssetBytesLoader(assetName: 'bar.svg'),
+        loader: const AssetBytesLoader('bar.svg'),
       ),
     ));
 

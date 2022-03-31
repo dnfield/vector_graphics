@@ -26,9 +26,10 @@ PictureInfo decodeVectorGraphics(ByteData data) {
 
 /// A widget that displays a vector_graphics formatted asset.
 ///
-/// This widget will repeatedly ask the loader to load the bytes when its
+/// This widget will ask the loader to load the bytes whenever its
 /// dependencies change or it is configured with a new loader. A loader may
-/// or may not choose to used caching to respond to those requests.
+/// or may not choose to cache its responses, potentially resulting in multiple
+/// disk or network accesses for the same bytes.
 class VectorGraphic extends StatefulWidget {
   const VectorGraphic({
     Key? key,

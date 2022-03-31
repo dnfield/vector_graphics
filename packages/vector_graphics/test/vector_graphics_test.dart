@@ -11,13 +11,13 @@ const VectorGraphicsCodec codec = VectorGraphicsCodec();
 
 void main() {
   test('Can decode a message without a stroke and vertices', () {
-    final buffer = VectorGraphicsBuffer();
+    final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
     final FlutterVectorGraphicsListener listener =
         FlutterVectorGraphicsListener();
     final int paintId = codec.writeStroke(buffer, 44, 1, 2, 3, 4.0, 6.0);
     codec.writeDrawVertices(
         buffer,
-        Float32List.fromList([
+        Float32List.fromList(<double>[
           0.0,
           2.0,
           3.0,
@@ -34,7 +34,7 @@ void main() {
   });
 
   test('Can decode a message with a fill and path', () {
-    final buffer = VectorGraphicsBuffer();
+    final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
     final FlutterVectorGraphicsListener listener =
         FlutterVectorGraphicsListener();
     final int paintId = codec.writeFill(buffer, 23, 0);
@@ -60,7 +60,7 @@ void main() {
 
   testWidgets('Creates layout widgets when VectorGraphic is sized',
       (WidgetTester tester) async {
-    final buffer = VectorGraphicsBuffer();
+    final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
     await tester.pumpWidget(VectorGraphic(
       loader: TestBytesLoader(buffer.done()),
       width: 100,
@@ -79,7 +79,7 @@ void main() {
 
   testWidgets('Creates alignment widgets when VectorGraphic is aligned',
       (WidgetTester tester) async {
-    final buffer = VectorGraphicsBuffer();
+    final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
     await tester.pumpWidget(VectorGraphic(
       loader: TestBytesLoader(buffer.done()),
       alignment: Alignment.centerLeft,
@@ -98,7 +98,7 @@ void main() {
 
   testWidgets('Sizes VectorGraphic based on encoded viewbox information',
       (WidgetTester tester) async {
-    final buffer = VectorGraphicsBuffer();
+    final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
     codec.writeSize(buffer, 100, 200);
 
     await tester.pumpWidget(VectorGraphic(
@@ -176,7 +176,7 @@ class TestAssetBundle extends Fake implements AssetBundle {
   @override
   Future<ByteData> load(String key) async {
     loadKeys.add(key);
-    final buffer = VectorGraphicsBuffer();
+    final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
     codec.writeSize(buffer, 100, 200);
     return buffer.done();
   }

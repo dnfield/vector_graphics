@@ -1,7 +1,7 @@
-import 'dart:typed_data';
-import 'dart:ui' as ui;
 import 'dart:io';
 import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
@@ -24,12 +24,16 @@ PictureInfo decodeVectorGraphics(ByteData data) {
   return listener.toPicture();
 }
 
-/// A widget that displays a vector_graphics formatted asset.
+/// A widget that displays a [VectorGraphicsCodec] encoded asset.
 ///
 /// This widget will repeatedly ask the loader to load the bytes when its
 /// dependencies change or it is configured with a new loader. A loader may
 /// or may not choose to used caching to respond to those requests.
 class VectorGraphic extends StatefulWidget {
+  /// A widget that displays a vector graphics created via a
+  /// [VectorGraphicsCodec].
+  ///
+  /// See [VectorGraphic].
   const VectorGraphic({
     Key? key,
     required this.loader,
@@ -171,14 +175,24 @@ abstract class BytesLoader {
 /// [AssetBundle] that caches data, or should create their own implementation
 /// of an asset bytes loader.
 class AssetBytesLoader extends BytesLoader {
+  /// A loader that retrieves bytes from an [AssetBundle].
+  ///
+  /// See [AssetBytesLoader].
   const AssetBytesLoader(
     this.assetName, {
     this.packageName,
     this.assetBundle,
   });
 
+  /// The name of the asset to load.
   final String assetName;
+
+  /// The package name to load from, if any.
   final String? packageName;
+
+  /// The asset bundle to use.
+  ///
+  /// If unspecified, [DefaultAssetBundle.of] the current context will be used.
   final AssetBundle? assetBundle;
 
   @override
@@ -209,8 +223,14 @@ class NetworkBytesLoader extends BytesLoader {
     this.client,
   });
 
+  /// The HTTP headers to use for the network request.
   final Map<String, String>? headers;
+
+  /// The [Uri] of the resource to request.
   final Uri url;
+
+  /// The [HttpClient] to use when making a request. By default, this will
+  /// create a new [HttpClient] per request.
   final HttpClient? client;
 
   @override
@@ -257,7 +277,9 @@ class _RawVectorGraphicsWidget extends SingleChildRenderObjectWidget {
 
   @override
   void updateRenderObject(
-      BuildContext context, covariant _RenderVectorGraphics renderObject) {
+    BuildContext context,
+    covariant _RenderVectorGraphics renderObject,
+  ) {
     renderObject.pictureInfo = pictureInfo;
   }
 }

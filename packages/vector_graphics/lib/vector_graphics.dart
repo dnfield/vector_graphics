@@ -53,14 +53,19 @@ PictureInfo decodeVectorGraphics(ByteData data) {
 class VectorGraphic extends StatefulWidget {
   const VectorGraphic({
     Key? key,
-    required this.bytesLoader,
+    required this.loader,
     this.width,
     this.height,
     this.fit = BoxFit.contain,
     this.alignment = Alignment.center,
   }) : super(key: key);
 
-  final BytesLoader bytesLoader;
+  /// A delegate for fetching the raw bytes of the vector graphic.
+  ///
+  /// The [BytesLoader.loadBytes] method will be called with this
+  /// widget's [BuildContext] whenever dependencies change or the widget
+  /// configuration changes the loader.
+  final BytesLoader loader;
 
   /// If specified, the width to use for the vector graphic. If unspecified,
   /// the vector graphic will take the width of its parent.
@@ -106,14 +111,14 @@ class _VectorGraphicsWidgetState extends State<VectorGraphic> {
   PictureInfo? _pictureInfo;
 
   @override
-  void initState() {
+  void didChangeDependencies() {
     _loadAssetBytes();
-    super.initState();
+    super.didChangeDependencies();
   }
 
   @override
   void didUpdateWidget(covariant VectorGraphic oldWidget) {
-    if (oldWidget.bytesLoader != widget.bytesLoader) {
+    if (oldWidget.loader != widget.loader) {
       _loadAssetBytes();
     }
     super.didUpdateWidget(oldWidget);
@@ -127,7 +132,7 @@ class _VectorGraphicsWidgetState extends State<VectorGraphic> {
   }
 
   void _loadAssetBytes() {
-    widget.bytesLoader.loadBytes().then((ByteData data) {
+    widget.loader.loadBytes(context).then((ByteData data) {
       final PictureInfo pictureInfo = decodeVectorGraphics(data);
       setState(() {
         _pictureInfo?.picture.dispose();
@@ -169,37 +174,47 @@ class _VectorGraphicsWidgetState extends State<VectorGraphic> {
 /// See also:
 ///   * [AssetBytesLoader], for loading from the asset bundle.
 ///   * [NetworkBytesLoader], for loading network bytes.
+@immutable
 abstract class BytesLoader {
-  /// const constructor to allow subtypes to be const.
+  /// Const constructor to allow subtypes to be const.
   const BytesLoader();
 
   /// Load the byte data for a vector graphic binary asset.
-  Future<ByteData> loadBytes();
+  Future<ByteData> loadBytes(BuildContext context);
 }
 
-/// A controller for loading vector graphics data from an asset bundle.
+/// Loads vector graphics data from an asset bundle.
 class AssetBytesLoader extends BytesLoader {
-  /// Create a new [VectorGraphicsAssetController].
-  ///
-  /// The default asset bundle can be acquired using [DefaultAssetBundle.of].
   const AssetBytesLoader({
     required this.assetName,
     this.packageName,
-    required this.assetBundle,
+    this.assetBundle,
   });
 
   final String assetName;
   final String? packageName;
-  final AssetBundle assetBundle;
+  final AssetBundle? assetBundle;
 
   @override
-  Future<ByteData> loadBytes() {
-    return assetBundle.load(assetName);
+  Future<ByteData> loadBytes(BuildContext context) {
+    return (assetBundle ?? DefaultAssetBundle.of(context)).load(assetName);
+  }
+
+  @override
+  int get hashCode => Object.hash(assetName, packageName, assetBundle);
+
+  @override
+  bool operator ==(Object other) {
+    return other is AssetBytesLoader &&
+        other.assetName == assetName &&
+        other.assetBundle == assetBundle &&
+        other.packageName == packageName;
   }
 }
 
 /// A controller for loading vector graphics data from over the network.
 class NetworkBytesLoader extends BytesLoader {
+  /// Creates a new loading context for network bytes.
   const NetworkBytesLoader({
     required this.url,
     this.headers,
@@ -211,7 +226,7 @@ class NetworkBytesLoader extends BytesLoader {
   final HttpClient? client;
 
   @override
-  Future<ByteData> loadBytes() async {
+  Future<ByteData> loadBytes(BuildContext context) async {
     final HttpClient currentClient = client ?? HttpClient();
     final HttpClientRequest request = await currentClient.getUrl(url);
     headers?.forEach(request.headers.add);
@@ -225,6 +240,17 @@ class NetworkBytesLoader extends BytesLoader {
       response,
     );
     return bytes.buffer.asByteData();
+  }
+
+  @override
+  int get hashCode => Object.hash(url, headers, client);
+
+  @override
+  bool operator ==(Object other) {
+    return other is NetworkBytesLoader &&
+        other.headers == headers &&
+        other.url == url &&
+        other.client == client;
   }
 }
 

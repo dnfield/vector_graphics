@@ -62,7 +62,7 @@ void main() {
       (WidgetTester tester) async {
     final buffer = VectorGraphicsBuffer();
     await tester.pumpWidget(VectorGraphic(
-      bytesLoader: TestBytesLoader(buffer.done()),
+      loader: TestBytesLoader(buffer.done()),
       width: 100,
       height: 100,
     ));
@@ -81,7 +81,7 @@ void main() {
       (WidgetTester tester) async {
     final buffer = VectorGraphicsBuffer();
     await tester.pumpWidget(VectorGraphic(
-      bytesLoader: TestBytesLoader(buffer.done()),
+      loader: TestBytesLoader(buffer.done()),
       alignment: Alignment.centerLeft,
       fit: BoxFit.fitHeight,
     ));
@@ -102,7 +102,7 @@ void main() {
     codec.writeSize(buffer, 100, 200);
 
     await tester.pumpWidget(VectorGraphic(
-      bytesLoader: TestBytesLoader(buffer.done()),
+      loader: TestBytesLoader(buffer.done()),
     ));
     await tester.pumpAndSettle();
 
@@ -114,15 +114,89 @@ void main() {
     expect(sizedBox.width, 100);
     expect(sizedBox.height, 200);
   });
+
+  testWidgets('Reloads bytes when position changes in tree',
+      (WidgetTester tester) async {
+    final TestAssetBundle testBundle = TestAssetBundle();
+    final GlobalKey key = GlobalKey();
+
+    await tester.pumpWidget(DefaultAssetBundle(
+      key: UniqueKey(),
+      bundle: testBundle,
+      child: VectorGraphic(
+        key: key,
+        loader: const AssetBytesLoader(assetName: 'foo.svg'),
+      ),
+    ));
+
+    expect(testBundle.loadKeys.single, 'foo.svg');
+
+    await tester.pumpWidget(DefaultAssetBundle(
+      key: UniqueKey(),
+      bundle: testBundle,
+      child: VectorGraphic(
+        key: key,
+        loader: const AssetBytesLoader(assetName: 'foo.svg'),
+      ),
+    ));
+
+    expect(testBundle.loadKeys, <String>['foo.svg', 'foo.svg']);
+  });
+
+  testWidgets('Reloads bytes when configuration changes',
+      (WidgetTester tester) async {
+    final TestAssetBundle testBundle = TestAssetBundle();
+    final GlobalKey key = GlobalKey();
+
+    await tester.pumpWidget(DefaultAssetBundle(
+      bundle: testBundle,
+      child: VectorGraphic(
+        key: key,
+        loader: const AssetBytesLoader(assetName: 'foo.svg'),
+      ),
+    ));
+
+    expect(testBundle.loadKeys.single, 'foo.svg');
+
+    await tester.pumpWidget(DefaultAssetBundle(
+      bundle: testBundle,
+      child: VectorGraphic(
+        key: key,
+        loader: const AssetBytesLoader(assetName: 'bar.svg'),
+      ),
+    ));
+
+    expect(testBundle.loadKeys, <String>['foo.svg', 'bar.svg']);
+  });
+}
+
+class TestAssetBundle extends Fake implements AssetBundle {
+  final List<String> loadKeys = <String>[];
+
+  @override
+  Future<ByteData> load(String key) async {
+    loadKeys.add(key);
+    final buffer = VectorGraphicsBuffer();
+    codec.writeSize(buffer, 100, 200);
+    return buffer.done();
+  }
 }
 
 class TestBytesLoader extends BytesLoader {
-  TestBytesLoader(this.data);
+  const TestBytesLoader(this.data);
 
   final ByteData data;
 
   @override
-  Future<ByteData> loadBytes() async {
+  Future<ByteData> loadBytes(BuildContext context) async {
     return data;
+  }
+
+  @override
+  int get hashCode => data.hashCode;
+
+  @override
+  bool operator ==(Object other) {
+    return other is TestBytesLoader && other.data == data;
   }
 }

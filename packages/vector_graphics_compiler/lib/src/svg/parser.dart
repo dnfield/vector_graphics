@@ -393,8 +393,8 @@ class _Elements {
 
     SvgAttributes computeCurrentAttributes() {
       final SvgAttributes current = currentAttributes.last;
-      final SvgAttributes newAttributes =
-          parserState._currentAttributes.applyParent(current, includePosition: true);
+      final SvgAttributes newAttributes = parserState._currentAttributes
+          .applyParent(current, includePosition: true);
       currentAttributes.add(newAttributes);
       return newAttributes;
     }
@@ -1575,13 +1575,12 @@ class SvgAttributes {
   ///
   /// If `includePosition` is true, the `x`/`y` coordinates are also inherited. This
   /// is intended to be used by text parsing. Defaults to `false`.
-  SvgAttributes applyParent(SvgAttributes parent, {bool includePosition = false}) {
+  SvgAttributes applyParent(SvgAttributes parent,
+      {bool includePosition = false}) {
     final Map<String, String> newRaw = <String, String>{
       ...Map<String, String>.fromEntries(parent.heritable),
-      if (includePosition && parent.raw.containsKey('x'))
-        'x': parent.raw['x']!,
-      if (includePosition && parent.raw.containsKey('y'))
-        'y': parent.raw['y']!,
+      if (includePosition && parent.raw.containsKey('x')) 'x': parent.raw['x']!,
+      if (includePosition && parent.raw.containsKey('y')) 'y': parent.raw['y']!,
       ...raw,
     };
     return SvgAttributes._(

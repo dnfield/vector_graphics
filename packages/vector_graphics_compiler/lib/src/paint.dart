@@ -1275,15 +1275,33 @@ class TextConfig {
   final AffineMatrix? transform;
 }
 
+/// The value of the font weight.
 enum FontWeight {
+  /// A font weight of 100,
   w100,
+
+  /// A font weight of 200,
   w200,
+
+  /// A font weight of 300,
   w300,
+
+  /// A font weight of 400,
   w400,
+
+  /// A font weight of 500,
   w500,
+
+  /// A font weight of 600,
   w600,
+
+  /// A font weight of 700,
   w700,
+
+  /// A font weight of 800,
   w800,
+
+  /// A font weight of 900,
   w900,
 }
 

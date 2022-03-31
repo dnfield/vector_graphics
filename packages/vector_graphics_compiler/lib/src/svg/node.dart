@@ -35,6 +35,13 @@ abstract class Node {
 
   /// Look up the bounds for the nearest sized parent.
   Rect nearestParentBounds() => parent?.nearestParentBounds() ?? Rect.zero;
+
+  /// Calls `visitor` for each child node of this parent group.
+  ///
+  /// This call does not recursively call `visitChildren`. Callers must decide
+  /// whether to do BFS or DFS by calling `visitChildren` if the visited child
+  /// is a [ParentNode].
+  void visitChildren(NodeCallback visitor);
 }
 
 /// A node that has attributes in the tree of graphics operations.
@@ -100,17 +107,7 @@ class ParentNode extends AttributedNode {
   /// The child nodes of this node.
   final List<Node> _children = <Node>[];
 
-  /// The color, if any, to pass on to children for inheritence purposes.
-  ///
-  /// This color will be applied to any [Stroke] or [Fill] properties on child
-  /// paints.
-  // final Color? color;
-
-  /// Calls `visitor` for each child node of this parent group.
-  ///
-  /// This call does not recursively call `visitChildren`. Callers must decide
-  /// whether to do BFS or DFS by calling `visitChildren` if the visited child
-  /// is a [ParentNode].
+  @override
   void visitChildren(NodeCallback visitor) {
     _children.forEach(visitor);
   }
@@ -232,6 +229,11 @@ class ClipNode extends Node {
       builder.restore();
     }
   }
+
+  @override
+  void visitChildren(NodeCallback visitor) {
+    visitor(child);
+  }
 }
 
 /// A parent node that applies a mask to its child.
@@ -262,7 +264,7 @@ class MaskNode extends Node {
     // the color on the dart:ui.Paint object.
     builder.addSaveLayer(Paint(
       blendMode: blendMode,
-      fill: const Fill(color: Color.opaqueBlack),
+      fill: const Fill(),
     ));
     child.build(builder, transform);
     {
@@ -271,6 +273,11 @@ class MaskNode extends Node {
       builder.restore();
     }
     builder.restore();
+  }
+
+  @override
+  void visitChildren(NodeCallback visitor) {
+    visitor(child);
   }
 }
 
@@ -317,6 +324,9 @@ class PathNode extends AttributedNode {
       builder.addPath(transformedPath, paint, attributes.id);
     }
   }
+
+  @override
+  void visitChildren(NodeCallback visitor) {}
 }
 
 /// A node that refers to another node, and uses [resolver] at [build] time
@@ -351,6 +361,9 @@ class DeferredNode extends AttributedNode {
         resolver(refId).applyAttributes(attributes);
     concreteRef.build(builder, transform);
   }
+
+  @override
+  void visitChildren(NodeCallback visitor) {}
 }
 
 /// A leaf node in the tree that represents inline text.
@@ -446,6 +459,7 @@ class TextNode extends AttributedNode {
     final Point newBaseline = absolute
         ? baseline
         : Point(baseline.x * bounds.width, baseline.y * bounds.height);
+
     return TextConfig(
       text,
       transform.transformPoint(newBaseline),
@@ -475,4 +489,7 @@ class TextNode extends AttributedNode {
       builder.addText(textConfig, paint, attributes.id);
     }
   }
+
+  @override
+  void visitChildren(NodeCallback visitor) {}
 }

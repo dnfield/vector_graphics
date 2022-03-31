@@ -387,25 +387,49 @@ class _Elements {
     if (parserState._currentStartElement!.isSelfClosing) {
       return;
     }
-    String rawX = parserState.attribute('x', def: '0')!;
-    String rawY = parserState.attribute('y', def: '0')!;
-    final SvgAttributes attributes = parserState._currentAttributes;
+    final List<SvgAttributes> currentAttributes = <SvgAttributes>[
+      parserState._currentAttributes
+    ];
+
+    SvgAttributes computeCurrentAttributes() {
+      final SvgAttributes current = currentAttributes.last;
+      final SvgAttributes newAttributes =
+          parserState._currentAttributes.applyParent(current);
+      currentAttributes.add(newAttributes);
+      return newAttributes;
+    }
+
+    void appendText(String text) {
+      if (text.isEmpty) {
+        return;
+      }
+      final SvgAttributes attributes = computeCurrentAttributes();
+      final String rawX = attributes.raw['x'] ?? '0';
+      final String rawY = attributes.raw['y'] ?? '0';
+      final bool absolute =
+          !isPercentage(rawX); // TODO: do we need to handle mixed case.
+      final double x = parseDecimalOrPercentage(rawX);
+      final double y = parseDecimalOrPercentage(rawY);
+
+      parserState.currentGroup!.addChild(
+        TextNode(
+          text,
+          Point(x, y),
+          absolute,
+          attributes,
+        ),
+        clipResolver: parserState._definitions.getClipPath,
+        maskResolver: parserState._definitions.getDrawable,
+      );
+    }
 
     for (XmlEvent event in parserState._readSubtree()) {
-      if (event is XmlTextEvent) {
-        rawX = parserState.attribute('x') ?? rawX;
-        rawY = parserState.attribute('y') ?? rawY;
-        final bool absolute =
-            !isPercentage(rawX); // TODO: do we need to handle mixed case.
-        final double x = parseDecimalOrPercentage(rawX);
-        final double y = parseDecimalOrPercentage(rawY);
-        final SvgAttributes moreAttributes = parserState._currentAttributes;
-        parserState.currentGroup!.addChild(
-          TextNode(event.text.trim(), Point(x, y), absolute,
-              moreAttributes.applyParent(attributes)),
-          clipResolver: parserState._definitions.getClipPath,
-          maskResolver: parserState._definitions.getDrawable,
-        );
+      if (event is XmlCDATAEvent) {
+        appendText(event.text.trim());
+      } else if (event is XmlTextEvent) {
+        appendText(event.text.trim());
+      } else if (event is XmlEndElementEvent) {
+        currentAttributes.removeLast();
       }
     }
   }

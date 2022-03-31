@@ -26,30 +26,9 @@ PictureInfo decodeVectorGraphics(ByteData data) {
 
 /// A widget that displays a vector_graphics formatted asset.
 ///
-/// A bytes loader class should not be constructed directly in a build method,
-/// if this is done the corresponding [VectorGraphic] widget may repeatedly
-/// reload the bytes.
-///
-/// ```dart
-/// class MyVectorGraphic extends StatefulWidget {
-///   State<MyVectorGraphic> createState() => _MyVectorGraphicState();
-/// }
-///
-/// class _MyVectorGraphicState extends State<MyVectorGraphic> {
-///   BytesLoader? loader;
-///
-///   @override
-///   void initState() {
-///     super.initState();
-///     loader = AssetBytesLoader(assetName: 'foobar', assetBundle: DefaultAssetBundle.of(context));
-///   }
-///
-///   @override
-///   Widget build(BuildContext context) {
-///     return VectorGraphic(bytesLoader: loader!);
-///   }
-/// }
-/// ```
+/// This widget will repeatedly ask the loader to load the bytes when its
+/// dependencies change or it is configured with a new loader. A loader may
+/// or may not choose to used caching to respond to those requests.
 class VectorGraphic extends StatefulWidget {
   const VectorGraphic({
     Key? key,
@@ -184,9 +163,16 @@ abstract class BytesLoader {
 }
 
 /// Loads vector graphics data from an asset bundle.
+///
+/// This loader does not cache bytes by default. The Flutter framework
+/// implementations of [AssetBundle] also do not typically cache binary data.
+///
+/// Callers that would benefit from caching should provide a custom
+/// [AssetBundle] that caches data, or should create their own implementation
+/// of an asset bytes loader.
 class AssetBytesLoader extends BytesLoader {
-  const AssetBytesLoader({
-    required this.assetName,
+  const AssetBytesLoader(
+    this.assetName, {
     this.packageName,
     this.assetBundle,
   });
@@ -213,10 +199,12 @@ class AssetBytesLoader extends BytesLoader {
 }
 
 /// A controller for loading vector graphics data from over the network.
+///
+/// This loader does not cache bytes requested from the network.
 class NetworkBytesLoader extends BytesLoader {
   /// Creates a new loading context for network bytes.
-  const NetworkBytesLoader({
-    required this.url,
+  const NetworkBytesLoader(
+    this.url, {
     this.headers,
     this.client,
   });

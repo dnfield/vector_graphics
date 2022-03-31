@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
           child: ListView(
             children: const <Widget>[
               VectorGraphic(
-                loader: AssetBytesLoader(assetName: 'assets/tiger.bin'),
+                loader: AssetBytesLoader('assets/tiger.bin'),
               ),
               VectorGraphic(
                 loader: NetworkSvgLoader(

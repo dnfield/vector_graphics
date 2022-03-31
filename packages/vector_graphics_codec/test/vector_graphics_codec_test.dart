@@ -521,6 +521,48 @@ void main() {
       OnDrawText(textId, paintId),
     ]);
   });
+
+  test('Encodes empty text', () {
+    final buffer = VectorGraphicsBuffer();
+    final TestListener listener = TestListener();
+
+    final int paintId = codec.writeFill(buffer, 0xFFAABBAA, 0);
+    final int textId = codec.writeTextConfig(
+      buffer: buffer,
+      text: '',
+      fontFamily: null,
+      dx: 10,
+      dy: 12,
+      fontWeight: 0,
+      fontSize: 16,
+    );
+    codec.writeDrawText(buffer, textId, paintId);
+    codec.decode(buffer.done(), listener);
+
+    expect(listener.commands, [
+      OnPaintObject(
+        color: 0xFFAABBAA,
+        strokeCap: null,
+        strokeJoin: null,
+        blendMode: 0,
+        strokeMiterLimit: null,
+        strokeWidth: null,
+        paintStyle: 0,
+        id: paintId,
+        shaderId: null,
+      ),
+      OnTextConfig(
+        '',
+        10,
+        12,
+        16,
+        null,
+        0,
+        textId,
+      ),
+      OnDrawText(textId, paintId),
+    ]);
+  });
 }
 
 class TestListener extends VectorGraphicsCodecListener {

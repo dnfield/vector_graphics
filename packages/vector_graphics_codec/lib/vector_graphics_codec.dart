@@ -542,8 +542,7 @@ class VectorGraphicsCodec {
   /// Saves a copy of the current transform and clip on the save stack, and then
   /// creates a new group which subsequent calls will become a part of. When the
   /// save stack is later popped, the group will be flattened into a layer and
-  /// have the given `paint`'s [Paint.colorFilter] and [Paint.blendMode]
-  /// applied.
+  /// have the given `paint`'s [Paint.blendMode] applied.
   ///
   /// See also:
   ///   * [Canvas.saveLayer]

@@ -51,10 +51,6 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
       0, 0, 0, 0, 0,
       0.2126, 0.7152, 0.0722, 0, 0,
     ]); //convert to grayscale (https://www.w3.org/Graphics/Color/sRGB) and use them as transparency
-  static const ui.ParagraphConstraints _infiniteParagraphConstraints =
-      ui.ParagraphConstraints(
-    width: double.infinity,
-  );
 
   /// Convert the vector graphics asset this listener decoded into a [ui.Picture].
   ///
@@ -284,7 +280,9 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     builder.addText(textConfig.text);
 
     final ui.Paragraph paragraph = builder.build();
-    paragraph.layout(_infiniteParagraphConstraints);
+    paragraph.layout(const ui.ParagraphConstraints(
+      width: double.infinity,
+    ));
     _canvas.drawParagraph(paragraph,
         ui.Offset(textConfig.dx, textConfig.dy - paragraph.alphabeticBaseline));
   }

@@ -926,7 +926,9 @@ class OnPaintObject {
 
   @override
   String toString() =>
-      'OnPaintObject($color, $strokeCap, $strokeJoin, $blendMode, $strokeMiterLimit, $strokeWidth, $paintStyle, $id, $shaderId)';
+      'OnPaintObject(color: $color, strokeCap: $strokeCap, strokeJoin: $strokeJoin, '
+      'blendMode: $blendMode, strokeMiterLimit: $strokeMiterLimit, strokeWidth: $strokeWidth, '
+      'paintStyle: $paintStyle, id: $id, shaderId: $shaderId)';
 }
 
 class OnPathClose {

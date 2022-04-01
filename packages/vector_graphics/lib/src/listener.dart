@@ -7,11 +7,25 @@ import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 /// The deocded result of a vector graphics asset.
 class PictureInfo {
   /// Construct a new [PictureInfo].
-  const PictureInfo(this.handle, this.size);
+  PictureInfo._(this._handle, this.size);
 
   /// A [LayerHandle] that contains a picture layer with the decoded
   /// vector graphic.
-  final LayerHandle<PictureLayer> handle;
+  final LayerHandle<PictureLayer> _handle;
+
+  /// Retrieve the picture layer associated with this [PictureInfo].
+  ///
+  /// Will be null if info has already been disposed.
+  PictureLayer? get picture {
+    return _handle.layer;
+  }
+
+  //// Dispose this picture info.
+  ///
+  /// It is safe to call this method multiple times.
+  void dispose() {
+    _handle.layer = null;
+  }
 
   /// The target size of the picture.
   ///
@@ -60,7 +74,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     final LayerHandle<PictureLayer> handle = LayerHandle<PictureLayer>();
     handle.layer = PictureLayer(Rect.fromLTWH(0, 0, _size.width, _size.height))
       ..picture = _recorder.endRecording();
-    return PictureInfo(handle, _size);
+    return PictureInfo._(handle, _size);
   }
 
   @override

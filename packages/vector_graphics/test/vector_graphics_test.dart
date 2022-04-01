@@ -197,6 +197,16 @@ void main() {
 
     expect(tester.layers, contains(isA<PictureLayer>()));
   });
+
+  testWidgets('PictureInfo.dispose is safe to call multiple times',
+      (WidgetTester tester) async {
+    final FlutterVectorGraphicsListener listener =
+        FlutterVectorGraphicsListener();
+    final PictureInfo info = listener.toPicture();
+
+    info.dispose();
+    expect(info.dispose, returnsNormally);
+  });
 }
 
 class TestAssetBundle extends Fake implements AssetBundle {

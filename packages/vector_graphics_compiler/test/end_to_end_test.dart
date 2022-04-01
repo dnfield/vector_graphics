@@ -22,13 +22,21 @@ import '../../vector_graphics_codec/test/vector_graphics_codec_test.dart'
         OnDrawText;
 
 class TestBytesLoader extends BytesLoader {
-  TestBytesLoader(this.data);
+  const TestBytesLoader(this.data);
 
   final ByteData data;
 
   @override
-  Future<ByteData> loadBytes() async {
+  Future<ByteData> loadBytes(BuildContext context) async {
     return data;
+  }
+
+  @override
+  int get hashCode => data.hashCode;
+
+  @override
+  bool operator ==(Object other) {
+    return other is TestBytesLoader && other.data == data;
   }
 }
 
@@ -40,7 +48,7 @@ void main() {
 
       await tester.pumpWidget(Center(
           child: VectorGraphic(
-              bytesLoader: TestBytesLoader(bytes.buffer.asByteData()))));
+              loader: TestBytesLoader(bytes.buffer.asByteData()))));
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);

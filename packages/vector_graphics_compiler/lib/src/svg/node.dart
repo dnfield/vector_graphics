@@ -121,7 +121,7 @@ class ParentNode extends AttributedNode {
     String? clipId,
     String? maskId,
     required Resolver<List<Path>> clipResolver,
-    required Resolver<AttributedNode> maskResolver,
+    required Resolver<AttributedNode?> maskResolver,
   }) {
     Node wrappedChild = child;
     if (clipId != null) {
@@ -256,10 +256,16 @@ class MaskNode extends Node {
   final BlendMode? blendMode;
 
   /// Called by [build] to resolve [maskId] to an [AttributedNode].
-  final Resolver<AttributedNode> resolver;
+  final Resolver<AttributedNode?> resolver;
 
   @override
   void build(DrawCommandBuilder builder, AffineMatrix transform) {
+    final AttributedNode? resolvedMask = resolver(maskId);
+    if (resolvedMask == null) {
+      child.build(builder, transform);
+      return;
+    }
+
     // Save layer expects to use the fill paint, and will unconditionally set
     // the color on the dart:ui.Paint object.
     builder.addSaveLayer(Paint(
@@ -269,7 +275,7 @@ class MaskNode extends Node {
     child.build(builder, transform);
     {
       builder.addMask();
-      resolver(maskId).build(builder, child.concatTransform(transform));
+      resolvedMask.build(builder, child.concatTransform(transform));
       builder.restore();
     }
     builder.restore();
@@ -345,7 +351,8 @@ class DeferredNode extends AttributedNode {
 
   /// The callback that materializes an [AttributedNode] for [refId] at [build]
   /// time.
-  final Resolver<AttributedNode> resolver;
+  final Resolver<AttributedNode?> resolver;
+
   @override
   AttributedNode applyAttributes(SvgAttributes newAttributes) {
     return DeferredNode(
@@ -357,8 +364,11 @@ class DeferredNode extends AttributedNode {
 
   @override
   void build(DrawCommandBuilder builder, AffineMatrix transform) {
-    final AttributedNode concreteRef =
-        resolver(refId).applyAttributes(attributes);
+    final AttributedNode? resolvedNode = resolver(refId);
+    if (resolvedNode == null) {
+      return;
+    }
+    final AttributedNode concreteRef = resolvedNode.applyAttributes(attributes);
     concreteRef.build(builder, transform);
   }
 

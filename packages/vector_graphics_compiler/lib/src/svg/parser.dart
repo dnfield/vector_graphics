@@ -1004,8 +1004,6 @@ class SvgParser {
   List<Path> parseClipPath() {
     final String? id = _currentAttributes.clipPathId;
     if (id != null) {
-      // If this returns null it should be an error, but for now match
-      // flutter_svg behavior.
       return _definitions.getClipPath(id);
     }
 
@@ -1357,19 +1355,19 @@ class _Resolver {
     _sealed = true;
   }
 
-  AttributedNode getDrawable(String ref) {
+  AttributedNode? getDrawable(String ref) {
     assert(_sealed);
-    return _drawables[ref]!;
+    return _drawables[ref];
   }
 
   List<Path> getClipPath(String ref) {
     assert(_sealed);
-    return _clips[ref]!;
+    return _clips[ref] ?? <Path>[];
   }
 
-  T getGradient<T extends Gradient>(String ref) {
+  T? getGradient<T extends Gradient>(String ref) {
     assert(_sealed);
-    return _shaders[ref]! as T;
+    return _shaders[ref] as T?;
   }
 
   final Map<String, List<Gradient>> _deferredShaders =
@@ -1653,8 +1651,12 @@ class SvgStrokeAttributes {
     if (shaderId != null) {
       shader = _definitions!
           .getGradient<Gradient>(shaderId!)
-          .applyBounds(shaderBounds, transform);
+          ?.applyBounds(shaderBounds, transform);
+      if (shader == null) {
+        return null;
+      }
     }
+
     return Stroke(
       color: color,
       shader: shader,
@@ -1694,8 +1696,12 @@ class SvgFillAttributes {
     if (shaderId != null) {
       shader = _definitions!
           .getGradient<Gradient>(shaderId!)
-          .applyBounds(shaderBounds, transform);
+          ?.applyBounds(shaderBounds, transform);
+      if (shader == null) {
+        return null;
+      }
     }
+
     return Fill(color: color, shader: shader);
   }
 }

@@ -447,8 +447,8 @@ void main() {
       buffer: buffer,
       text: 'Hello',
       fontFamily: 'Roboto',
-      dx: 10,
-      dy: 12,
+      x: 10,
+      y: 12,
       fontWeight: 0,
       fontSize: 16,
     );
@@ -489,8 +489,8 @@ void main() {
       buffer: buffer,
       text: 'Hello',
       fontFamily: null,
-      dx: 10,
-      dy: 12,
+      x: 10,
+      y: 12,
       fontWeight: 0,
       fontSize: 16,
     );
@@ -531,8 +531,8 @@ void main() {
       buffer: buffer,
       text: '',
       fontFamily: null,
-      dx: 10,
-      dy: 12,
+      x: 10,
+      y: 12,
       fontWeight: 0,
       fontSize: 16,
     );

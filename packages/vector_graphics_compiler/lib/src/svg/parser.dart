@@ -416,6 +416,8 @@ class _Elements {
           text,
           Point(x, y),
           absolute,
+          parserState.parseFontSize(attributes.raw['font-size']),
+          parserState.parseFontWeight(attributes.raw['font-weight']),
           attributes,
         ),
         clipResolver: parserState._definitions.getClipPath,
@@ -664,7 +666,7 @@ class SvgParser {
     _definitions._seal();
 
     final DrawCommandBuilder builder = DrawCommandBuilder();
-    _root!.build(builder, AffineMatrix.identity);
+    _root!.build(builder, AffineMatrix.identity, _root!.viewport);
     return builder.toInstructions(_root!.width, _root!.height);
   }
 
@@ -804,12 +806,15 @@ class SvgParser {
   };
 
   /// Parses a `font-size` attribute.
-  double? parseFontSize(
+  double parseFontSize(
     String? raw, {
     double? parentValue,
   }) {
+    // Not specified in spec, but the default in many browsers.
+    const double kDefaultFontSize = 16;
+
     if (raw == null || raw == '') {
-      return null;
+      return kDefaultFontSize;
     }
 
     double? ret = parseDoubleWithUnits(
@@ -828,14 +833,14 @@ class SvgParser {
 
     if (raw == 'larger') {
       if (parentValue == null) {
-        return _kTextSizeMap['large'];
+        return _kTextSizeMap['large']!;
       }
       return parentValue * 1.2;
     }
 
     if (raw == 'smaller') {
       if (parentValue == null) {
-        return _kTextSizeMap['small'];
+        return _kTextSizeMap['small']!;
       }
       return parentValue / 1.2;
     }
@@ -1038,6 +1043,37 @@ class SvgParser {
     }
 
     return null;
+  }
+
+  /// Parse the raw font weight string.
+  int parseFontWeight(String? fontWeight) {
+    if (fontWeight == null || fontWeight == 'normal') {
+      return normalFontWeight.index;
+    }
+    if (fontWeight == 'bold') {
+      return boldFontWeight.index;
+    }
+    switch (fontWeight) {
+      case '100':
+        return FontWeight.w100.index;
+      case '200':
+        return FontWeight.w200.index;
+      case '300':
+        return FontWeight.w300.index;
+      case '400':
+        return FontWeight.w400.index;
+      case '500':
+        return FontWeight.w500.index;
+      case '600':
+        return FontWeight.w600.index;
+      case '700':
+        return FontWeight.w700.index;
+      case '800':
+        return FontWeight.w800.index;
+      case '900':
+        return FontWeight.w900.index;
+    }
+    throw StateError('Invalid "font-weight": $fontWeight');
   }
 
   /// Converts a SVG Color String (either a # prefixed color string or a named color) to a [Color].
@@ -1339,8 +1375,8 @@ class SvgParser {
       transform:
           parseTransform(attributeMap['transform']) ?? AffineMatrix.identity,
       fontFamily: attributeMap['font-family'],
-      fontWeight: attributeMap['font-weight'],
-      fontSize: attributeMap['font-size'],
+      fontWeight: parseFontWeight(attributeMap['font-weight']),
+      fontSize: parseFontSize(attributeMap['font-size']),
     );
   }
 }
@@ -1562,14 +1598,14 @@ class SvgAttributes {
   /// The `mix-blend-mode` attribute.
   final BlendMode? blendMode;
 
-  /// The `font-family` attribute, as a raw string.
+  /// The `font-family` attribute, as a string.
   final String? fontFamily;
 
-  /// The `font-weight` attribute, as a raw string.
-  final String? fontWeight;
+  /// The font weight attribute.
+  final int? fontWeight;
 
-  /// The `font-size` attribute, as a raw string.
-  final String? fontSize;
+  /// The `font-size` attribute.
+  final double? fontSize;
 
   /// Creates a new set of attributes as if this inherited from `parent`.
   ///

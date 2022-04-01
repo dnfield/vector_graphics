@@ -35,7 +35,7 @@ class VectorGraphicsCodec {
   static const int _clipPathTag = 42;
   static const int _maskTag = 43;
   static const int _drawTextTag = 44;
-  static const int _textTag = 45;
+  static const int _textConfigTag = 45;
 
   static const int _version = 1;
   static const int _magicNumber = 0x00882d62;
@@ -117,7 +117,7 @@ class VectorGraphicsCodec {
         case _maskTag:
           listener?.onMask();
           continue;
-        case _textTag:
+        case _textConfigTag:
           _readTextConfig(buffer, listener);
           continue;
         case _drawTextTag:
@@ -567,8 +567,8 @@ class VectorGraphicsCodec {
     required VectorGraphicsBuffer buffer,
     required String text,
     required String? fontFamily,
-    required double dx,
-    required double dy,
+    required double x,
+    required double y,
     required int fontWeight,
     required double fontSize,
   }) {
@@ -579,10 +579,10 @@ class VectorGraphicsCodec {
     final int textId = buffer._nextTextId++;
     assert(textId < kMaxId);
 
-    buffer._putUint8(_textTag);
+    buffer._putUint8(_textConfigTag);
     buffer._putUint16(textId);
-    buffer._putFloat32(dx);
-    buffer._putFloat32(dy);
+    buffer._putFloat32(x);
+    buffer._putFloat32(y);
     buffer._putFloat32(fontSize);
     buffer._putUint8(fontWeight);
 

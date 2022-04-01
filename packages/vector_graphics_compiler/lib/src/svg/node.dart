@@ -15,9 +15,6 @@ typedef Resolver<T> = T Function(String id);
 /// Nodes describe painting attributes, clips, transformations, paths, and
 /// vertices to draw in depth-first order.
 abstract class Node {
-  /// This node's parent, or `null` if it is the root element.
-  Node? parent;
-
   /// Subclasses that have additional transformation information will
   /// concatenate their transform to the supplied `currentTransform`.
   AffineMatrix concatTransform(AffineMatrix currentTransform) {
@@ -31,10 +28,11 @@ abstract class Node {
   /// [ParentNode]s in the subtree, and applied to any [Path] objects in leaf
   /// nodes in the tree. It may be [AffineMatrix.identity] to indicate that no
   /// additional transformation is needed.
-  void build(DrawCommandBuilder builder, AffineMatrix transform);
-
-  /// Look up the bounds for the nearest sized parent.
-  Rect nearestParentBounds() => parent?.nearestParentBounds() ?? Rect.zero;
+  void build(
+    DrawCommandBuilder builder,
+    AffineMatrix transform,
+    Rect nearestParentBounds,
+  );
 
   /// Calls `visitor` for each child node of this parent group.
   ///
@@ -84,9 +82,6 @@ class ViewportNode extends ParentNode {
 
   /// The viewport rect described by [width] and [height].
   Rect get viewport => Rect.fromLTWH(0, 0, width, height);
-
-  @override
-  Rect nearestParentBounds() => viewport;
 }
 
 /// The signature for a visitor callback to [ParentNode.visitChildren].
@@ -125,25 +120,20 @@ class ParentNode extends AttributedNode {
   }) {
     Node wrappedChild = child;
     if (clipId != null) {
-      final Node childNode = wrappedChild;
       wrappedChild = ClipNode(
         resolver: clipResolver,
         clipId: clipId,
         child: wrappedChild,
       );
-      childNode.parent = wrappedChild;
     }
     if (maskId != null) {
-      final Node childNode = wrappedChild;
       wrappedChild = MaskNode(
         resolver: maskResolver,
         maskId: maskId,
         child: wrappedChild,
         blendMode: child.attributes.blendMode,
       );
-      childNode.parent = wrappedChild;
     }
-    wrappedChild.parent = this;
     _children.add(wrappedChild);
   }
 
@@ -181,14 +171,18 @@ class ParentNode extends AttributedNode {
   }
 
   @override
-  void build(DrawCommandBuilder builder, AffineMatrix transform) {
+  void build(
+    DrawCommandBuilder builder,
+    AffineMatrix transform,
+    Rect nearestParentBounds,
+  ) {
     final Paint? layerPaint = _createLayerPaint();
     if (layerPaint != null) {
       builder.addSaveLayer(layerPaint);
     }
 
     for (final Node child in _children) {
-      child.build(builder, concatTransform(transform));
+      child.build(builder, concatTransform(transform), nearestParentBounds);
     }
 
     if (layerPaint != null) {
@@ -221,11 +215,15 @@ class ClipNode extends Node {
   final Node child;
 
   @override
-  void build(DrawCommandBuilder builder, AffineMatrix transform) {
+  void build(
+    DrawCommandBuilder builder,
+    AffineMatrix transform,
+    Rect nearestParentBounds,
+  ) {
     for (final Path clip in resolver(clipId)) {
       final Path transformedClip = clip.transformed(transform);
       builder.addClip(transformedClip);
-      child.build(builder, transform);
+      child.build(builder, transform, nearestParentBounds);
       builder.restore();
     }
   }
@@ -259,17 +257,19 @@ class MaskNode extends Node {
   final Resolver<AttributedNode> resolver;
 
   @override
-  void build(DrawCommandBuilder builder, AffineMatrix transform) {
+  void build(DrawCommandBuilder builder, AffineMatrix transform,
+      Rect nearestParentBounds) {
     // Save layer expects to use the fill paint, and will unconditionally set
     // the color on the dart:ui.Paint object.
     builder.addSaveLayer(Paint(
       blendMode: blendMode,
       fill: const Fill(),
     ));
-    child.build(builder, transform);
+    child.build(builder, transform, nearestParentBounds);
     {
       builder.addMask();
-      resolver(maskId).build(builder, child.concatTransform(transform));
+      resolver(maskId).build(
+          builder, child.concatTransform(transform), nearestParentBounds);
       builder.restore();
     }
     builder.restore();
@@ -315,7 +315,8 @@ class PathNode extends AttributedNode {
   }
 
   @override
-  void build(DrawCommandBuilder builder, AffineMatrix transform) {
+  void build(DrawCommandBuilder builder, AffineMatrix transform,
+      Rect nearestParentBounds) {
     transform = transform.multiplied(attributes.transform);
     final Path transformedPath = path.transformed(transform);
     final Rect bounds = path.bounds();
@@ -356,10 +357,11 @@ class DeferredNode extends AttributedNode {
   }
 
   @override
-  void build(DrawCommandBuilder builder, AffineMatrix transform) {
+  void build(DrawCommandBuilder builder, AffineMatrix transform,
+      Rect nearestParentBounds) {
     final AttributedNode concreteRef =
         resolver(refId).applyAttributes(attributes);
-    concreteRef.build(builder, transform);
+    concreteRef.build(builder, transform, nearestParentBounds);
   }
 
   @override
@@ -376,6 +378,8 @@ class TextNode extends AttributedNode {
     this.text,
     this.baseline,
     this.absolute,
+    this.fontSize,
+    this.fontWeight,
     SvgAttributes attributes,
   ) : super(attributes);
 
@@ -387,6 +391,12 @@ class TextNode extends AttributedNode {
 
   /// Whether the [baseline] is in absolute or relative units.
   final bool absolute;
+
+  /// The font weight to use.
+  final int fontWeight;
+
+  /// The text node's font size.
+  final double fontSize;
 
   Paint? _paint(Rect bounds, AffineMatrix transform) {
     final Fill? fill = attributes.fill?.toFill(bounds, transform);
@@ -401,60 +411,6 @@ class TextNode extends AttributedNode {
     );
   }
 
-  static final Map<String, double> _kTextSizeMap = <String, double>{
-    'xx-small': 10,
-    'x-small': 12,
-    'small': 14,
-    'medium': 18,
-    'large': 22,
-    'x-large': 26,
-    'xx-large': 32,
-  };
-
-  double _computeFontSize() {
-    final String? fontSize = attributes.fontSize;
-    if (fontSize == null) {
-      // Default font size if unspecified: https://www.w3.org/TR/css-fonts-3/#font-size-prop
-      return _kTextSizeMap['medium']!;
-    }
-    if (_kTextSizeMap.containsKey(fontSize)) {
-      return _kTextSizeMap[fontSize]!;
-    }
-    // TODO support units.
-    return double.parse(fontSize);
-  }
-
-  int _computeFontWeight() {
-    final String? fontWeightValue = attributes.fontWeight;
-    if (fontWeightValue == null || fontWeightValue == 'normal') {
-      return normalFontWeight.index;
-    }
-    if (fontWeightValue == 'bold') {
-      return boldFontWeight.index;
-    }
-    switch (fontWeightValue) {
-      case '100':
-        return FontWeight.w100.index;
-      case '200':
-        return FontWeight.w200.index;
-      case '300':
-        return FontWeight.w300.index;
-      case '400':
-        return FontWeight.w400.index;
-      case '500':
-        return FontWeight.w500.index;
-      case '600':
-        return FontWeight.w600.index;
-      case '700':
-        return FontWeight.w700.index;
-      case '800':
-        return FontWeight.w800.index;
-      case '900':
-        return FontWeight.w900.index;
-    }
-    throw StateError('Invalid "font-weight": $fontWeightValue');
-  }
-
   TextConfig _textConfig(Rect bounds, AffineMatrix transform) {
     final Point newBaseline = absolute
         ? baseline
@@ -463,9 +419,9 @@ class TextNode extends AttributedNode {
     return TextConfig(
       text,
       transform.transformPoint(newBaseline),
-      attributes.fontFamily ?? '',
-      _computeFontWeight(),
-      _computeFontSize(),
+      attributes.fontFamily,
+      fontWeight,
+      fontSize,
       attributes.transform,
     );
   }
@@ -476,15 +432,17 @@ class TextNode extends AttributedNode {
       text,
       baseline,
       absolute,
+      fontSize,
+      fontWeight,
       attributes.applyParent(newAttributes),
     );
   }
 
   @override
-  void build(DrawCommandBuilder builder, AffineMatrix transform) {
-    final Rect bounds = nearestParentBounds();
-    final Paint? paint = _paint(bounds, transform);
-    final TextConfig textConfig = _textConfig(bounds, transform);
+  void build(DrawCommandBuilder builder, AffineMatrix transform,
+      Rect nearestParentBounds) {
+    final Paint? paint = _paint(nearestParentBounds, transform);
+    final TextConfig textConfig = _textConfig(nearestParentBounds, transform);
     if (paint != null && textConfig.text.trim().isNotEmpty) {
       builder.addText(textConfig, paint, attributes.id);
     }

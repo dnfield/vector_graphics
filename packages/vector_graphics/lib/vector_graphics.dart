@@ -110,7 +110,7 @@ class _VectorGraphicsWidgetState extends State<VectorGraphic> {
 
   @override
   void dispose() {
-    _pictureInfo?.picture.dispose();
+    _pictureInfo?.handle.layer = null;
     _pictureInfo = null;
     super.dispose();
   }
@@ -119,7 +119,7 @@ class _VectorGraphicsWidgetState extends State<VectorGraphic> {
     widget.loader.loadBytes(context).then((ByteData data) {
       final PictureInfo pictureInfo = decodeVectorGraphics(data);
       setState(() {
-        _pictureInfo?.picture.dispose();
+        _pictureInfo?.handle.layer = null;
         _pictureInfo = pictureInfo;
       });
     });
@@ -319,7 +319,7 @@ class _RenderVectorGraphics extends RenderBox {
     if (_scaleCanvasToViewBox(transform, size, pictureInfo.size)) {
       context.canvas.transform(transform.storage);
     }
-    context.canvas.drawPicture(_pictureInfo.picture);
+    context.addLayer(_pictureInfo.handle.layer!);
   }
 }
 

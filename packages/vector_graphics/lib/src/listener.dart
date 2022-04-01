@@ -1,15 +1,17 @@
 import 'dart:ui' as ui;
 import 'dart:typed_data';
 
+import 'package:flutter/rendering.dart';
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
 /// The deocded result of a vector graphics asset.
 class PictureInfo {
   /// Construct a new [PictureInfo].
-  const PictureInfo(this.picture, this.size);
+  const PictureInfo(this.handle, this.size);
 
-  /// The picture to be drawn with [ui.canvas.drawPicture]
-  final ui.Picture picture;
+  /// A [LayerHandle] that contains a picture layer with the decoded
+  /// vector graphic.
+  final LayerHandle<PictureLayer> handle;
 
   /// The target size of the picture.
   ///
@@ -55,7 +57,10 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   PictureInfo toPicture() {
     assert(!_done);
     _done = true;
-    return PictureInfo(_recorder.endRecording(), _size);
+    final LayerHandle<PictureLayer> handle = LayerHandle<PictureLayer>();
+    handle.layer = PictureLayer(Rect.fromLTWH(0, 0, _size.width, _size.height))
+      ..picture = _recorder.endRecording();
+    return PictureInfo(handle, _size);
   }
 
   @override

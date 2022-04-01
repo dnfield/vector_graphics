@@ -1,6 +1,7 @@
 import 'dart:ui' as ui;
 import 'dart:typed_data';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/rendering.dart';
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
@@ -36,12 +37,33 @@ class PictureInfo {
   final ui.Size size;
 }
 
+/// Internal testing only.
+@visibleForTesting
+Locale? get debugLastLocale => _debugLastLocale;
+Locale? _debugLastLocale;
+
+/// Internal testing only.
+@visibleForTesting
+TextDirection? get debugLastTextDirection => _debugLastTextDirection;
+TextDirection? _debugLastTextDirection;
+
 /// Decode a vector graphics binary asset into a [ui.Picture].
 ///
 /// Throws a [StateError] if the data is invalid.
-PictureInfo decodeVectorGraphics(ByteData data) {
-  final FlutterVectorGraphicsListener listener =
-      FlutterVectorGraphicsListener();
+PictureInfo decodeVectorGraphics(
+  ByteData data, {
+  required Locale? locale,
+  required TextDirection? textDirection,
+}) {
+  assert(() {
+    _debugLastTextDirection = textDirection;
+    _debugLastLocale = locale;
+    return true;
+  }());
+  final FlutterVectorGraphicsListener listener = FlutterVectorGraphicsListener(
+    locale: locale,
+    textDirection: textDirection,
+  );
   _codec.decode(data, listener);
   return listener.toPicture();
 }
@@ -50,13 +72,32 @@ PictureInfo decodeVectorGraphics(ByteData data) {
 /// format into a [ui.Picture].
 class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   /// Create a new [FlutterVectorGraphicsListener].
-  factory FlutterVectorGraphicsListener() {
+  ///
+  /// The [locale] and [textDirection] are used to configure any text created
+  /// by the vector_graphic.
+  factory FlutterVectorGraphicsListener({
+    Locale? locale,
+    TextDirection? textDirection,
+  }) {
     final ui.PictureRecorder recorder = ui.PictureRecorder();
     final ui.Canvas canvas = ui.Canvas(recorder);
-    return FlutterVectorGraphicsListener._(canvas, recorder);
+    return FlutterVectorGraphicsListener._(
+      canvas,
+      recorder,
+      locale,
+      textDirection,
+    );
   }
 
-  FlutterVectorGraphicsListener._(this._canvas, this._recorder);
+  FlutterVectorGraphicsListener._(
+    this._canvas,
+    this._recorder,
+    this._locale,
+    this._textDirection,
+  );
+
+  final Locale? _locale;
+  final TextDirection? _textDirection;
 
   final ui.PictureRecorder _recorder;
   final ui.Canvas _canvas;
@@ -284,23 +325,27 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   void onTextConfig(
     String text,
     String? fontFamily,
-    double dx,
-    double dy,
+    double x,
+    double y,
     int fontWeight,
     double fontSize,
     int id,
   ) {
     _textConfig.add(_TextConfig(
-        text, fontFamily, dx, dy, ui.FontWeight.values[fontWeight], fontSize));
+        text, fontFamily, x, y, ui.FontWeight.values[fontWeight], fontSize));
   }
 
   @override
   void onDrawText(int textId, int paintId) {
     final ui.Paint paint = _paints[paintId];
     final _TextConfig textConfig = _textConfig[textId];
-    final ui.ParagraphBuilder builder =
-        ui.ParagraphBuilder(ui.ParagraphStyle());
+    final ui.ParagraphBuilder builder = ui.ParagraphBuilder(
+      ui.ParagraphStyle(
+        textDirection: _textDirection,
+      ),
+    );
     builder.pushStyle(ui.TextStyle(
+      locale: _locale,
       foreground: paint,
       fontWeight: textConfig.fontWeight,
       fontSize: textConfig.fontSize,

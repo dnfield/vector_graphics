@@ -835,8 +835,8 @@ abstract class VectorGraphicsCodecListener {
   void onTextConfig(
     String text,
     String? fontFamily,
-    double dx,
-    double dy,
+    double x,
+    double y,
     int fontWeight,
     double fontSize,
     int id,

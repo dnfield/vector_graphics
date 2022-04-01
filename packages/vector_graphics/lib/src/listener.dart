@@ -16,7 +16,7 @@ class PictureInfo {
   /// Retrieve the picture layer associated with this [PictureInfo].
   ///
   /// Will be null if info has already been disposed.
-  PictureLayer? get picture {
+  PictureLayer? get layer {
     return _handle.layer;
   }
 

@@ -319,7 +319,7 @@ class _RenderVectorGraphics extends RenderBox {
     if (_scaleCanvasToViewBox(transform, size, pictureInfo.size)) {
       context.canvas.transform(transform.storage);
     }
-    context.addLayer(_pictureInfo.picture!);
+    context.addLayer(_pictureInfo.layer!);
   }
 }
 

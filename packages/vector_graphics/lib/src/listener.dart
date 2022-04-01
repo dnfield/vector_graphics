@@ -4,6 +4,8 @@ import 'dart:typed_data';
 import 'package:flutter/rendering.dart';
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
+const VectorGraphicsCodec _codec = VectorGraphicsCodec();
+
 /// The deocded result of a vector graphics asset.
 class PictureInfo {
   /// Construct a new [PictureInfo].
@@ -32,6 +34,16 @@ class PictureInfo {
   /// This information should be used to scale and position
   /// the picture based on the available space and alignment.
   final ui.Size size;
+}
+
+/// Decode a vector graphics binary asset into a [ui.Picture].
+///
+/// Throws a [StateError] if the data is invalid.
+PictureInfo decodeVectorGraphics(ByteData data) {
+  final FlutterVectorGraphicsListener listener =
+      FlutterVectorGraphicsListener();
+  _codec.decode(data, listener);
+  return listener.toPicture();
 }
 
 /// A listener implementation for the vector graphics codec that converts the

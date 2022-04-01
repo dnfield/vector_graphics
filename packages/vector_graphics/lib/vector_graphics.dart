@@ -10,20 +10,6 @@ import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
 import 'src/listener.dart';
 
-export 'src/listener.dart' show PictureInfo;
-
-const VectorGraphicsCodec _codec = VectorGraphicsCodec();
-
-/// Decode a vector graphics binary asset into a [ui.Picture].
-///
-/// Throws a [StateError] if the data is invalid.
-PictureInfo decodeVectorGraphics(ByteData data) {
-  final FlutterVectorGraphicsListener listener =
-      FlutterVectorGraphicsListener();
-  _codec.decode(data, listener);
-  return listener.toPicture();
-}
-
 /// A widget that displays a [VectorGraphicsCodec] encoded asset.
 ///
 /// This widget will ask the loader to load the bytes whenever its

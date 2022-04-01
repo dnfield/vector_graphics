@@ -1264,10 +1264,10 @@ class TextConfig {
   final double fontSize;
 
   /// The name of the font family to select for rendering.
-  final String fontFamily;
+  final String? fontFamily;
 
   /// The font weight, converted to a weight constant.
-  final int fontWeight;
+  final FontWeight fontWeight;
 
   /// A transform applied to the rendered font.
   ///
@@ -1276,6 +1276,8 @@ class TextConfig {
 }
 
 /// The value of the font weight.
+///
+/// This matches the enum values defined in dart:ui.
 enum FontWeight {
   /// A font weight of 100,
   w100,

@@ -163,9 +163,9 @@ Future<Uint8List> encodeSvg(String input, String filename) async {
       buffer: buffer,
       text: textConfig.text,
       fontFamily: textConfig.fontFamily,
-      dx: textConfig.baselineStart.x,
-      dy: textConfig.baselineStart.y,
-      fontWeight: textConfig.fontWeight,
+      x: textConfig.baselineStart.x,
+      y: textConfig.baselineStart.y,
+      fontWeight: textConfig.fontWeight.index,
       fontSize: textConfig.fontSize,
     );
   }

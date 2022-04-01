@@ -447,8 +447,8 @@ void main() {
       buffer: buffer,
       text: 'Hello',
       fontFamily: 'Roboto',
-      dx: 10,
-      dy: 12,
+      x: 10,
+      y: 12,
       fontWeight: 0,
       fontSize: 16,
     );
@@ -489,8 +489,8 @@ void main() {
       buffer: buffer,
       text: 'Hello',
       fontFamily: null,
-      dx: 10,
-      dy: 12,
+      x: 10,
+      y: 12,
       fontWeight: 0,
       fontSize: 16,
     );
@@ -531,8 +531,8 @@ void main() {
       buffer: buffer,
       text: '',
       fontFamily: null,
-      dx: 10,
-      dy: 12,
+      x: 10,
+      y: 12,
       fontWeight: 0,
       fontSize: 16,
     );
@@ -1097,8 +1097,8 @@ class OnSize {
 class OnTextConfig {
   const OnTextConfig(
     this.text,
-    this.dx,
-    this.dy,
+    this.x,
+    this.y,
     this.fontSize,
     this.fontFamily,
     this.fontWeight,
@@ -1106,8 +1106,8 @@ class OnTextConfig {
   );
 
   final String text;
-  final double dx;
-  final double dy;
+  final double x;
+  final double y;
   final double fontSize;
   final String? fontFamily;
   final int fontWeight;
@@ -1115,14 +1115,14 @@ class OnTextConfig {
 
   @override
   int get hashCode =>
-      Object.hash(text, dx, dy, fontSize, fontFamily, fontWeight, id);
+      Object.hash(text, x, y, fontSize, fontFamily, fontWeight, id);
 
   @override
   bool operator ==(Object other) =>
       other is OnTextConfig &&
       other.text == text &&
-      other.dx == dx &&
-      other.dy == dy &&
+      other.x == x &&
+      other.y == y &&
       other.fontSize == fontSize &&
       other.fontFamily == fontFamily &&
       other.fontWeight == fontWeight &&
@@ -1130,7 +1130,7 @@ class OnTextConfig {
 
   @override
   String toString() =>
-      'OnTextConfig($text, $dx, $dy, $fontSize, $fontFamily, $fontWeight, $id)';
+      'OnTextConfig($text, $x, $y, $fontSize, $fontFamily, $fontWeight, $id)';
 }
 
 class OnDrawText {

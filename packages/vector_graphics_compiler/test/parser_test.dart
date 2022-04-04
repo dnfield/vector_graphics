@@ -8,7 +8,7 @@ import 'test_svg_strings.dart';
 void main() {
   test('text with transform', () async {
     final VectorInstructions instructions = await parse(
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><text transform="rotate(10)">a</text></svg>',
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><text transform="rotate(10 -100 50)">a</text></svg>',
     );
     expect(instructions.paints.single, const Paint(fill: Fill()));
     expect(
@@ -19,7 +19,10 @@ void main() {
         null,
         normalFontWeight,
         16,
-        AffineMatrix.identity.rotated(radians(10)),
+        AffineMatrix.identity
+            .translated(-100, 50)
+            .rotated(radians(10))
+            .translated(100, -50),
       ),
     );
   });

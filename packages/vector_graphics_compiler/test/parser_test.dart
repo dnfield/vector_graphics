@@ -8,18 +8,18 @@ import 'test_svg_strings.dart';
 void main() {
   test('text with transform', () async {
     final VectorInstructions instructions = await parse(
-      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><text transform="translate(10, 11)">a</text></svg>',
+      '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 160"><text transform="rotate(10)">a</text></svg>',
     );
     expect(instructions.paints.single, const Paint(fill: Fill()));
     expect(
       instructions.text.single,
-      const TextConfig(
+      TextConfig(
         'a',
         Point.zero,
         null,
         normalFontWeight,
         16,
-        AffineMatrix(1, 0, 0, 1, 10, 11),
+        AffineMatrix.identity.rotated(radians(10)),
       ),
     );
   });

@@ -668,6 +668,7 @@ class SvgParser {
     /// Resolve the tree
     final ResolvingVisitor resolvingVisitor = ResolvingVisitor();
     final Node newRoot = _root!.accept(resolvingVisitor);
+
     /// Convert to vector instructions
     final CommandBuilderVisitor commandVisitor = CommandBuilderVisitor();
     newRoot.accept(commandVisitor);
@@ -1387,7 +1388,6 @@ class SvgParser {
 /// A resolver is used by the parser and node tree to handle forward/backwards
 /// references with identifiers.
 class RefResolver {
-
   /// A default empty identifier.
   static const String emptyUrlIri = 'url(#)';
   final Map<String, AttributedNode> _drawables = <String, AttributedNode>{};

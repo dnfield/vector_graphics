@@ -12,6 +12,7 @@ import 'node.dart';
 import 'numbers.dart' hide parseDoubleWithUnits;
 import 'numbers.dart' as numbers show parseDoubleWithUnits;
 import 'parsers.dart';
+import 'resolver.dart';
 import 'theme.dart';
 import 'visitor.dart';
 

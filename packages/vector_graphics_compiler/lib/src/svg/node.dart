@@ -20,7 +20,7 @@ abstract class Node {
 
   /// A node with no properties or operations, used for replacing `null` values
   /// in the tree or nodes that cannot be resolved correctly.
-  static const Node zero = _EmptyNode();
+  static const Node empty = _EmptyNode();
 
   /// Subclasses that have additional transformation information will
   /// concatenate their transform to the supplied `currentTransform`.
@@ -472,105 +472,4 @@ class TextNode extends AttributedNode {
   S accept<S>(Visitor<S> visitor) {
     return visitor.visitTextNode(this);
   }
-}
-
-/// A block of text that has its position and final transfrom fully known.
-class ResolvedTextNode extends Node {
-  /// Create a new [ResolvedTextNode].
-  ResolvedTextNode({
-    required this.textConfig,
-    required this.paint,
-  });
-
-  /// The text configuration to draw this piece of text.
-  final TextConfig textConfig;
-
-  /// The paint used to draw this piece of text.
-  final Paint paint;
-
-  @override
-  S accept<S>(Visitor<S> visitor) {
-    return visitor.visitResolvedText(this);
-  }
-
-  @override
-  void visitChildren(NodeCallback visitor) {}
-}
-
-/// A path node that has its bounds fully computed.
-class ResolvedPathNode extends Node {
-  /// Create a new [ResolvedPathNode].
-  ResolvedPathNode({
-    required this.paint,
-    required this.bounds,
-    required this.path,
-  });
-
-  /// The paint for the current path node.
-  final Paint paint;
-
-  /// The bounds estimate for the current path.
-  final Rect bounds;
-
-  /// The path to be drawn.
-  final Path path;
-
-  @override
-  S accept<S>(Visitor<S> visitor) {
-    return visitor.visitResolvedPath(this);
-  }
-
-  @override
-  void visitChildren(NodeCallback visitor) {}
-}
-
-/// A clip node where all paths are known and transformed in a single
-/// coordinate space.
-class ResolvedClipNode extends Node {
-  /// Create a new [ResolvedClipNode].
-  ResolvedClipNode({
-    required this.clips,
-    required this.child,
-  });
-
-  /// One or more clips to apply to rendered children.
-  final List<Path> clips;
-
-  /// The child node.
-  final Node child;
-
-  @override
-  S accept<S>(Visitor<S> visitor) {
-    return visitor.visitResolvedClipNode(this);
-  }
-
-  @override
-  void visitChildren(NodeCallback visitor) {}
-}
-
-/// A mask node with child and mask fully resolved.
-class ResolvedMaskNode extends Node {
-  /// Create a new [ResolvedMaskNode].
-  ResolvedMaskNode({
-    required this.child,
-    required this.mask,
-    required this.blendMode,
-  });
-
-  /// The child to apply as a mask.
-  final Node mask;
-
-  /// The child of this mask layer.
-  final Node child;
-
-  /// The blend mode to apply when saving a layer for the mask, if any.
-  final BlendMode? blendMode;
-
-  @override
-  S accept<S>(Visitor<S> visitor) {
-    return visitor.visitResolvedMaskNode(this);
-  }
-
-  @override
-  void visitChildren(NodeCallback visitor) {}
 }

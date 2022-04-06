@@ -5,7 +5,7 @@ import 'package:vector_graphics_compiler/src/geometry/path.dart';
 import 'package:vector_graphics_compiler/src/paint.dart';
 import 'package:vector_graphics_compiler/src/svg/node.dart';
 import 'package:vector_graphics_compiler/src/svg/parser.dart';
-import 'package:vector_graphics_compiler/src/svg/visitor.dart';
+import 'package:vector_graphics_compiler/src/svg/resolver.dart';
 
 void main() {
   test(
@@ -61,7 +61,7 @@ void main() {
     final ViewportNode newViewport =
         viewportNode.accept(resolver) as ViewportNode;
 
-    expect(newViewport.children, <Node>[Node.zero]);
+    expect(newViewport.children, <Node>[Node.empty]);
   });
 
   test('Resolving Nodes removes unresolved masks', () {

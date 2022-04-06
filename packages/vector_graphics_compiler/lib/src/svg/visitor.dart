@@ -131,12 +131,13 @@ class ResolvingVisitor extends Visitor<Node> {
     final AffineMatrix transform =
         _transformStack.last.multiplied(pathNode.attributes.transform);
     final Path transformedPath = pathNode.path.transformed(transform);
-    final Rect bounds = transformedPath.bounds();
-    final Paint? paint = pathNode.computePaint(bounds, transform);
+    final Rect originalBounds = pathNode.path.bounds();
+    final Rect newBounds = transformedPath.bounds();
+    final Paint? paint = pathNode.computePaint(originalBounds, transform);
     if (paint != null) {
       return ResolvedPathNode(
         paint: paint,
-        bounds: bounds,
+        bounds: newBounds,
         path: transformedPath,
       );
     }

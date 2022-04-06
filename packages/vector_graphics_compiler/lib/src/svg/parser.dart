@@ -689,8 +689,8 @@ class SvgParser {
   }
 
   Future<Node> _parseToNodeTree() async {
-     await _parseTree();
-     return _root!;
+    await _parseTree();
+    return _root!;
   }
 
   /// Gets the attribute for the current position of the parser.

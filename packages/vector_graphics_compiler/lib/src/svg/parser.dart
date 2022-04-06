@@ -668,11 +668,11 @@ class SvgParser {
 
     /// Resolve the tree
     final ResolvingVisitor resolvingVisitor = ResolvingVisitor();
-    final Node newRoot = _root!.accept(resolvingVisitor);
+    final Node newRoot = _root!.accept(resolvingVisitor, AffineMatrix.identity);
 
     /// Convert to vector instructions
     final CommandBuilderVisitor commandVisitor = CommandBuilderVisitor();
-    newRoot.accept(commandVisitor);
+    newRoot.accept(commandVisitor, null);
 
     return commandVisitor.toInstructions();
   }

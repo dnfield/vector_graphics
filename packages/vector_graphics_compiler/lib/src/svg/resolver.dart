@@ -9,40 +9,33 @@ import 'visitor.dart';
 /// A visitor class that processes relative coordinates in the tree into a
 /// single coordinate space, removing extra attributes, empty nodes, resolving
 /// references/masks/clips.
-class ResolvingVisitor extends Visitor<Node> {
+class ResolvingVisitor extends Visitor<Node, AffineMatrix> {
   late Rect _bounds;
-  final List<AffineMatrix> _transformStack = <AffineMatrix>[
-    AffineMatrix.identity,
-  ];
 
   @override
-  Node visitClipNode(ClipNode clipNode) {
+  Node visitClipNode(ClipNode clipNode, AffineMatrix data) {
     final List<Path> transformedClips = <Path>[
       for (Path clip in clipNode.resolver(clipNode.clipId))
-        clip.transformed(_transformStack.last)
+        clip.transformed(data)
     ];
     if (transformedClips.isEmpty) {
-      return clipNode.child.accept(this);
+      return clipNode.child.accept(this, data);
     }
     return ResolvedClipNode(
       clips: transformedClips,
-      child: clipNode.child.accept(this),
+      child: clipNode.child.accept(this, data),
     );
   }
 
   @override
-  Node visitMaskNode(MaskNode maskNode) {
+  Node visitMaskNode(MaskNode maskNode, AffineMatrix data) {
     final AttributedNode? resolvedMask = maskNode.resolver(maskNode.maskId);
     if (resolvedMask == null) {
-      return maskNode.child.accept(this);
+      return maskNode.child.accept(this, data);
     }
-    final Node child = maskNode.child.accept(this);
-    final AffineMatrix childTransform =
-        maskNode.concatTransform(_transformStack.last);
-
-    _transformStack.add(childTransform);
-    final Node mask = resolvedMask.accept(this);
-    _transformStack.removeLast();
+    final Node child = maskNode.child.accept(this, data);
+    final AffineMatrix childTransform = maskNode.concatTransform(data);
+    final Node mask = resolvedMask.accept(this, childTransform);
 
     return ResolvedMaskNode(
       child: child,
@@ -52,10 +45,8 @@ class ResolvingVisitor extends Visitor<Node> {
   }
 
   @override
-  Node visitParentNode(ParentNode parentNode) {
-    final AffineMatrix current = _transformStack.last;
-    final AffineMatrix nextTransform = parentNode.concatTransform(current);
-    _transformStack.add(nextTransform);
+  Node visitParentNode(ParentNode parentNode, AffineMatrix data) {
+    final AffineMatrix nextTransform = parentNode.concatTransform(data);
 
     final Paint? saveLayerPaint = parentNode.createLayerPaint();
     final Node result;
@@ -64,7 +55,8 @@ class ResolvingVisitor extends Visitor<Node> {
         SvgAttributes.empty,
         precalculatedTransform: AffineMatrix.identity,
         children: <Node>[
-          for (Node child in parentNode.children) child.accept(this),
+          for (Node child in parentNode.children)
+            child.accept(this, nextTransform),
         ],
       );
     } else {
@@ -72,18 +64,18 @@ class ResolvingVisitor extends Visitor<Node> {
         SvgAttributes.empty,
         paint: saveLayerPaint,
         children: <Node>[
-          for (Node child in parentNode.children) child.accept(this),
+          for (Node child in parentNode.children)
+            child.accept(this, nextTransform),
         ],
       );
     }
-    _transformStack.removeLast();
     return result;
   }
 
   @override
-  Node visitPathNode(PathNode pathNode) {
+  Node visitPathNode(PathNode pathNode, AffineMatrix data) {
     final AffineMatrix transform =
-        _transformStack.last.multiplied(pathNode.attributes.transform);
+        data.multiplied(pathNode.attributes.transform);
     final Path transformedPath = pathNode.path.transformed(transform);
     final Rect originalBounds = pathNode.path.bounds();
     final Rect newBounds = transformedPath.bounds();
@@ -99,10 +91,9 @@ class ResolvingVisitor extends Visitor<Node> {
   }
 
   @override
-  Node visitTextNode(TextNode textNode) {
-    final Paint? paint = textNode.computePaint(_bounds, _transformStack.last);
-    final TextConfig textConfig =
-        textNode.computeTextConfig(_bounds, _transformStack.last);
+  Node visitTextNode(TextNode textNode, AffineMatrix data) {
+    final Paint? paint = textNode.computePaint(_bounds, data);
+    final TextConfig textConfig = textNode.computeTextConfig(_bounds, data);
     if (paint != null && textConfig.text.trim().isNotEmpty) {
       return ResolvedTextNode(
         textConfig: textConfig,
@@ -113,22 +104,22 @@ class ResolvingVisitor extends Visitor<Node> {
   }
 
   @override
-  Node visitViewportNode(ViewportNode viewportNode) {
+  Node visitViewportNode(ViewportNode viewportNode, AffineMatrix data) {
     _bounds = Rect.fromLTWH(0, 0, viewportNode.width, viewportNode.height);
-    _transformStack.add(viewportNode.transform);
+    final AffineMatrix transform = viewportNode.concatTransform(data);
     return ViewportNode(
       SvgAttributes.empty,
       width: viewportNode.width,
       height: viewportNode.height,
       transform: AffineMatrix.identity,
       children: <Node>[
-        for (Node child in viewportNode.children) child.accept(this),
+        for (Node child in viewportNode.children) child.accept(this, transform),
       ],
     );
   }
 
   @override
-  Node visitDeferredNode(DeferredNode deferredNode) {
+  Node visitDeferredNode(DeferredNode deferredNode, AffineMatrix data) {
     final AttributedNode? resolvedNode =
         deferredNode.resolver(deferredNode.refId);
     if (resolvedNode == null) {
@@ -136,38 +127,38 @@ class ResolvingVisitor extends Visitor<Node> {
     }
     final AttributedNode concreteRef =
         resolvedNode.applyAttributes(deferredNode.attributes);
-    return concreteRef.accept(this);
+    return concreteRef.accept(this, data);
   }
 
   @override
-  Node visitEmptyNode(Node node) => node;
+  Node visitEmptyNode(Node node, AffineMatrix data) => node;
 
   @override
-  Node visitResolvedText(ResolvedTextNode textNode) {
+  Node visitResolvedText(ResolvedTextNode textNode, AffineMatrix data) {
     assert(false);
     return textNode;
   }
 
   @override
-  Node visitResolvedPath(ResolvedPathNode pathNode) {
+  Node visitResolvedPath(ResolvedPathNode pathNode, AffineMatrix data) {
     assert(false);
     return pathNode;
   }
 
   @override
-  Node visitResolvedClipNode(ResolvedClipNode clipNode) {
+  Node visitResolvedClipNode(ResolvedClipNode clipNode, AffineMatrix data) {
     assert(false);
     return clipNode;
   }
 
   @override
-  Node visitResolvedMaskNode(ResolvedMaskNode maskNode) {
+  Node visitResolvedMaskNode(ResolvedMaskNode maskNode, AffineMatrix data) {
     assert(false);
     return maskNode;
   }
 
   @override
-  Node visitSaveLayerNode(SaveLayerNode layerNode) {
+  Node visitSaveLayerNode(SaveLayerNode layerNode, AffineMatrix data) {
     assert(false);
     return layerNode;
   }
@@ -190,8 +181,8 @@ class ResolvedTextNode extends Node {
   final Paint paint;
 
   @override
-  S accept<S>(Visitor<S> visitor) {
-    return visitor.visitResolvedText(this);
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitResolvedText(this, data);
   }
 
   @override
@@ -219,8 +210,8 @@ class ResolvedPathNode extends Node {
   final Path path;
 
   @override
-  S accept<S>(Visitor<S> visitor) {
-    return visitor.visitResolvedPath(this);
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitResolvedPath(this, data);
   }
 
   @override
@@ -245,8 +236,8 @@ class ResolvedClipNode extends Node {
   final Node child;
 
   @override
-  S accept<S>(Visitor<S> visitor) {
-    return visitor.visitResolvedClipNode(this);
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitResolvedClipNode(this, data);
   }
 
   @override
@@ -274,8 +265,8 @@ class ResolvedMaskNode extends Node {
   final BlendMode? blendMode;
 
   @override
-  S accept<S>(Visitor<S> visitor) {
-    return visitor.visitResolvedMaskNode(this);
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitResolvedMaskNode(this, data);
   }
 
   @override

@@ -36,15 +36,15 @@ abstract class Node {
   void visitChildren(NodeCallback visitor);
 
   /// Accept a [Visitor] implementation.
-  S accept<S>(Visitor<S> visitor);
+  S accept<S, V>(Visitor<S, V> visitor, V data);
 }
 
 class _EmptyNode extends Node {
   const _EmptyNode();
 
   @override
-  S accept<S>(Visitor<S> visitor) {
-    return visitor.visitEmptyNode(this);
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitEmptyNode(this, data);
   }
 
   @override
@@ -98,8 +98,8 @@ class ViewportNode extends ParentNode {
   Rect get viewport => Rect.fromLTWH(0, 0, width, height);
 
   @override
-  S accept<S>(Visitor<S> visitor) {
-    return visitor.visitViewportNode(this);
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitViewportNode(this, data);
   }
 }
 
@@ -199,8 +199,8 @@ class ParentNode extends AttributedNode {
   }
 
   @override
-  S accept<S>(Visitor<S> visitor) {
-    return visitor.visitParentNode(this);
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitParentNode(this, data);
   }
 }
 
@@ -218,8 +218,8 @@ class SaveLayerNode extends ParentNode {
   final Paint paint;
 
   @override
-  S accept<S>(Visitor<S> visitor) {
-    return visitor.visitSaveLayerNode(this);
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitSaveLayerNode(this, data);
   }
 }
 
@@ -264,8 +264,8 @@ class ClipNode extends Node {
   }
 
   @override
-  S accept<S>(Visitor<S> visitor) {
-    return visitor.visitClipNode(this);
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitClipNode(this, data);
   }
 }
 
@@ -309,8 +309,8 @@ class MaskNode extends Node {
   }
 
   @override
-  S accept<S>(Visitor<S> visitor) {
-    return visitor.visitMaskNode(this);
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitMaskNode(this, data);
   }
 }
 
@@ -352,8 +352,8 @@ class PathNode extends AttributedNode {
   void visitChildren(NodeCallback visitor) {}
 
   @override
-  S accept<S>(Visitor<S> visitor) {
-    return visitor.visitPathNode(this);
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitPathNode(this, data);
   }
 }
 
@@ -388,8 +388,8 @@ class DeferredNode extends AttributedNode {
   void visitChildren(NodeCallback visitor) {}
 
   @override
-  S accept<S>(Visitor<S> visitor) {
-    return visitor.visitDeferredNode(this);
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitDeferredNode(this, data);
   }
 }
 
@@ -469,7 +469,7 @@ class TextNode extends AttributedNode {
   void visitChildren(NodeCallback visitor) {}
 
   @override
-  S accept<S>(Visitor<S> visitor) {
-    return visitor.visitTextNode(this);
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitTextNode(this, data);
   }
 }

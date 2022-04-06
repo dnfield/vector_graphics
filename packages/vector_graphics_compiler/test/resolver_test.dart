@@ -30,7 +30,7 @@ void main() {
 
     final ResolvingVisitor resolver = ResolvingVisitor();
     final ResolvedPathNode resolvedPathNode =
-        pathNode.accept(resolver) as ResolvedPathNode;
+        pathNode.accept(resolver, AffineMatrix.identity) as ResolvedPathNode;
 
     expect(resolvedPathNode.bounds, const Rect.fromLTWH(10, 10, 10, 10));
     expect(
@@ -59,7 +59,7 @@ void main() {
 
     final ResolvingVisitor resolver = ResolvingVisitor();
     final ViewportNode newViewport =
-        viewportNode.accept(resolver) as ViewportNode;
+        viewportNode.accept(resolver, AffineMatrix.identity) as ViewportNode;
 
     expect(newViewport.children, <Node>[Node.empty]);
   });
@@ -93,7 +93,7 @@ void main() {
 
     final ResolvingVisitor resolver = ResolvingVisitor();
     final ViewportNode newViewport =
-        viewportNode.accept(resolver) as ViewportNode;
+        viewportNode.accept(resolver, AffineMatrix.identity) as ViewportNode;
 
     expect(newViewport.children, contains(isA<ResolvedPathNode>()));
   });

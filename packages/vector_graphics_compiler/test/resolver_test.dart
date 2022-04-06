@@ -2,99 +2,83 @@ import 'package:test/test.dart';
 import 'package:vector_graphics_compiler/src/geometry/basic_types.dart';
 import 'package:vector_graphics_compiler/src/geometry/matrix.dart';
 import 'package:vector_graphics_compiler/src/geometry/path.dart';
-import 'package:vector_graphics_compiler/src/paint.dart';
 import 'package:vector_graphics_compiler/src/svg/node.dart';
 import 'package:vector_graphics_compiler/src/svg/parser.dart';
 import 'package:vector_graphics_compiler/src/svg/resolver.dart';
 
+List<T> queryChildren<T extends Node>(Node node) {
+  final List<T> children = <T>[];
+  void visitor(Node child) {
+    if (child is T) {
+      children.add(child);
+    }
+    child.visitChildren(visitor);
+  }
+
+  node.visitChildren(visitor);
+  return children;
+}
+
 void main() {
   test(
       'Resolves PathNodes to ResolvedPathNodes by flattening the transform '
-      'and computing bounds', () {
-    final PathNode pathNode = PathNode(
-      Path(
-        commands: const <PathCommand>[
-          MoveToCommand(0, 0),
-          MoveToCommand(10, 10),
-        ],
-      ),
-      SvgAttributes(
-        transform: AffineMatrix.identity.translated(10, 10),
-        raw: <String, String>{},
-        fill: SvgFillAttributes(
-          RefResolver(),
-          color: const Color(0xFFAABBCC),
-        ),
-      ),
-    );
+      'and computing bounds', () async {
+    final Node node = await parseToNodeTree('''
+<svg viewBox="0 0 200 200">
+  <g transform="translate(10, 10)">
+    <rect x="0" y="0" width="10" height="10" fill="white" />
+  </g>
+</svg>''');
+    final Node resolvedNode =
+        node.accept(ResolvingVisitor(), AffineMatrix.identity);
+    final List<ResolvedPathNode> nodes =
+        queryChildren<ResolvedPathNode>(resolvedNode);
 
-    final ResolvingVisitor resolver = ResolvingVisitor();
-    final ResolvedPathNode resolvedPathNode =
-        pathNode.accept(resolver, AffineMatrix.identity) as ResolvedPathNode;
+    expect(nodes.length, 1);
+
+    final ResolvedPathNode resolvedPathNode = nodes[0];
 
     expect(resolvedPathNode.bounds, const Rect.fromLTWH(10, 10, 10, 10));
     expect(
       resolvedPathNode.path,
       Path(
         commands: const <PathCommand>[
-          MoveToCommand(10, 10),
-          MoveToCommand(20, 20),
+          MoveToCommand(20.0, 10.0),
+          LineToCommand(20.0, 20.0),
+          LineToCommand(10.0, 20.0),
+          LineToCommand(10.0, 10.0),
+          CloseCommand(),
         ],
       ),
     );
   });
 
-  test('Resolving Nodes replaces empty text with Node.zero', () {
-    final ViewportNode viewportNode = ViewportNode(
-      SvgAttributes.empty,
-      width: 100,
-      height: 100,
-      transform: AffineMatrix.identity,
-    );
-    viewportNode.addChild(
-      TextNode('', Point.zero, true, 12, FontWeight.w100, SvgAttributes.empty),
-      clipResolver: (String ref) => <Path>[],
-      maskResolver: (String ref) => null,
-    );
+  test('Resolving Nodes replaces empty text with Node.zero', () async {
+    final Node node = await parseToNodeTree('''
+  <svg viewBox="0 0 200 200">
+    <text></text>
+  </svg>''');
+    final Node resolvedNode =
+        node.accept(ResolvingVisitor(), AffineMatrix.identity);
+    final List<ResolvedTextNode> nodes =
+        queryChildren<ResolvedTextNode>(resolvedNode);
 
-    final ResolvingVisitor resolver = ResolvingVisitor();
-    final ViewportNode newViewport =
-        viewportNode.accept(resolver, AffineMatrix.identity) as ViewportNode;
-
-    expect(newViewport.children, <Node>[Node.empty]);
+    expect(nodes, isEmpty);
   });
 
-  test('Resolving Nodes removes unresolved masks', () {
-    final ViewportNode viewportNode = ViewportNode(
-      SvgAttributes.empty,
-      width: 100,
-      height: 100,
-      transform: AffineMatrix.identity,
-    );
-    viewportNode.addChild(
-      PathNode(
-        Path(commands: const <PathCommand>[
-          MoveToCommand(10, 10),
-        ]),
-        SvgAttributes(
-          raw: const <String, String>{},
-          fill: SvgFillAttributes(
-            RefResolver(),
-            color: const Color(0xFFAABBCC),
-          ),
-        ),
-      ),
-      clipResolver: (String ref) => <Path>[],
-      maskResolver: (String ref) => null,
-      maskId: 'DoesntMatter',
-    );
+  test('Resolving Nodes removes unresolved masks', () async {
+    final Node node = await parseToNodeTree('''
+<svg viewBox="0 0 200 200">
+  <g mask="foo">
+    <rect x="0" y="0" width="100" height="100" fill="white" />
+  </g>
+</svg>''');
 
-    expect(viewportNode.children, contains(isA<MaskNode>()));
+    final Node resolvedNode =
+        node.accept(ResolvingVisitor(), AffineMatrix.identity);
+    final List<ResolvedMaskNode> nodes =
+        queryChildren<ResolvedMaskNode>(resolvedNode);
 
-    final ResolvingVisitor resolver = ResolvingVisitor();
-    final ViewportNode newViewport =
-        viewportNode.accept(resolver, AffineMatrix.identity) as ViewportNode;
-
-    expect(newViewport.children, contains(isA<ResolvedPathNode>()));
+    expect(nodes, isEmpty);
   });
 }

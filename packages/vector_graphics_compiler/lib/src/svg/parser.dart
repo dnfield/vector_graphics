@@ -1,5 +1,6 @@
 import 'dart:collection';
 
+import 'package:meta/meta.dart';
 import 'package:xml/xml_events.dart';
 
 import '../geometry/basic_types.dart';
@@ -558,6 +559,12 @@ class _SvgGroupTuple {
   final ParentNode drawable;
 }
 
+/// Parse an SVG to the initial Node tree.
+@visibleForTesting
+Future<Node> parseToNodeTree(String source) {
+  return SvgParser(source, const SvgTheme(), null, true)._parseToNodeTree();
+}
+
 /// Reads an SVG XML string and via the [parse] method creates a set of
 /// [VectorInstructions].
 class SvgParser {
@@ -575,7 +582,7 @@ class SvgParser {
   final Iterator<XmlEvent> _eventIterator;
   final String? _key;
   final bool _warningsAsErrors;
-  final RefResolver _definitions = RefResolver();
+  final _Resolver _definitions = _Resolver();
   final Queue<_SvgGroupTuple> _parentDrawables = ListQueue<_SvgGroupTuple>(10);
   ViewportNode? _root;
   SvgAttributes _currentAttributes = SvgAttributes.empty;
@@ -639,8 +646,7 @@ class SvgParser {
     }
   }
 
-  /// Drive the XML reader to EOF and produce [VectorInstructions].
-  Future<VectorInstructions> parse() async {
+  Future<void> _parseTree() async {
     for (XmlEvent event in _readSubtree()) {
       if (event is XmlStartElementEvent) {
         if (startElement(event)) {
@@ -665,6 +671,11 @@ class SvgParser {
       throw StateError('Invalid SVG data');
     }
     _definitions._seal();
+  }
+
+  /// Drive the XML reader to EOF and produce [VectorInstructions].
+  Future<VectorInstructions> parse() async {
+    await _parseTree();
 
     /// Resolve the tree
     final ResolvingVisitor resolvingVisitor = ResolvingVisitor();
@@ -675,6 +686,11 @@ class SvgParser {
     newRoot.accept(commandVisitor, null);
 
     return commandVisitor.toInstructions();
+  }
+
+  Future<Node> _parseToNodeTree() async {
+     await _parseTree();
+     return _root!;
   }
 
   /// Gets the attribute for the current position of the parser.
@@ -924,7 +940,7 @@ class SvgParser {
   String buildUrlIri() => 'url(#${_currentAttributes.id})';
 
   /// An empty IRI.
-  static const String emptyUrlIri = RefResolver.emptyUrlIri;
+  static const String emptyUrlIri = _Resolver.emptyUrlIri;
 
   /// Parses a `spreadMethod` attribute into a [TileMode].
   TileMode? parseTileMode() {
@@ -1327,7 +1343,7 @@ class SvgParser {
     }
 
     if (rawFill.startsWith('url')) {
-      return SvgFillAttributes(
+      return SvgFillAttributes._(
         _definitions,
         color: Color.fromRGBO(255, 255, 255, opacity),
         shaderId: rawFill,
@@ -1346,7 +1362,7 @@ class SvgParser {
       return null;
     }
 
-    return SvgFillAttributes(
+    return SvgFillAttributes._(
       _definitions,
       color: fillColor,
     );
@@ -1364,7 +1380,7 @@ class SvgParser {
     final double? opacity =
         parseDouble(attributeMap['opacity'])?.clamp(0.0, 1.0).toDouble();
     final Color? color = parseColor(attributeMap['color']) ?? currentColor;
-    return SvgAttributes(
+    return SvgAttributes._(
       raw: attributeMap,
       id: attributeMap['id'],
       href: attributeMap['href'],
@@ -1388,7 +1404,7 @@ class SvgParser {
 
 /// A resolver is used by the parser and node tree to handle forward/backwards
 /// references with identifiers.
-class RefResolver {
+class _Resolver {
   /// A default empty identifier.
   static const String emptyUrlIri = 'url(#)';
   final Map<String, AttributedNode> _drawables = <String, AttributedNode>{};
@@ -1478,7 +1494,7 @@ class _Viewport {
 /// A collection of attributes for an SVG element.
 class SvgAttributes {
   /// Create a new [SvgAttributes] from the given properties.
-  const SvgAttributes({
+  const SvgAttributes._({
     required this.raw,
     this.id,
     this.href,
@@ -1497,7 +1513,7 @@ class SvgAttributes {
   });
 
   /// The empty set of properties.
-  static const SvgAttributes empty = SvgAttributes(raw: <String, String>{});
+  static const SvgAttributes empty = SvgAttributes._(raw: <String, String>{});
 
   /// Whether these attributes could result in any visual display if applied to
   /// a leaf shape node.
@@ -1635,7 +1651,7 @@ class SvgAttributes {
       if (includePosition && parent.raw.containsKey('y')) 'y': parent.raw['y']!,
       ...raw,
     };
-    return SvgAttributes(
+    return SvgAttributes._(
       raw: newRaw,
       id: id,
       href: href,
@@ -1671,7 +1687,7 @@ class SvgStrokeAttributes {
   /// be.
   static const SvgStrokeAttributes none = SvgStrokeAttributes._(null);
 
-  final RefResolver? _definitions;
+  final _Resolver? _definitions;
 
   /// The color to use for stroking. _Does_ include the opacity value. Only
   /// opacity is used if the [shaderId] is not null.
@@ -1725,12 +1741,12 @@ class SvgStrokeAttributes {
 /// SVG attributes specific to filling.
 class SvgFillAttributes {
   /// Create a new [SvgFillAttributes];
-  const SvgFillAttributes(this._definitions, {this.color, this.shaderId});
+  const SvgFillAttributes._(this._definitions, {this.color, this.shaderId});
 
   /// Specifies that fills should not be drawn, even if they otherwise would be.
-  static const SvgFillAttributes none = SvgFillAttributes(null);
+  static const SvgFillAttributes none = SvgFillAttributes._(null);
 
-  final RefResolver? _definitions;
+  final _Resolver? _definitions;
 
   /// The color to use for filling. _Does_ include the opacity value. Only
   /// opacity is used if the [shaderId] is not null.

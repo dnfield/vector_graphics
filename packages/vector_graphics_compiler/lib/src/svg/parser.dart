@@ -14,7 +14,6 @@ import 'numbers.dart' hide parseDoubleWithUnits;
 import 'numbers.dart' as numbers show parseDoubleWithUnits;
 import 'parsers.dart';
 import 'resolver.dart';
-import 'theme.dart';
 import 'visitor.dart';
 
 final Set<String> _unhandledElements = <String>{'title', 'desc'};
@@ -562,7 +561,7 @@ class _SvgGroupTuple {
 /// Parse an SVG to the initial Node tree.
 @visibleForTesting
 Future<Node> parseToNodeTree(String source) {
-  return SvgParser(source, const SvgTheme(), null, true)._parseToNodeTree();
+  return SvgParser(source, null, true)._parseToNodeTree();
 }
 
 /// Reads an SVG XML string and via the [parse] method creates a set of
@@ -571,13 +570,9 @@ class SvgParser {
   /// Creates a new [SvgParser].
   SvgParser(
     String xml,
-    this.theme,
     this._key,
     this._warningsAsErrors,
   ) : _eventIterator = parseEvents(xml).iterator;
-
-  /// The theme used when parsing SVG elements.
-  final SvgTheme theme;
 
   final Iterator<XmlEvent> _eventIterator;
   final String? _key;
@@ -626,7 +621,6 @@ class SvgParser {
         }
         _currentAttributes = _createSvgAttributes(
           attributeMap,
-          currentColor: depth == 0 ? theme.currentColor : null,
         );
         _currentStartElement = event;
         depth += 1;
@@ -814,7 +808,6 @@ class SvgParser {
     return numbers.parseDoubleWithUnits(
       rawDouble,
       tryParse: tryParse,
-      theme: theme,
     );
   }
 

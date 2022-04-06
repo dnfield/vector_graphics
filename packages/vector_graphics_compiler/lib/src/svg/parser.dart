@@ -2,7 +2,6 @@ import 'dart:collection';
 
 import 'package:xml/xml_events.dart';
 
-import '../draw_command_builder.dart';
 import '../geometry/basic_types.dart';
 import '../geometry/matrix.dart';
 import '../geometry/path.dart';
@@ -14,6 +13,7 @@ import 'numbers.dart' hide parseDoubleWithUnits;
 import 'numbers.dart' as numbers show parseDoubleWithUnits;
 import 'parsers.dart';
 import 'theme.dart';
+import 'visitor.dart';
 
 final Set<String> _unhandledElements = <String>{'title', 'desc'};
 
@@ -56,7 +56,6 @@ class _Elements {
       if (warningsAsErrors) {
         throw UnsupportedError(errorMessage);
       }
-
       parserState._parentDrawables.addLast(
         _SvgGroupTuple(
           'svg',
@@ -575,7 +574,7 @@ class SvgParser {
   final Iterator<XmlEvent> _eventIterator;
   final String? _key;
   final bool _warningsAsErrors;
-  final _Resolver _definitions = _Resolver();
+  final RefResolver _definitions = RefResolver();
   final Queue<_SvgGroupTuple> _parentDrawables = ListQueue<_SvgGroupTuple>(10);
   ViewportNode? _root;
   SvgAttributes _currentAttributes = SvgAttributes.empty;
@@ -666,9 +665,14 @@ class SvgParser {
     }
     _definitions._seal();
 
-    final DrawCommandBuilder builder = DrawCommandBuilder();
-    _root!.build(builder, AffineMatrix.identity, _root!.viewport);
-    return builder.toInstructions(_root!.width, _root!.height);
+    /// Resolve the tree
+    final ResolvingVisitor resolvingVisitor = ResolvingVisitor();
+    final Node newRoot = _root!.accept(resolvingVisitor);
+    /// Convert to vector instructions
+    final CommandBuilderVisitor commandVisitor = CommandBuilderVisitor();
+    newRoot.accept(commandVisitor);
+
+    return commandVisitor.toInstructions();
   }
 
   /// Gets the attribute for the current position of the parser.
@@ -918,7 +922,7 @@ class SvgParser {
   String buildUrlIri() => 'url(#${_currentAttributes.id})';
 
   /// An empty IRI.
-  static const String emptyUrlIri = _Resolver.emptyUrlIri;
+  static const String emptyUrlIri = RefResolver.emptyUrlIri;
 
   /// Parses a `spreadMethod` attribute into a [TileMode].
   TileMode? parseTileMode() {
@@ -1321,7 +1325,7 @@ class SvgParser {
     }
 
     if (rawFill.startsWith('url')) {
-      return SvgFillAttributes._(
+      return SvgFillAttributes(
         _definitions,
         color: Color.fromRGBO(255, 255, 255, opacity),
         shaderId: rawFill,
@@ -1340,7 +1344,7 @@ class SvgParser {
       return null;
     }
 
-    return SvgFillAttributes._(
+    return SvgFillAttributes(
       _definitions,
       color: fillColor,
     );
@@ -1358,7 +1362,7 @@ class SvgParser {
     final double? opacity =
         parseDouble(attributeMap['opacity'])?.clamp(0.0, 1.0).toDouble();
     final Color? color = parseColor(attributeMap['color']) ?? currentColor;
-    return SvgAttributes._(
+    return SvgAttributes(
       raw: attributeMap,
       id: attributeMap['id'],
       href: attributeMap['href'],
@@ -1380,7 +1384,11 @@ class SvgParser {
   }
 }
 
-class _Resolver {
+/// A resolver is used by the parser and node tree to handle forward/backwards
+/// references with identifiers.
+class RefResolver {
+
+  /// A default empty identifier.
   static const String emptyUrlIri = 'url(#)';
   final Map<String, AttributedNode> _drawables = <String, AttributedNode>{};
   final Map<String, Gradient> _shaders = <String, Gradient>{};
@@ -1392,16 +1400,19 @@ class _Resolver {
     _sealed = true;
   }
 
+  /// Retrieve the drawable defined by [ref].
   AttributedNode? getDrawable(String ref) {
     assert(_sealed);
     return _drawables[ref];
   }
 
+  /// Retrieve the clip defined by [ref], or `null` if it is undefined.
   List<Path> getClipPath(String ref) {
     assert(_sealed);
     return _clips[ref] ?? <Path>[];
   }
 
+  /// Retrieve the [Gradeint] defined by [ref].
   T? getGradient<T extends Gradient>(String ref) {
     assert(_sealed);
     return _shaders[ref] as T?;
@@ -1410,13 +1421,15 @@ class _Resolver {
   final Map<String, List<Gradient>> _deferredShaders =
       <String, List<Gradient>>{};
 
-  void addDeferredGradient<T extends Gradient>(String ref, T gradient) {
+  /// Add a deferred [gradient] to the resolver, identified by [href].
+  void addDeferredGradient(String ref, Gradient gradient) {
     assert(!_sealed);
-    _deferredShaders.putIfAbsent(ref, () => <T>[]).add(gradient);
+    _deferredShaders.putIfAbsent(ref, () => <Gradient>[]).add(gradient);
   }
 
-  void addGradient<T extends Gradient>(
-    T gradient,
+  /// Add the [gradient] to the resolver, identified by [href].
+  void addGradient(
+    Gradient gradient,
     String? href,
   ) {
     assert(!_sealed);
@@ -1440,11 +1453,13 @@ class _Resolver {
     }
   }
 
+  /// Add the clip defined by [paths] to the resolver identifier by [ref].
   void addClipPath(String ref, List<Path> paths) {
     assert(!_sealed);
     _clips[ref] = paths;
   }
 
+  /// Add the [drawable] to the resolver identifier by [ref].
   void addDrawable(String ref, AttributedNode drawable) {
     assert(!_sealed);
     _drawables[ref] = drawable;
@@ -1461,7 +1476,8 @@ class _Viewport {
 
 /// A collection of attributes for an SVG element.
 class SvgAttributes {
-  const SvgAttributes._({
+  /// Create a new [SvgAttributes] from the given properties.
+  const SvgAttributes({
     required this.raw,
     this.id,
     this.href,
@@ -1480,7 +1496,7 @@ class SvgAttributes {
   });
 
   /// The empty set of properties.
-  static const SvgAttributes empty = SvgAttributes._(raw: <String, String>{});
+  static const SvgAttributes empty = SvgAttributes(raw: <String, String>{});
 
   /// Whether these attributes could result in any visual display if applied to
   /// a leaf shape node.
@@ -1618,7 +1634,7 @@ class SvgAttributes {
       if (includePosition && parent.raw.containsKey('y')) 'y': parent.raw['y']!,
       ...raw,
     };
-    return SvgAttributes._(
+    return SvgAttributes(
       raw: newRaw,
       id: id,
       href: href,
@@ -1654,7 +1670,7 @@ class SvgStrokeAttributes {
   /// be.
   static const SvgStrokeAttributes none = SvgStrokeAttributes._(null);
 
-  final _Resolver? _definitions;
+  final RefResolver? _definitions;
 
   /// The color to use for stroking. _Does_ include the opacity value. Only
   /// opacity is used if the [shaderId] is not null.
@@ -1707,12 +1723,13 @@ class SvgStrokeAttributes {
 
 /// SVG attributes specific to filling.
 class SvgFillAttributes {
-  const SvgFillAttributes._(this._definitions, {this.color, this.shaderId});
+  /// Create a new [SvgFillAttributes];
+  const SvgFillAttributes(this._definitions, {this.color, this.shaderId});
 
   /// Specifies that fills should not be drawn, even if they otherwise would be.
-  static const SvgFillAttributes none = SvgFillAttributes._(null);
+  static const SvgFillAttributes none = SvgFillAttributes(null);
 
-  final _Resolver? _definitions;
+  final RefResolver? _definitions;
 
   /// The color to use for filling. _Does_ include the opacity value. Only
   /// opacity is used if the [shaderId] is not null.

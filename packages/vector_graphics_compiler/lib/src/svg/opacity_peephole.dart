@@ -62,13 +62,15 @@ class _OpacityForwarder extends Visitor<Node, _ForwardResult>
     Stroke? stroke;
     if (oldFill != null) {
       fill = Fill(
-        color: oldFill.color.withOpacity(data.opacity * (oldFill.color.a / 255)),
+        color:
+            oldFill.color.withOpacity(data.opacity * (oldFill.color.a / 255)),
         shader: oldFill.shader,
       );
     }
     if (oldStroke != null) {
       stroke = Stroke(
-        color: oldStroke.color.withOpacity(data.opacity * (oldStroke.color.a / 255)),
+        color: oldStroke.color
+            .withOpacity(data.opacity * (oldStroke.color.a / 255)),
         shader: oldStroke.shader,
         cap: oldStroke.cap,
         join: oldStroke.join,

@@ -26,7 +26,7 @@ Future<VectorInstructions> parse(
   SvgTheme theme = const SvgTheme(),
 }) async {
   final SvgParser parser = SvgParser(xml, theme, key, warningsAsErrors);
-  return await parser.parse();
+  return parser.parse();
 }
 
 Float64List? _encodeMatrix(AffineMatrix? matrix) {

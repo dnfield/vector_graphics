@@ -151,9 +151,24 @@ class OpacityPeepholeOptimizer extends Visitor<_Result, void>
     // the exact bounds.
     final Node child = clipNode.child.accept(this, data).node;
     if (clipNode.clips.length > 1) {
-      return _Result(false, child, <Rect>[]);
+      return _Result(
+        false,
+        ResolvedClipNode(
+          child: child,
+          clips: clipNode.clips,
+        ),
+        <Rect>[],
+      );
     }
-    return _Result(true, child, <Rect>[clipNode.clips.single.bounds()]);
+    return _Result(
+        true,
+        ResolvedClipNode(
+          child: child,
+          clips: clipNode.clips,
+        ),
+        <Rect>[
+          clipNode.clips.single.bounds(),
+        ]);
   }
 
   @override

@@ -331,7 +331,23 @@ class PathNode extends AttributedNode {
     final Rect bounds = path.bounds();
     final Paint? paint = _paint(bounds, transform);
     if (paint != null) {
-      builder.addPath(transformedPath, paint, attributes.id);
+      if (attributes.stroke?.dashArray != null) {
+        assert(paint.stroke != null);
+        if (paint.fill != null) {
+          builder.addPath(
+            transformedPath,
+            Paint(blendMode: paint.blendMode, fill: paint.fill),
+            attributes.id,
+          );
+        }
+        builder.addPath(
+          transformedPath.dashed(attributes.stroke!.dashArray!),
+          Paint(blendMode: paint.blendMode, stroke: paint.stroke),
+          attributes.id,
+        );
+      } else {
+        builder.addPath(transformedPath, paint, attributes.id);
+      }
     }
   }
 

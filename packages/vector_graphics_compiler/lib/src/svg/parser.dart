@@ -680,10 +680,11 @@ class SvgParser {
 
     /// Resolve the tree
     final ResolvingVisitor resolvingVisitor = ResolvingVisitor();
-    final OpacityPeepholeOptimizer opacityPeepholeOptimizer = OpacityPeepholeOptimizer();
+    final OpacityPeepholeOptimizer opacityPeepholeOptimizer =
+        OpacityPeepholeOptimizer();
     Node newRoot = _root!.accept(resolvingVisitor, AffineMatrix.identity);
     newRoot = opacityPeepholeOptimizer.apply(newRoot);
-    print('removed count: ${OpacityPeepholeOptimizer.removedLayer}');
+
     /// Convert to vector instructions
     final CommandBuilderVisitor commandVisitor = CommandBuilderVisitor();
     newRoot.accept(commandVisitor, null);

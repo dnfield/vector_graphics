@@ -105,7 +105,7 @@ Future<Uint8List> encodeSvg(String input, String filename) async {
       final int? shaderId = shaderIds[fill.shader];
       final int fillId = codec.writeFill(
         buffer,
-        fill.color?.value ?? 0,
+        fill.color.value,
         paint.blendMode?.index ?? 0,
         shaderId,
       );
@@ -115,7 +115,7 @@ Future<Uint8List> encodeSvg(String input, String filename) async {
       final int? shaderId = shaderIds[stroke.shader];
       final int strokeId = codec.writeStroke(
         buffer,
-        stroke.color?.value ?? 0,
+        stroke.color.value,
         stroke.cap?.index ?? 0,
         stroke.join?.index ?? 0,
         paint.blendMode?.index ?? 0,

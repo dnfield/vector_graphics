@@ -3,6 +3,7 @@ import 'package:vector_graphics_compiler/src/svg/resolver.dart';
 import 'package:vector_graphics_compiler/src/svg/visitor.dart';
 
 import '../geometry/basic_types.dart';
+import '../paint.dart';
 import 'node.dart';
 
 class _Result {
@@ -13,11 +14,91 @@ class _Result {
   final List<Rect> bounds;
 }
 
-/// This visitor will process the tree and apply opacity forward.
-class OpacityPeepholeOptimizer extends Visitor<_Result, double?>
-    with ErrorOnUnResolvedNode<_Result, double?> {
-  static int removedLayer = 0;
+class _OpacityForwarder extends Visitor<Node, double>
+    with ErrorOnUnResolvedNode<Node, double> {
+  const _OpacityForwarder();
 
+  @override
+  Node visitEmptyNode(Node node, double data) {
+    return node;
+  }
+
+  @override
+  Node visitParentNode(ParentNode parentNode, double data) {
+    return ParentNode(
+      SvgAttributes.empty,
+      children: <Node>[
+        for (Node child in parentNode.children) child.accept(this, data),
+      ],
+    );
+  }
+
+  @override
+  Node visitResolvedClipNode(ResolvedClipNode clipNode, double data) {
+    assert(clipNode.clips.length == 1);
+    return ResolvedClipNode(
+      clips: clipNode.clips,
+      child: clipNode.child.accept(this, data),
+    );
+  }
+
+  @override
+  Node visitResolvedMaskNode(ResolvedMaskNode maskNode, double data) {
+    throw UnsupportedError('Cannot forward opacity through a mask node');
+  }
+
+  @override
+  Node visitResolvedPath(ResolvedPathNode pathNode, double data) {
+    final Fill? oldFill = pathNode.paint.fill;
+    final Stroke? oldStroke = pathNode.paint.stroke;
+    Fill? fill;
+    Stroke? stroke;
+    if (oldFill != null) {
+      fill = Fill(
+        color: oldFill.color.withOpacity(data),
+        shader: oldFill.shader,
+      );
+    }
+    if (oldStroke != null) {
+      stroke = Stroke(
+        color: oldStroke.color.withOpacity(data),
+        shader: oldStroke.shader,
+        cap: oldStroke.cap,
+        join: oldStroke.join,
+        miterLimit: oldStroke.miterLimit,
+        width: oldStroke.width,
+      );
+    }
+    return ResolvedPathNode(
+      paint: Paint(
+        blendMode: pathNode.paint.blendMode,
+        stroke: stroke,
+        fill: fill,
+      ),
+      bounds: pathNode.bounds,
+      path: pathNode.path,
+    );
+  }
+
+  @override
+  Node visitResolvedText(ResolvedTextNode textNode, double? data) {
+    throw UnsupportedError('Cannot forward opacity through a mask node');
+  }
+
+  @override
+  Node visitSaveLayerNode(SaveLayerNode layerNode, double? data) {
+    throw UnsupportedError('Cannot forward opacity through a savelayer node');
+  }
+
+  @override
+  Node visitViewportNode(ViewportNode viewportNode, double? data) {
+    throw UnsupportedError('Cannot forward opacity through a viewport node');
+  }
+}
+
+/// This visitor will process the tree and apply opacity forward.
+class OpacityPeepholeOptimizer extends Visitor<_Result, void>
+    with ErrorOnUnResolvedNode<_Result, void> {
   /// Apply the optimization to the given node tree.
   Node apply(Node node) {
     final _Result _result = node.accept(this, null);
@@ -25,12 +106,12 @@ class OpacityPeepholeOptimizer extends Visitor<_Result, double?>
   }
 
   @override
-  _Result visitEmptyNode(Node node, double? data) {
+  _Result visitEmptyNode(Node node, void data) {
     return _Result(true, node, <Rect>[Rect.zero]);
   }
 
   @override
-  _Result visitParentNode(ParentNode parentNode, double? data) {
+  _Result visitParentNode(ParentNode parentNode, void data) {
     final List<_Result> childResults = <_Result>[
       for (Node child in parentNode.children) child.accept(this, data)
     ];
@@ -58,7 +139,7 @@ class OpacityPeepholeOptimizer extends Visitor<_Result, double?>
   }
 
   @override
-  _Result visitResolvedClipNode(ResolvedClipNode clipNode, double? data) {
+  _Result visitResolvedClipNode(ResolvedClipNode clipNode, void data) {
     // If there are multiple clip paths, then we don't currently know how to calculate
     // the exact bounds.
     final Node child = clipNode.child.accept(this, data).node;
@@ -69,26 +150,26 @@ class OpacityPeepholeOptimizer extends Visitor<_Result, double?>
   }
 
   @override
-  _Result visitResolvedMaskNode(ResolvedMaskNode maskNode, double? data) {
+  _Result visitResolvedMaskNode(ResolvedMaskNode maskNode, void data) {
     // We don't currently know how to compute bounds for a mask.
     // Don't process children to avoid breaking mask.
     return _Result(false, maskNode, <Rect>[]);
   }
 
   @override
-  _Result visitResolvedPath(ResolvedPathNode pathNode, double? data) {
+  _Result visitResolvedPath(ResolvedPathNode pathNode, void data) {
     return _Result(true, pathNode, <Rect>[pathNode.bounds]);
   }
 
   @override
-  _Result visitResolvedText(ResolvedTextNode textNode, double? data) {
+  _Result visitResolvedText(ResolvedTextNode textNode, void data) {
     // Text cannot apply the opacity optimization since we cannot accurately
     // learn its bounds ahead of time.
     return _Result(false, textNode, <Rect>[]);
   }
 
   @override
-  _Result visitSaveLayerNode(SaveLayerNode layerNode, double? data) {
+  _Result visitSaveLayerNode(SaveLayerNode layerNode, void data) {
     final List<_Result> childResults = <_Result>[
       for (Node child in layerNode.children) child.accept(this, data)
     ];
@@ -125,15 +206,20 @@ class OpacityPeepholeOptimizer extends Visitor<_Result, double?>
         <Rect>[],
       );
     }
+    final double opacity = layerNode.paint.fill!.color.a / 255;
 
-    removedLayer += 1;
-    final Node result = ParentNode(SvgAttributes.empty,
-        children: <Node>[for (_Result result in childResults) result.node]);
+    final Node result = ParentNode(
+      SvgAttributes.empty,
+      children: <Node>[
+        for (_Result result in childResults)
+          result.node.accept(const _OpacityForwarder(), opacity),
+      ],
+    );
     return _Result(canForwardOpacity, result, flattenedBounds);
   }
 
   @override
-  _Result visitViewportNode(ViewportNode viewportNode, double? data) {
+  _Result visitViewportNode(ViewportNode viewportNode, void data) {
     final ViewportNode node = ViewportNode(
       viewportNode.attributes,
       width: viewportNode.width,

@@ -82,7 +82,8 @@ mixin ErrorOnUnResolvedNode<S, V> on Visitor<S, V> {
 }
 
 /// A visitor that builds up a [VectorInstructions] for binary encoding.
-class CommandBuilderVisitor extends Visitor<void, void> with ErrorOnUnResolvedNode<void, void> {
+class CommandBuilderVisitor extends Visitor<void, void>
+    with ErrorOnUnResolvedNode<void, void> {
   final DrawCommandBuilder _builder = DrawCommandBuilder();
   late double _width;
   late double _height;

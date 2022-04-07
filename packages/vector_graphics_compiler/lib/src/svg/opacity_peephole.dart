@@ -62,13 +62,13 @@ class _OpacityForwarder extends Visitor<Node, _ForwardResult>
     Stroke? stroke;
     if (oldFill != null) {
       fill = Fill(
-        color: oldFill.color.withOpacity(data.opacity),
+        color: oldFill.color.withOpacity(data.opacity * (oldFill.color.a / 255)),
         shader: oldFill.shader,
       );
     }
     if (oldStroke != null) {
       stroke = Stroke(
-        color: oldStroke.color.withOpacity(data.opacity),
+        color: oldStroke.color.withOpacity(data.opacity * (oldStroke.color.a / 255)),
         shader: oldStroke.shader,
         cap: oldStroke.cap,
         join: oldStroke.join,
@@ -161,14 +161,15 @@ class OpacityPeepholeOptimizer extends Visitor<_Result, void>
       );
     }
     return _Result(
-        true,
-        ResolvedClipNode(
-          child: child,
-          clips: clipNode.clips,
-        ),
-        <Rect>[
-          clipNode.clips.single.bounds(),
-        ]);
+      true,
+      ResolvedClipNode(
+        child: child,
+        clips: clipNode.clips,
+      ),
+      <Rect>[
+        clipNode.clips.single.bounds(),
+      ],
+    );
   }
 
   @override

@@ -130,7 +130,7 @@ void main() {
     expect(textNode.paint.fill?.color, const Color(0xffffffff));
   });
 
-  test('Collapses nested opacity groups', () async {
+  test('Collapses nested opacity groups multiplicatively', () async {
     final Node node = await parseAndResolve('''
 <svg viewBox="0 0 200 200">
   <g opacity="0.5">
@@ -147,6 +147,6 @@ void main() {
     final ResolvedPathNode textNode =
         queryChildren<ResolvedPathNode>(newNode).single;
 
-    expect(textNode.paint.fill?.color, const Color(0x7fffffff));
+    expect(textNode.paint.fill?.color, const Color(0x07ffffff));
   });
 }

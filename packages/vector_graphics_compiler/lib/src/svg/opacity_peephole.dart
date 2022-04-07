@@ -14,17 +14,24 @@ class _Result {
   final List<Rect> bounds;
 }
 
-class _OpacityForwarder extends Visitor<Node, double>
-    with ErrorOnUnResolvedNode<Node, double> {
+class _ForwardResult {
+  _ForwardResult(this.opacity, this.blendMode);
+
+  final double opacity;
+  final BlendMode? blendMode;
+}
+
+class _OpacityForwarder extends Visitor<Node, _ForwardResult>
+    with ErrorOnUnResolvedNode<Node, _ForwardResult> {
   const _OpacityForwarder();
 
   @override
-  Node visitEmptyNode(Node node, double data) {
+  Node visitEmptyNode(Node node, _ForwardResult data) {
     return node;
   }
 
   @override
-  Node visitParentNode(ParentNode parentNode, double data) {
+  Node visitParentNode(ParentNode parentNode, _ForwardResult data) {
     return ParentNode(
       SvgAttributes.empty,
       children: <Node>[
@@ -34,7 +41,7 @@ class _OpacityForwarder extends Visitor<Node, double>
   }
 
   @override
-  Node visitResolvedClipNode(ResolvedClipNode clipNode, double data) {
+  Node visitResolvedClipNode(ResolvedClipNode clipNode, _ForwardResult data) {
     assert(clipNode.clips.length == 1);
     return ResolvedClipNode(
       clips: clipNode.clips,
@@ -43,25 +50,25 @@ class _OpacityForwarder extends Visitor<Node, double>
   }
 
   @override
-  Node visitResolvedMaskNode(ResolvedMaskNode maskNode, double data) {
+  Node visitResolvedMaskNode(ResolvedMaskNode maskNode, _ForwardResult data) {
     throw UnsupportedError('Cannot forward opacity through a mask node');
   }
 
   @override
-  Node visitResolvedPath(ResolvedPathNode pathNode, double data) {
+  Node visitResolvedPath(ResolvedPathNode pathNode, _ForwardResult data) {
     final Fill? oldFill = pathNode.paint.fill;
     final Stroke? oldStroke = pathNode.paint.stroke;
     Fill? fill;
     Stroke? stroke;
     if (oldFill != null) {
       fill = Fill(
-        color: oldFill.color.withOpacity(data),
+        color: oldFill.color.withOpacity(data.opacity),
         shader: oldFill.shader,
       );
     }
     if (oldStroke != null) {
       stroke = Stroke(
-        color: oldStroke.color.withOpacity(data),
+        color: oldStroke.color.withOpacity(data.opacity),
         shader: oldStroke.shader,
         cap: oldStroke.cap,
         join: oldStroke.join,
@@ -71,7 +78,7 @@ class _OpacityForwarder extends Visitor<Node, double>
     }
     return ResolvedPathNode(
       paint: Paint(
-        blendMode: pathNode.paint.blendMode,
+        blendMode: data.blendMode ?? pathNode.paint.blendMode,
         stroke: stroke,
         fill: fill,
       ),
@@ -81,17 +88,17 @@ class _OpacityForwarder extends Visitor<Node, double>
   }
 
   @override
-  Node visitResolvedText(ResolvedTextNode textNode, double? data) {
+  Node visitResolvedText(ResolvedTextNode textNode, _ForwardResult data) {
     throw UnsupportedError('Cannot forward opacity through a mask node');
   }
 
   @override
-  Node visitSaveLayerNode(SaveLayerNode layerNode, double? data) {
+  Node visitSaveLayerNode(SaveLayerNode layerNode, _ForwardResult data) {
     throw UnsupportedError('Cannot forward opacity through a savelayer node');
   }
 
   @override
-  Node visitViewportNode(ViewportNode viewportNode, double? data) {
+  Node visitViewportNode(ViewportNode viewportNode, _ForwardResult data) {
     throw UnsupportedError('Cannot forward opacity through a viewport node');
   }
 }
@@ -207,12 +214,12 @@ class OpacityPeepholeOptimizer extends Visitor<_Result, void>
       );
     }
     final double opacity = layerNode.paint.fill!.color.a / 255;
-
     final Node result = ParentNode(
       SvgAttributes.empty,
       children: <Node>[
         for (_Result result in childResults)
-          result.node.accept(const _OpacityForwarder(), opacity),
+          result.node.accept(const _OpacityForwarder(),
+              _ForwardResult(opacity, layerNode.paint.blendMode)),
       ],
     );
     return _Result(canForwardOpacity, result, flattenedBounds);

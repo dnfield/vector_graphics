@@ -105,13 +105,12 @@ class ResolvingVisitor extends Visitor<Node, AffineMatrix> {
           ));
         }
         return parent;
-      } else {
-        return ResolvedPathNode(
-          paint: paint,
-          bounds: newBounds,
-          path: transformedPath,
-        );
       }
+      return ResolvedPathNode(
+        paint: paint,
+        bounds: newBounds,
+        path: transformedPath,
+      );
     }
     return Node.empty;
   }

@@ -165,7 +165,8 @@ class OpacityPeepholeOptimizer extends Visitor<_Result, void>
 
   @override
   _Result visitResolvedPath(ResolvedPathNode pathNode, void data) {
-    return _Result(true, pathNode, <Rect>[pathNode.bounds]);
+    return _Result(pathNode.paint.blendMode == BlendMode.srcOver, pathNode,
+        <Rect>[pathNode.bounds]);
   }
 
   @override
@@ -218,8 +219,13 @@ class OpacityPeepholeOptimizer extends Visitor<_Result, void>
       SvgAttributes.empty,
       children: <Node>[
         for (_Result result in childResults)
-          result.node.accept(const _OpacityForwarder(),
-              _ForwardResult(opacity, layerNode.paint.blendMode)),
+          result.node.accept(
+            const _OpacityForwarder(),
+            _ForwardResult(
+              opacity,
+              layerNode.paint.blendMode,
+            ),
+          ),
       ],
     );
     return _Result(canForwardOpacity, result, flattenedBounds);

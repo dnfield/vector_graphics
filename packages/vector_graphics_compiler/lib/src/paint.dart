@@ -396,16 +396,16 @@ class Paint {
   ///
   /// See [Paint].
   const Paint({
-    this.blendMode,
+    BlendMode? blendMode,
     this.stroke,
     this.fill,
-  });
+  }) : blendMode = blendMode ?? BlendMode.srcOver;
 
   /// The Porter-Duff algorithm to use when compositing this painting object
   /// with any objects painted under it.
   ///
   /// Defaults to [BlendMode.srcOver].
-  final BlendMode? blendMode;
+  final BlendMode blendMode;
 
   /// The stroke properties, if any, to apply to shapes drawn with this paint.
   ///
@@ -454,10 +454,8 @@ class Paint {
   String toString() {
     final StringBuffer buffer = StringBuffer('Paint(');
     String leading = '';
-    if (blendMode != null) {
-      buffer.write('${leading}blendMode: $blendMode');
-      leading = ', ';
-    }
+    buffer.write('${leading}blendMode: $blendMode');
+    leading = ', ';
     if (stroke != null) {
       buffer.write('${leading}stroke: $stroke');
       leading = ', ';

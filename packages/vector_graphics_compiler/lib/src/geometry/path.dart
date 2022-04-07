@@ -226,9 +226,13 @@ class CubicToCommand extends PathCommand {
   }
 
   /// Precisions > 1 increase precision at cost of extra computation time.
-  double computeLength(Point start, [double precision = 2]) {
+  double computeLength(Point start) {
     // Mike Reed just made this up! The nerve of him.
-    final double tolerance = 1 / 2 * 3;
+    // One difference from Skia is just setting a default tolerance of 3. This
+    // is good enough for a particular test SVG that has this curve:
+    // M65 33c0 17.673-14.326 32-32 32S1 50.673 1 33C1 15.327 15.326 1 33 1s32 14.327 32 32z
+    // Lower values end up getting the end points wrong when dashing a path.
+    const double tolerance = 1 / 2 * 3;
 
     double _compute(
       Point p1,

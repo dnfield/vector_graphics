@@ -17,6 +17,7 @@ export 'src/geometry/vertices.dart';
 export 'src/paint.dart';
 export 'src/svg/theme.dart';
 export 'src/vector_instructions.dart';
+export 'src/svg/tesselator.dart' show initializeLibTesselator;
 
 /// Parses an SVG string into a [VectorInstructions] object.
 Future<VectorInstructions> parse(

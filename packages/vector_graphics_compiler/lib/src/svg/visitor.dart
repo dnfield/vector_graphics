@@ -48,6 +48,9 @@ abstract class Visitor<S, V> {
 
   /// Visit a [SaveLayerNode].
   S visitSaveLayerNode(SaveLayerNode layerNode, V data);
+
+  /// Visit a [ResolvedVerticesNode].
+  S visitResolvedVerticesNode(ResolvedVerticesNode verticesNode, V data);
 }
 
 /// A mixin that can be applied to a [Visitor] that makes visiting an
@@ -156,5 +159,10 @@ class CommandBuilderVisitor extends Visitor<void, void>
       child.accept(this, data);
     }
     _builder.restore();
+  }
+
+  @override
+  void visitResolvedVerticesNode(ResolvedVerticesNode verticesNode, void data) {
+    _builder.addVertices(verticesNode.vertices, verticesNode.paint);
   }
 }

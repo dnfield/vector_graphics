@@ -5,6 +5,13 @@ import 'package:args/args.dart';
 import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 
 final ArgParser argParser = ArgParser()
+  ..addOption(
+    'libtesselator',
+    help: 'The path to a libtesselator dynamic library.\n'
+        'When this value is provided, fill paths will be tesselated \n'
+        'into vertices.',
+    valueHelp: 'path/to/libtesselator.dylib',
+  )
   ..addOption('input',
       abbr: 'i',
       help: 'The path to a file containing a single SVG',
@@ -26,6 +33,10 @@ Future<void> main(List<String> args) async {
     print(argParser.usage);
     exit(1);
   }
+  if (results.wasParsed('libtesselator')) {
+    initializeLibTesselator(results['libtesselator'] as String);
+  }
+
   final String inputFilePath = results['input'] as String;
   final String xml = File(inputFilePath).readAsStringSync();
   final File outputFile =

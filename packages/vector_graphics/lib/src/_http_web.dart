@@ -1,4 +1,3 @@
-import 'dart:convert';
 // This lint is currently broken for packages that say they support web.
 // ignore: avoid_web_libraries_in_flutter
 import 'dart:html';
@@ -10,5 +9,10 @@ Future<Uint8List> httpGet(Uri uri, {Map<String, String>? headers}) async {
     uri.toString(),
     requestHeaders: headers,
   );
-  return Uint8List.fromList(utf8.encode(request.responseText!));
+  request.responseType = 'arraybuffer';
+  if (request.response is Uint8List) {
+    return request.response as Uint8List;
+  } else {
+    return Uint8List.fromList(request.response as List<int>);
+  }
 }

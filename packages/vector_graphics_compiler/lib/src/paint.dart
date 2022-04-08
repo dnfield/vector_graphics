@@ -452,17 +452,13 @@ class Paint {
 
   @override
   String toString() {
-    final StringBuffer buffer = StringBuffer('Paint(');
-    String leading = '';
-    buffer.write('${leading}blendMode: $blendMode');
-    leading = ', ';
+    final StringBuffer buffer = StringBuffer('Paint($blendMode: $blendMode');
+    const String leading = ', ';
     if (stroke != null) {
       buffer.write('${leading}stroke: $stroke');
-      leading = ', ';
     }
     if (fill != null) {
       buffer.write('${leading}fill: $fill');
-      leading = ', ';
     }
     buffer.write(')');
     return buffer.toString();
@@ -528,25 +524,19 @@ class Stroke {
 
   @override
   String toString() {
-    final StringBuffer buffer = StringBuffer('Stroke(');
-    String leading = '';
-    buffer.write('${leading}color: $color');
-    leading = ', ';
+    final StringBuffer buffer = StringBuffer('Stroke(color: $color');
+    const String leading = ', ';
     if (shader != null) {
       buffer.write('${leading}shader: $shader');
-      leading = ', ';
     }
     if (cap != null) {
       buffer.write('${leading}cap: $cap');
-      leading = ', ';
     }
     if (join != null) {
       buffer.write('${leading}join: $join');
-      leading = ', ';
     }
     if (miterLimit != null) {
       buffer.write('${leading}miterLimit: $miterLimit');
-      leading = ', ';
     }
     if (width != null) {
       buffer.write('${leading}width: $width');
@@ -587,10 +577,8 @@ class Fill {
 
   @override
   String toString() {
-    final StringBuffer buffer = StringBuffer('Fill(');
-    String leading = '';
-    buffer.write('${leading}color: $color');
-    leading = ', ';
+    final StringBuffer buffer = StringBuffer('Fill($color: $color');
+    const String leading = ', ';
 
     if (shader != null) {
       buffer.write('${leading}shader: $shader');

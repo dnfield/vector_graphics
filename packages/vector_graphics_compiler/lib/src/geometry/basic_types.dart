@@ -108,7 +108,11 @@ class Rect {
   bool get isEmpty => width == 0 || height == 0;
 
   /// Whether or not [other] intersect this rectangle.
+  ///
+  /// This only works for sorted rectangles.
   bool intersects(Rect other) {
+    assert(other.left <= other.right && other.top <= other.bottom);
+    assert(left <= right && top <= bottom);
     if (isEmpty || other.isEmpty) {
       return false;
     }

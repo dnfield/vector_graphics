@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:meta/meta.dart';
 
 import 'geometry/basic_types.dart';
@@ -1315,3 +1317,18 @@ const FontWeight normalFontWeight = FontWeight.w400;
 
 /// A commonly used font weight that is heavier than normal.
 const FontWeight boldFontWeight = FontWeight.w700;
+
+/// The raw data of a raster image and its rendering information.
+abstract class ImageData {
+  /// The raw encoded raster data.
+  Uint8List get image;
+
+  /// The target width of the image.
+  double get width;
+
+  /// The target height of the image.
+  double get height;
+
+  /// The transform to apply to the image.s
+  AffineMatrix get transform;
+}

@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:meta/meta.dart';
 
 import 'geometry/basic_types.dart';

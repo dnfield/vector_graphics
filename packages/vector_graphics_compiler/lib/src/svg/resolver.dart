@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../geometry/basic_types.dart';
 import '../geometry/matrix.dart';
 import '../geometry/path.dart';
@@ -116,6 +118,22 @@ class ResolvingVisitor extends Visitor<Node, AffineMatrix> {
   }
 
   @override
+  Node visitImageNode(ImageNode imageNode, AffineMatrix data) {
+    final AffineMatrix transform = data.multiplied(
+      imageNode.attributes.transform.translated(
+        imageNode.offset.x,
+        imageNode.offset.y,
+      ),
+    );
+    return ResolvedImageNode(
+      image: imageNode.image,
+      width: imageNode.width,
+      height: imageNode.height,
+      transform: transform,
+    );
+  }
+
+  @override
   Node visitTextNode(TextNode textNode, AffineMatrix data) {
     final Paint? paint = textNode.computePaint(_bounds, data);
     final TextConfig textConfig = textNode.computeTextConfig(_bounds, data);
@@ -180,6 +198,12 @@ class ResolvingVisitor extends Visitor<Node, AffineMatrix> {
   Node visitResolvedMaskNode(ResolvedMaskNode maskNode, AffineMatrix data) {
     assert(false);
     return maskNode;
+  }
+
+  @override
+  Node visitResolvedImage(ResolvedImageNode imageNode, AffineMatrix data) {
+    assert(false);
+    return imageNode;
   }
 
   @override
@@ -292,6 +316,41 @@ class ResolvedMaskNode extends Node {
   @override
   S accept<S, V>(Visitor<S, V> visitor, V data) {
     return visitor.visitResolvedMaskNode(this, data);
+  }
+
+  @override
+  void visitChildren(NodeCallback visitor) {}
+}
+
+/// An [ImageNode] whose offset and transform have been resolved.
+class ResolvedImageNode extends Node implements ImageData {
+  /// Creates a new image node that has resolved its offset and transform.
+  ResolvedImageNode({
+    required this.image,
+    required this.width,
+    required this.height,
+    required this.transform,
+  });
+
+  /// The raw image data.
+  @override
+  final Uint8List image;
+
+  /// The width of the image.
+  @override
+  final double width;
+
+  /// The height of the image.
+  @override
+  final double height;
+
+  /// The transform to apply to the image.
+  @override
+  final AffineMatrix transform;
+
+  @override
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitResolvedImage(this, data);
   }
 
   @override

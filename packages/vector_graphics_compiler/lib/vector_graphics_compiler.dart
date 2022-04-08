@@ -85,6 +85,18 @@ Future<Uint8List> encodeSvg(String input, String filename) async {
   final VectorInstructions instructions = await parse(input, key: filename);
   final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
 
+  final Map<int, int> imageIds = <int, int>{};
+  codec.writeImageCount(buffer, instructions.images.length);
+  for (final ImageData imageData in instructions.images) {
+    codec.writeImage(
+      buffer,
+      imageData.image,
+      imageData.width,
+      imageData.height,
+      imageData.transform.toMatrix4(),
+    );
+  }
+
   codec.writeSize(buffer, instructions.width, instructions.height);
 
   final Map<int, int> fillIds = <int, int>{};
@@ -222,6 +234,9 @@ Future<Uint8List> encodeSvg(String input, String filename) async {
             strokeIds[command.paintId]!,
           );
         }
+        break;
+      case DrawCommandType.image:
+        codec.writeDrawImage(buffer, imageIds[command.objectId]!);
         break;
     }
   }

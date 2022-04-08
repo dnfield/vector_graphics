@@ -378,6 +378,23 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
       _canvas.restore();
     }
   }
+
+  @override
+  void onDrawImage(
+    Uint8List image,
+    double width,
+    double height,
+    Float64List? transform,
+  ) {
+    if (transform != null) {
+      _canvas.save();
+      _canvas.transform(transform);
+    }
+
+    if (transform != null) {
+      _canvas.restore();
+    }
+  }
 }
 
 class _TextConfig {

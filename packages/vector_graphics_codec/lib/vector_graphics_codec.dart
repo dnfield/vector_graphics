@@ -36,6 +36,7 @@ class VectorGraphicsCodec {
   static const int _maskTag = 43;
   static const int _drawTextTag = 44;
   static const int _textConfigTag = 45;
+  static const int _drawImageTag = 46;
 
   static const int _version = 1;
   static const int _magicNumber = 0x00882d62;
@@ -123,6 +124,9 @@ class VectorGraphicsCodec {
         case _drawTextTag:
           _readDrawText(buffer, listener);
           continue;
+        case _drawImageTag:
+          _readDrawImage(buffer, listener);
+          continue;
         default:
           throw StateError('Unknown type tag $type');
       }
@@ -137,7 +141,7 @@ class VectorGraphicsCodec {
     double width,
     double height,
   ) {
-    if (buffer._decodePhase.index != _CurrentSection.size.index) {
+    if (buffer._decodePhase.index != _CurrentSection.images.index) {
       throw StateError('Size already written');
     }
     buffer._decodePhase = _CurrentSection.shaders;
@@ -168,10 +172,8 @@ class VectorGraphicsCodec {
     Uint16List? indices,
     int? paintId,
   ) {
-    if (buffer._decodePhase.index > _CurrentSection.commands.index) {
-      throw StateError('Commands must be encoded together.');
-    }
-    buffer._decodePhase = _CurrentSection.commands;
+    buffer._checkPhase(_CurrentSection.commands);
+
     // Type Tag
     // Vertex Length
     // Vertex Buffer
@@ -190,6 +192,35 @@ class VectorGraphicsCodec {
     }
   }
 
+  void writeImageCount(VectorGraphicsBuffer buffer, int count) {
+    buffer._checkPhase(_CurrentSection.images);
+    buffer._putUint16(count);
+  }
+
+  void writeImage(
+    VectorGraphicsBuffer buffer,
+    Uint8List image,
+    double width,
+    double height,
+    Float64List? transform,
+  ) {
+    buffer._checkPhase(_CurrentSection.images);
+
+    buffer._putUint16(image.length);
+    buffer._putUint8List(image);
+    buffer._putFloat32(width);
+    buffer._putFloat32(height);
+    buffer._writeTransform(transform);
+  }
+
+  /// Encode a draw image command in the current buffer.
+  void writeDrawImage(VectorGraphicsBuffer buffer, int imageId) {
+    buffer._checkPhase(_CurrentSection.commands);
+
+    buffer._putUint8(_drawImageTag);
+    buffer._putUint16(imageId);
+  }
+
   /// Encode a paint object used for a fill in the current buffer, returning
   /// the identifier assigned to it.
   ///
@@ -206,10 +237,8 @@ class VectorGraphicsCodec {
     int blendMode, [
     int? shaderId,
   ]) {
-    if (buffer._decodePhase.index > _CurrentSection.paints.index) {
-      throw StateError('Paints must be encoded together.');
-    }
-    buffer._decodePhase = _CurrentSection.paints;
+    buffer._checkPhase(_CurrentSection.paints);
+
     final int paintId = buffer._nextPaintId++;
     assert(paintId < kMaxId);
     buffer._putUint8(_fillPaintTag);
@@ -231,10 +260,8 @@ class VectorGraphicsCodec {
     required Float32List? offsets,
     required int tileMode,
   }) {
-    if (buffer._decodePhase.index > _CurrentSection.shaders.index) {
-      throw StateError('Shaders must be encoded together.');
-    }
-    buffer._decodePhase = _CurrentSection.shaders;
+    buffer._checkPhase(_CurrentSection.shaders);
+
     final int shaderId = buffer._nextShaderId++;
     assert(shaderId < kMaxId);
     buffer._putUint8(_linearGradientTag);
@@ -273,10 +300,8 @@ class VectorGraphicsCodec {
     assert((focalX == null && focalY == null) ||
         (focalX != null && focalY != null));
     assert(transform == null || transform.length == 16);
-    if (buffer._decodePhase.index > _CurrentSection.shaders.index) {
-      throw StateError('Shaders must be encoded together.');
-    }
-    buffer._decodePhase = _CurrentSection.shaders;
+    buffer._checkPhase(_CurrentSection.shaders);
+
     final int shaderId = buffer._nextShaderId++;
     assert(shaderId < kMaxId);
     buffer._putUint8(_radialGradientTag);
@@ -300,12 +325,7 @@ class VectorGraphicsCodec {
     } else {
       buffer._putUint16(0);
     }
-    if (transform != null) {
-      buffer._putUint8(transform.length);
-      buffer._putFloat64List(transform);
-    } else {
-      buffer._putUint8(0);
-    }
+    buffer._writeTransform(transform);
     buffer._putUint8(tileMode);
     return shaderId;
   }
@@ -329,10 +349,7 @@ class VectorGraphicsCodec {
     double strokeWidth, [
     int? shaderId,
   ]) {
-    if (buffer._decodePhase.index > _CurrentSection.paints.index) {
-      throw StateError('Paints must be encoded together.');
-    }
-    buffer._decodePhase = _CurrentSection.paints;
+    buffer._checkPhase(_CurrentSection.paints);
     final int paintId = buffer._nextPaintId++;
     assert(paintId < kMaxId);
     buffer._putUint8(_strokePaintTag);
@@ -392,9 +409,7 @@ class VectorGraphicsCodec {
     final Int32List colors = buffer.getInt32List(colorsLength);
     final int offsetsLength = buffer.getUint16();
     final Float32List offsets = buffer.getFloat32List(offsetsLength);
-    final int transformLength = buffer.getUint8();
-    final Float64List? transform =
-        transformLength != 0 ? buffer.getFloat64List(transformLength) : null;
+    final Float64List? transform = buffer.getTransform();
     final int tileMode = buffer.getUint8();
     listener?.onRadialGradient(
       centerX,
@@ -464,10 +479,8 @@ class VectorGraphicsCodec {
     if (buffer._currentPathId != -1) {
       throw StateError('There is already an active Path.');
     }
-    if (buffer._decodePhase.index > _CurrentSection.paths.index) {
-      throw StateError('Paths must be encoded together');
-    }
-    buffer._decodePhase = _CurrentSection.paths;
+    buffer._checkPhase(_CurrentSection.paths);
+
     buffer._currentPathId = buffer._nextPathId++;
     assert(buffer._nextPathId < kMaxId);
     buffer._putUint8(_pathTag);
@@ -573,10 +586,8 @@ class VectorGraphicsCodec {
     required double fontSize,
     required Float64List? transform,
   }) {
-    if (buffer._decodePhase.index > _CurrentSection.text.index) {
-      throw StateError('Text config must be encoded together.');
-    }
-    buffer._decodePhase = _CurrentSection.text;
+    buffer._checkPhase(_CurrentSection.text);
+
     final int textId = buffer._nextTextId++;
     assert(textId < kMaxId);
 
@@ -596,12 +607,7 @@ class VectorGraphicsCodec {
       buffer._putUint16(0);
     }
 
-    if (transform != null) {
-      buffer._putUint8(transform.length);
-      buffer._putFloat64List(transform);
-    } else {
-      buffer._putUint8(0);
-    }
+    buffer._writeTransform(transform);
 
     // text-value
     final Uint8List encoded = utf8.encode(text) as Uint8List;
@@ -663,14 +669,18 @@ class VectorGraphicsCodec {
   }
 
   void _readDrawPath(
-      _ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
+    _ReadBuffer buffer,
+    VectorGraphicsCodecListener? listener,
+  ) {
     final int pathId = buffer.getUint16();
     final int paintId = buffer.getUint16();
     listener?.onDrawPath(pathId, paintId);
   }
 
   void _readDrawVertices(
-      _ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
+    _ReadBuffer buffer,
+    VectorGraphicsCodecListener? listener,
+  ) {
     final int paintId = buffer.getUint16();
     final int verticesLength = buffer.getUint16();
     final Float32List vertices = buffer.getFloat32List(verticesLength);
@@ -681,6 +691,18 @@ class VectorGraphicsCodec {
     }
     listener?.onDrawVertices(
         vertices, indices, paintId != kMaxId ? paintId : null);
+  }
+
+  void _readDrawImage(
+    _ReadBuffer buffer,
+    VectorGraphicsCodecListener? listener,
+  ) {
+    final int imageLength = buffer.getUint16();
+    final Uint8List imageData = buffer.getUint8List(imageLength);
+    final double width = buffer.getFloat32();
+    final double height = buffer.getFloat32();
+    final Float64List? transform = buffer.getTransform();
+    listener?.onDrawImage(imageData, width, height, transform);
   }
 
   void _readSaveLayer(
@@ -719,12 +741,7 @@ class VectorGraphicsCodec {
     if (fontFamilyLength > 0) {
       fontFamily = utf8.decode(buffer.getUint8List(fontFamilyLength));
     }
-    final int transformLength = buffer.getUint8();
-    Float64List? transform;
-    if (transformLength > 0) {
-      assert(transformLength == 16);
-      transform = buffer.getFloat64List(transformLength);
-    }
+    Float64List? transform = buffer.getTransform();
     final int textLength = buffer.getUint16();
     final String text = utf8.decode(buffer.getUint8List(textLength));
 
@@ -800,10 +817,15 @@ abstract class VectorGraphicsCodecListener {
   /// [indices].
   ///
   /// If the [paintId] is `null`, a default empty paint should be used instead.
-  void onDrawVertices(
-    Float32List vertices,
-    Uint16List? indices,
-    int? paintId,
+  void onDrawVertices(Float32List vertices, Uint16List? indices, int? paintId);
+
+  /// Draw the given raster [image] data with [width], [height], and optional
+  /// [transform].
+  void onDrawImage(
+    Uint8List image,
+    double width,
+    double height,
+    Float64List? transform,
   );
 
   /// Save a new layer with the given [paintId].
@@ -866,6 +888,7 @@ abstract class VectorGraphicsCodecListener {
 }
 
 enum _CurrentSection {
+  images,
   size,
   shaders,
   paints,
@@ -918,7 +941,25 @@ class VectorGraphicsBuffer {
   ///
   /// Objects must be written in the correct order, the same as the
   /// enum order.
-  _CurrentSection _decodePhase = _CurrentSection.size;
+  _CurrentSection _decodePhase = _CurrentSection.images;
+
+  void _checkPhase(_CurrentSection expected) {
+    if (_decodePhase.index > expected.index) {
+      final String name = expected.name;
+      throw StateError('${name[0].toUpperCase()}${name.substring(1)} '
+          'must be encoded together (current phase is ${_decodePhase.name}).');
+    }
+    _decodePhase = expected;
+  }
+
+  void _writeTransform(Float64List? transform) {
+    if (transform != null) {
+      _putUint8(transform.length);
+      _putFloat64List(transform);
+    } else {
+      _putUint8(0);
+    }
+  }
 
   /// Write a Uint8 into the buffer.
   void _putUint8(int byte) {
@@ -1123,5 +1164,14 @@ class _ReadBuffer {
   void _alignTo(int alignment) {
     final int mod = _position % alignment;
     if (mod != 0) _position += alignment - mod;
+  }
+
+  Float64List? getTransform() {
+    final int transformLength = getUint8();
+    if (transformLength > 0) {
+      assert(transformLength == 16);
+      return getFloat64List(transformLength);
+    }
+    return null;
   }
 }

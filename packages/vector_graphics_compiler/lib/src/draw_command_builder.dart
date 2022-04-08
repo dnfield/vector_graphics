@@ -7,6 +7,8 @@ class DrawCommandBuilder {
   final Map<Paint, int> _paints = <Paint, int>{};
   final Map<Path, int> _paths = <Path, int>{};
   final Map<TextConfig, int> _text = <TextConfig, int>{};
+  final Map<ImageData, int> _images = <ImageData, int>{};
+
   final List<DrawCommand> _commands = <DrawCommand>[];
 
   int _getOrGenerateId<T>(T object, Map<T, int> map) =>
@@ -65,6 +67,16 @@ class DrawCommandBuilder {
     ));
   }
 
+  /// Adds an image to the current draw command stack.
+  void addImage(ImageData imageData, String? debugString) {
+    final int imageId = _getOrGenerateId(imageData, _images);
+    _commands.add(DrawCommand(
+      DrawCommandType.image,
+      objectId: imageId,
+      debugString: debugString,
+    ));
+  }
+
   /// Create a new [VectorInstructions] with the given width and height.
   VectorInstructions toInstructions(double width, double height) {
     return VectorInstructions(
@@ -73,6 +85,7 @@ class DrawCommandBuilder {
       paints: _paints.keys.toList(),
       paths: _paths.keys.toList(),
       text: _text.keys.toList(),
+      images: _images.keys.toList(),
       commands: _commands,
     );
   }

@@ -25,6 +25,9 @@ abstract class Visitor<S, V> {
   /// Visit a [PathNode].
   S visitPathNode(PathNode pathNode, V data);
 
+  /// Visit an [ImageNode].
+  S visitImageNode(ImageNode imageNode, V data);
+
   /// Visit a [ParentNode].
   S visitParentNode(ParentNode parentNode, V data);
 
@@ -45,6 +48,9 @@ abstract class Visitor<S, V> {
 
   /// Visit a [ResolvedMaskNode].
   S visitResolvedMaskNode(ResolvedMaskNode maskNode, V data);
+
+  /// Visit a [ResolvedImageNode].
+  S visitResolvedImage(ResolvedImageNode imageNode, V data);
 
   /// Visit a [SaveLayerNode].
   S visitSaveLayerNode(SaveLayerNode layerNode, V data);
@@ -109,6 +115,11 @@ class CommandBuilderVisitor extends Visitor<void, void>
   }
 
   @override
+  void visitImageNode(ImageNode imageNode, void data) {
+    assert(false);
+  }
+
+  @override
   void visitResolvedClipNode(ResolvedClipNode clipNode, void data) {
     for (final Path clip in clipNode.clips) {
       _builder.addClip(clip);
@@ -133,6 +144,11 @@ class CommandBuilderVisitor extends Visitor<void, void>
   @override
   void visitResolvedPath(ResolvedPathNode pathNode, void data) {
     _builder.addPath(pathNode.path, pathNode.paint, null);
+  }
+
+  @override
+  void visitResolvedImage(ResolvedImageNode imageNode, void data) {
+    _builder.addImage(imageNode, null);
   }
 
   @override

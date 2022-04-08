@@ -792,6 +792,38 @@ class TestListener extends VectorGraphicsCodecListener {
   void onDrawText(int textId, int paintId) {
     commands.add(OnDrawText(textId, paintId));
   }
+
+  @override
+  void onDrawImage(
+    Uint8List image,
+    double width,
+    double height,
+    Float64List? transform,
+  ) {
+    commands.add(OnDrawImage(image, width, height, transform));
+  }
+}
+
+class OnDrawImage {
+  const OnDrawImage(this.image, this.width, this.height, this.transform);
+
+  final Uint8List image;
+  final double width;
+  final double height;
+  final Float64List? transform;
+
+  @override
+  int get hashCode => Object.hash(Object.hashAll(image), width, height,
+      Object.hashAll(transform ?? <double>[]));
+
+  @override
+  bool operator ==(Object other) {
+    return other is OnDrawImage &&
+        other.width == width &&
+        other.height == height &&
+        _listEquals(other.image, image) &&
+        _listEquals(other.transform, transform);
+  }
 }
 
 class OnMask {

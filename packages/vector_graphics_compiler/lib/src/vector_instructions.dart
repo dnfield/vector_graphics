@@ -17,6 +17,7 @@ class VectorInstructions {
     this.paths = const <Path>[],
     this.vertices = const <IndexedVertices>[],
     this.text = const <TextConfig>[],
+    this.images = const <ImageData>[],
     required this.commands,
   });
 
@@ -37,6 +38,9 @@ class VectorInstructions {
 
   /// The [TextConfig] objects, if any, used in [commands].
   final List<TextConfig> text;
+
+  /// The [ImageData] objects, if any, used in [commands].
+  final List<ImageData> images;
 
   /// The painting order list of drawing commands.
   ///
@@ -86,6 +90,9 @@ enum DrawCommandType {
 
   /// Specifies that this command draws text.
   text,
+
+  /// Specifies that this command draws an image.
+  image,
 }
 
 /// A drawing command combining the index of a [Path] or an [IndexedVertices]

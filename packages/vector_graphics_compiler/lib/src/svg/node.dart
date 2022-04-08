@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import '../geometry/basic_types.dart';
 import '../geometry/matrix.dart';
 import '../geometry/path.dart';
@@ -234,7 +236,7 @@ class ClipNode extends Node {
     String? id,
   });
 
-  /// Called by [build] to resolve [clipId] to a list of paths.
+  /// Called by visitors to resolve [clipId] to a list of paths.
   final Resolver<List<Path>> resolver;
 
   /// The clips to apply to the child node.
@@ -292,7 +294,7 @@ class MaskNode extends Node {
   /// The decendant child's transform
   final AffineMatrix transform;
 
-  /// Called by [build] to resolve [maskId] to an [AttributedNode].
+  /// Called by visitors to resolve [maskId] to an [AttributedNode].
   final Resolver<AttributedNode?> resolver;
 
   @override
@@ -357,11 +359,11 @@ class PathNode extends AttributedNode {
   }
 }
 
-/// A node that refers to another node, and uses [resolver] at [build] time
+/// A node that refers to another node, and supplies a [resolver] for visitors
 /// to materialize the referenced node into the tree.
 class DeferredNode extends AttributedNode {
   /// Creates a new deferred node with [attributes] that will call [resolver]
-  /// with [refId] at [build] time.
+  /// with [refId] when visited.
   DeferredNode(
     SvgAttributes attributes, {
     required this.refId,
@@ -371,8 +373,8 @@ class DeferredNode extends AttributedNode {
   /// The reference id to pass to [resolver].
   final String refId;
 
-  /// The callback that materializes an [AttributedNode] for [refId] at [build]
-  /// time.
+  /// The callback that materializes an [AttributedNode] for [refId] when
+  /// visited.
   final Resolver<AttributedNode?> resolver;
 
   @override
@@ -472,4 +474,47 @@ class TextNode extends AttributedNode {
   S accept<S, V>(Visitor<S, V> visitor, V data) {
     return visitor.visitTextNode(this, data);
   }
+}
+
+/// A leaf node that paints a rasterized image.
+class ImageNode extends AttributedNode {
+  /// Creates a new leaf node that paints a rasterized image.
+  ImageNode(
+    this.image,
+    this.offset,
+    this.width,
+    this.height,
+    SvgAttributes attributes,
+  ) : super(attributes);
+
+  /// The raw image data to paint.
+  final Uint8List image;
+
+  /// The offset to use when drawing the image.
+  final Point offset;
+
+  /// The target width of the image.
+  final double width;
+
+  /// The target height of the image.
+  final double height;
+
+  @override
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitImageNode(this, data);
+  }
+
+  @override
+  AttributedNode applyAttributes(SvgAttributes newAttributes) {
+    return ImageNode(
+      image,
+      offset,
+      width,
+      height,
+      attributes.applyParent(newAttributes),
+    );
+  }
+
+  @override
+  void visitChildren(NodeCallback visitor) {}
 }

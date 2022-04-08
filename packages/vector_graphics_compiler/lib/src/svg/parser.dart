@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
 import 'package:xml/xml_events.dart';
@@ -343,42 +344,48 @@ class _Elements {
 
   static Future<void> image(
       SvgParser parserState, bool warningsAsErrors) async {
-    throw UnsupportedError('TODO');
-    // final String? href = parserState._currentAttributes.href;
-    // if (href == null) {
-    //   return;
-    // }
-    // final Point offset = Point(
-    //   parserState.parseDoubleWithUnits(
-    //     parserState.attribute('x', def: '0'),
-    //   )!,
-    //   parserState.parseDoubleWithUnits(
-    //     parserState.attribute('y', def: '0'),
-    //   )!,
-    // );
-    // final Size size = Size(
-    //   parserState.parseDoubleWithUnits(
-    //     parserState.attribute('width', def: '0'),
-    //   )!,
-    //   parserState.parseDoubleWithUnits(
-    //     parserState.attribute('height', def: '0'),
-    //   )!,
-    // );
-    // final Image image = await resolveImage(href);
-    // final ParentNode parent = parserState._parentDrawables.last.drawable!;
-    // final DrawableStyle? parentStyle = parent.paint;
-    // final DrawableRasterImage drawable = DrawableRasterImage(
-    //   parserState.attribute('id', def: ''),
-    //   image,
-    //   offset,
-    //   parserState.parseStyle(parserState.rootBounds, parentStyle,
-    //       currentColor: parent.color),
-    //   size: size,
-    //   transform: parseTransform(parserState.attribute('transform'))?.storage,
-    // );
-    // parserState.checkForIri(drawable);
+    // throw UnsupportedError('TODO');
+    final String? href = parserState._currentAttributes.href;
+    if (href == null) {
+      return;
+    }
+    final Point offset = Point(
+      parserState.parseDoubleWithUnits(
+        parserState.attribute('x', def: '0'),
+      )!,
+      parserState.parseDoubleWithUnits(
+        parserState.attribute('y', def: '0'),
+      )!,
+    );
 
-    // parserState.currentGroup!.children!.add(drawable);
+    final double width =
+        parserState.parseDoubleWithUnits(parserState.attribute('width')) ?? 0;
+    final double height =
+        parserState.parseDoubleWithUnits(parserState.attribute('height')) ?? 0;
+
+    if (width == 0 || height == 0) {
+      return;
+    }
+
+    final Uint8List image = await resolveImage(href);
+    final ParentNode parent = parserState._parentDrawables.last.drawable;
+
+    final ImageNode drawable = ImageNode(
+      image,
+      offset,
+      width,
+      height,
+      parserState._currentAttributes,
+    );
+
+    parserState.checkForIri(drawable);
+    parent.addChild(
+      drawable,
+      clipId: parserState._currentAttributes.clipPathId,
+      clipResolver: parserState._definitions.getClipPath,
+      maskId: parserState.attribute('mask'),
+      maskResolver: parserState._definitions.getDrawable,
+    );
   }
 
   static Future<void> text(

@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 
 import '../geometry/matrix.dart';
 import '../geometry/path.dart';
+import '../http/http.dart';
 import 'numbers.dart';
 
 const String _transformCommandAtom = ' *,?([^(]+)\\(([^)]*)\\)';
@@ -120,57 +123,24 @@ PathFillType? parseRawFillRule(String? rawFillRule) {
   return rawFillRule != 'evenodd' ? PathFillType.nonZero : PathFillType.evenOdd;
 }
 
-// final RegExp _whitespacePattern = RegExp(r'\s');
+final RegExp _whitespacePattern = RegExp(r'\s');
 
-// /// Resolves an image reference, potentially downloading it via HTTP.
-// Future<Image> resolveImage(String href) async {
-//   assert(href != '');
+/// Resolves an image reference, potentially downloading it via HTTP.
+Future<Uint8List> resolveImage(String href) async {
+  assert(href != '');
 
-//   final Future<Image> Function(Uint8List) decodeImage =
-//       (Uint8List bytes) async {
-//     final Codec codec = await instantiateImageCodec(bytes);
-//     final FrameInfo frame = await codec.getNextFrame();
-//     return frame.image;
-//   };
+  if (href.startsWith('http')) {
+    return httpGet(Uri.parse(href));
+  }
 
-//   if (href.startsWith('http')) {
-//     throw UnsupportedError('Cannot request http images');
-//   }
+  if (href.startsWith('data:')) {
+    final int commaLocation = href.indexOf(',') + 1;
+    return base64.decode(
+        href.substring(commaLocation).replaceAll(_whitespacePattern, ''));
+  }
 
-//   if (href.startsWith('data:')) {
-//     final int commaLocation = href.indexOf(',') + 1;
-//     final Uint8List bytes = base64.decode(
-//         href.substring(commaLocation).replaceAll(_whitespacePattern, ''));
-//     return decodeImage(bytes);
-//   }
-
-//   throw UnsupportedError('Could not resolve image href: $href');
-// }
-
-// const ParagraphConstraints _infiniteParagraphConstraints = ParagraphConstraints(
-//   width: double.infinity,
-// );
-
-// /// A [DrawablePaint] with a transparent stroke.
-// const DrawablePaint transparentStroke =
-//     DrawablePaint(PaintingStyle.stroke, color: Color(0x0));
-
-// /// Creates a [Paragraph] object using the specified [text], [style], and
-// /// [foregroundOverride].
-// Paragraph createParagraph(
-//   String text,
-//   DrawableStyle style,
-//   DrawablePaint? foregroundOverride,
-// ) {
-//   final ParagraphBuilder builder = ParagraphBuilder(ParagraphStyle())
-//     ..pushStyle(
-//       style.textStyle!.toFlutterTextStyle(
-//         foregroundOverride: foregroundOverride,
-//       ),
-//     )
-//     ..addText(text);
-//   return builder.build()..layout(_infiniteParagraphConstraints);
-// }
+  throw UnsupportedError('Could not resolve image href: $href');
+}
 
 /// Parses strings in the form of '1.0' or '100%'.
 double parseDecimalOrPercentage(String val, {double multiplier = 1.0}) {

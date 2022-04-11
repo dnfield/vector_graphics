@@ -393,7 +393,7 @@ class OnLinearGradient {
         toX,
         toY,
         Object.hashAll(colors),
-        Object.hashAll(offsets ?? Float32List(0)),
+        Object.hashAll(offsets ?? <double>[]),
         tileMode,
         id,
       );
@@ -458,8 +458,8 @@ class OnRadialGradient {
         focalX,
         focalY,
         Object.hashAll(colors),
-        Object.hashAll(offsets ?? Float32List(0)),
-        Object.hashAll(transform ?? Float64List(0)),
+        Object.hashAll(offsets ?? <double>[]),
+        Object.hashAll(transform ?? <double>[]),
         tileMode,
         id,
       );
@@ -738,7 +738,7 @@ class OnTextConfig {
 
   @override
   int get hashCode => Object.hash(text, x, y, fontSize, fontFamily, fontWeight,
-      Object.hashAll(transform ?? Float64List(0)), id);
+      Object.hashAll(transform ?? <double>[]), id);
 
   @override
   bool operator ==(Object other) =>

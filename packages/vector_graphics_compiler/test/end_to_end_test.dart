@@ -393,7 +393,7 @@ class OnLinearGradient {
         toX,
         toY,
         Object.hashAll(colors),
-        Object.hashAll(offsets ?? []),
+        Object.hashAll(offsets ?? Float32List(0)),
         tileMode,
         id,
       );
@@ -458,8 +458,8 @@ class OnRadialGradient {
         focalX,
         focalY,
         Object.hashAll(colors),
-        Object.hashAll(offsets ?? []),
-        Object.hashAll(transform ?? []),
+        Object.hashAll(offsets ?? Float32List(0)),
+        Object.hashAll(transform ?? Float64List(0)),
         tileMode,
         id,
       );
@@ -534,7 +534,7 @@ class OnDrawVertices {
 
   @override
   int get hashCode => Object.hash(
-      Object.hashAll(vertices), Object.hashAll(indices ?? []), paintId);
+      Object.hashAll(vertices), Object.hashAll(indices ?? <int>[]), paintId);
 
   @override
   bool operator ==(Object other) =>

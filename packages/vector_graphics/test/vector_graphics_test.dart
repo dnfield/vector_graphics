@@ -294,10 +294,13 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(tester.getSemantics(find.bySemanticsLabel('Foo')), matchesSemantics(
-      label: 'Foo',
-      isImage: true,
-    ));
+    expect(
+      tester.getSemantics(find.bySemanticsLabel('Foo')),
+      matchesSemantics(
+        label: 'Foo',
+        isImage: true,
+      ),
+    );
   });
 }
 

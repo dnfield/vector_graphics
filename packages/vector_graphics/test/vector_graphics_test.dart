@@ -294,7 +294,10 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    expect(find.bySemanticsLabel('Foo'), findsOneWidget);
+    expect(tester.getSemantics(find.bySemanticsLabel('Foo')), matchesSemantics(
+      label: 'Foo',
+      isImage: true,
+    ));
   });
 }
 

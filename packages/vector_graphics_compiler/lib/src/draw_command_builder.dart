@@ -9,7 +9,6 @@ class DrawCommandBuilder {
   final Map<Path, int> _paths = <Path, int>{};
   final Map<TextConfig, int> _text = <TextConfig, int>{};
   final Map<IndexedVertices, int> _vertices = <IndexedVertices, int>{};
-
   final List<DrawCommand> _commands = <DrawCommand>[];
 
   int _getOrGenerateId<T>(T object, Map<T, int> map) =>

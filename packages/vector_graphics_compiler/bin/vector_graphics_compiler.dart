@@ -11,6 +11,7 @@ final ArgParser argParser = ArgParser()
         'When this value is provided, fill paths will be tesselated \n'
         'into vertices.',
     valueHelp: 'path/to/libtesselator.dylib',
+    hide: true,
   )
   ..addOption('input',
       abbr: 'i',

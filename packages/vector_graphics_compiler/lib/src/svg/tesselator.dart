@@ -114,7 +114,7 @@ class Tesselator extends Visitor<Node, void>
             break;
           case PathCommandType.line:
             final LineToCommand line = command as LineToCommand;
-            builder.moveTo(line.x, line.y);
+            builder.lineTo(line.x, line.y);
             break;
           case PathCommandType.cubic:
             final CubicToCommand cubic = command as CubicToCommand;
@@ -135,13 +135,15 @@ class Tesselator extends Visitor<Node, void>
       final Float32List rawVertices = builder.tessellate(
         fillType: pathNode.path.fillType,
       );
-      final Vertices vertices = Vertices.fromFloat32List(rawVertices);
-      final IndexedVertices indexedVertices = vertices.createIndex();
-      children.add(ResolvedVerticesNode(
-        paint: Paint(blendMode: pathNode.paint.blendMode, fill: fill),
-        vertices: indexedVertices,
-        bounds: pathNode.bounds,
-      ));
+      if (rawVertices.isNotEmpty) {
+        final Vertices vertices = Vertices.fromFloat32List(rawVertices);
+        final IndexedVertices indexedVertices = vertices.createIndex();
+        children.add(ResolvedVerticesNode(
+          paint: Paint(blendMode: pathNode.paint.blendMode, fill: fill),
+          vertices: indexedVertices,
+          bounds: pathNode.bounds,
+        ));
+      }
     }
     if (stroke != null) {
       children.add(ResolvedPathNode(
@@ -151,6 +153,9 @@ class Tesselator extends Visitor<Node, void>
           ),
           bounds: pathNode.bounds,
           path: pathNode.path));
+    }
+    if (children.isEmpty) {
+      return Node.empty;
     }
     if (children.length > 1) {
       return ParentNode(SvgAttributes.empty, children: children);

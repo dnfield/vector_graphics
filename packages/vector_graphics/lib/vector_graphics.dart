@@ -144,6 +144,10 @@ class _VectorGraphicsWidgetState extends State<VectorGraphic> {
       return SizedBox(width: widget.width, height: widget.height);
     }
 
+    // If the caller did not specify a width or height, fall back to the
+    // size of the graphic.
+    // If the caller did specify a width or height, preserve the aspect ratio
+    // of the graphic and center it within that width and height.
     double? width = widget.width;
     double? height = widget.height;
 

@@ -1,3 +1,7 @@
+// Copyright 2013 The Flutter Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 import '../geometry/basic_types.dart';
 import '../geometry/matrix.dart';
 import '../geometry/path.dart';
@@ -301,7 +305,9 @@ class ResolvedClipNode extends Node {
   }
 
   @override
-  void visitChildren(NodeCallback visitor) {}
+  void visitChildren(NodeCallback visitor) {
+    visitor(child);
+  }
 }
 
 /// A mask node with child and mask fully resolved.
@@ -330,5 +336,7 @@ class ResolvedMaskNode extends Node {
   }
 
   @override
-  void visitChildren(NodeCallback visitor) {}
+  void visitChildren(NodeCallback visitor) {
+    visitor(child);
+  }
 }

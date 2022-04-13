@@ -1,3 +1,7 @@
+// Copyright 2013 The Flutter Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -18,7 +22,7 @@ final ArgParser argParser = ArgParser()
       help: 'The path to a file containing a single SVG',
       mandatory: true)
   ..addOption(
-    'ouput',
+    'output',
     abbr: 'o',
     help:
         'The path to a file where the resulting vector_graphic will be written.\n'

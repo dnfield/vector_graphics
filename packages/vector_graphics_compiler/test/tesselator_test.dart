@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:test/test.dart';
 import 'package:vector_graphics_compiler/src/geometry/basic_types.dart';
 import 'package:vector_graphics_compiler/src/geometry/matrix.dart';
@@ -10,12 +9,6 @@ import 'package:vector_graphics_compiler/src/svg/tesselator.dart';
 import 'helpers.dart';
 
 void main() {
-  setUpAll(() {
-    if (Platform.isWindows) {
-      initializeLibTesselator('native/tesspeller.dll');
-    }
-  });
-
   test('Can convert simple shape to indexed vertices', () async {
     final Node node = await parseToNodeTree('''
 <svg viewBox="0 0 200 200">
@@ -43,7 +36,7 @@ void main() {
       0.0
     ]);
     expect(verticesNode.vertices.indices, null);
-  });
+  }, skip: true);
 
   test('Can convert complex path to indexed vertices', () async {
     final Node node = await parseToNodeTree('''
@@ -343,5 +336,5 @@ void main() {
       55,
       56,
     ]);
-  });
+  }, skip: true);
 }

@@ -36,6 +36,7 @@ void main() {
       (WidgetTester tester) async {
     for (final String svg in allSvgTestStrings) {
       final Uint8List bytes = await encodeSvg(svg, 'test.svg');
+      print(bytes.lengthInBytes);
 
       await tester.pumpWidget(Center(
           child: VectorGraphic(

@@ -940,7 +940,6 @@ class VectorGraphicsBuffer {
   /// Write an Float32 into the buffer.
   void _putFloat32(double value, {Endian? endian}) {
     assert(!_isDone);
-    _alignTo(4);
     _eightBytes.setFloat32(0, value, endian ?? Endian.host);
     _buffer.addAll(_eightBytesAsList.take(4));
   }
@@ -1044,7 +1043,6 @@ class _ReadBuffer {
 
   /// Reads a Float32 from the buffer.
   double getFloat32({Endian? endian}) {
-    _alignTo(4);
     final double value = data.getFloat32(_position, endian ?? Endian.host);
     _position += 4;
     return value;

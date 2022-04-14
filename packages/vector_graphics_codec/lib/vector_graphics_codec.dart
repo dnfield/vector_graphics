@@ -851,7 +851,7 @@ enum _CurrentSection {
 /// A [VectorGraphicsBuffer] instance can be used only once. Attempts to reuse will result
 /// in [StateError]s being thrown.
 ///
-/// The byte order used is [Endian.big] throughout.
+/// The byte order used is [Endian.little] throughout.
 class VectorGraphicsBuffer {
   /// Creates an interface for incrementally building a [ByteData] instance.
   VectorGraphicsBuffer()
@@ -918,14 +918,14 @@ class VectorGraphicsBuffer {
 
   void _putUint16(int value) {
     assert(!_isDone);
-    _eightBytes.setUint16(0, value);
+    _eightBytes.setUint16(0, value, Endian.little);
     _buffer.addAll(_eightBytesAsList.take(2));
   }
 
   /// Write a Uint32 into the buffer.
   void _putUint32(int value) {
     assert(!_isDone);
-    _eightBytes.setUint32(0, value);
+    _eightBytes.setUint32(0, value, Endian.little);
     _buffer.addAll(_eightBytesAsList.take(4));
   }
 
@@ -940,7 +940,7 @@ class VectorGraphicsBuffer {
   /// Write an Float32 into the buffer.
   void _putFloat32(double value) {
     assert(!_isDone);
-    _eightBytes.setFloat32(0, value);
+    _eightBytes.setFloat32(0, value, Endian.little);
     _buffer.addAll(_eightBytesAsList.take(4));
   }
 
@@ -994,7 +994,7 @@ class VectorGraphicsBuffer {
 
 /// Read-only buffer for reading sequentially from a [ByteData] instance.
 ///
-/// The byte order used is [Endian.big] throughout.
+/// The byte order used is [Endian.little] throughout.
 class _ReadBuffer {
   /// Creates a [_ReadBuffer] for reading from the specified [data].
   _ReadBuffer(this.data);
@@ -1015,35 +1015,35 @@ class _ReadBuffer {
 
   /// Reads a Uint16 from the buffer.
   int getUint16() {
-    final int value = data.getUint16(_position);
+    final int value = data.getUint16(_position, Endian.little);
     _position += 2;
     return value;
   }
 
   /// Reads a Uint32 from the buffer.
   int getUint32() {
-    final int value = data.getUint32(_position);
+    final int value = data.getUint32(_position, Endian.little);
     _position += 4;
     return value;
   }
 
   /// Reads an Int32 from the buffer.
   int getInt32() {
-    final int value = data.getInt32(_position);
+    final int value = data.getInt32(_position, Endian.little);
     _position += 4;
     return value;
   }
 
   /// Reads an Int64 from the buffer.
   int getInt64() {
-    final int value = data.getInt64(_position);
+    final int value = data.getInt64(_position, Endian.little);
     _position += 8;
     return value;
   }
 
   /// Reads a Float32 from the buffer.
   double getFloat32() {
-    final double value = data.getFloat32(_position);
+    final double value = data.getFloat32(_position, Endian.little);
     _position += 4;
     return value;
   }
@@ -1051,7 +1051,7 @@ class _ReadBuffer {
   /// Reads a Float64 from the buffer.
   double getFloat64() {
     _alignTo(8);
-    final double value = data.getFloat64(_position);
+    final double value = data.getFloat64(_position, Endian.little);
     _position += 8;
     return value;
   }

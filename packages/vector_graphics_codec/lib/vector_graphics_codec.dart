@@ -7,6 +7,8 @@ import 'dart:convert';
 
 /// enumeration of the types of control points accepted by [VectorGraphicsCodec.writePath].
 abstract class ControlPointTypes {
+  const ControlPointTypes._();
+
   static const int moveTo = 0;
   static const int lineTo = 1;
   static const int cubicTo = 2;

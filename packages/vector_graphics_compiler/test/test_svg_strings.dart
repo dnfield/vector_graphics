@@ -1,16 +1,16 @@
 const List<String> allSvgTestStrings = <String>[
   ghostscriptTiger,
-  // simpleUseCircles,
-  // basicOpacity,
-  // groupOpacity,
-  // basicMask,
-  // groupMask,
-  // basicClip,
-  // multiClip,
-  // blendAndMask,
-  // outOfOrderGradientDef,
-  // xlinkGradient,
-  // basicText,
+  simpleUseCircles,
+  basicOpacity,
+  groupOpacity,
+  basicMask,
+  groupMask,
+  basicClip,
+  multiClip,
+  blendAndMask,
+  outOfOrderGradientDef,
+  xlinkGradient,
+  basicText,
 ];
 
 /// https://developer.mozilla.org/en-US/docs/Web/SVG/Element/mask

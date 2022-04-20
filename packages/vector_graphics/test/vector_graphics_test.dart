@@ -376,7 +376,7 @@ void main() {
       ),
     );
 
-    expect(find.byType(LimitedBox), findsOneWidget);
+    expect(find.byType(SizedBox), findsOneWidget);
   });
 
   testWidgets('Custom placeholder builder', (WidgetTester tester) async {

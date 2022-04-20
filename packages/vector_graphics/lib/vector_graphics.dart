@@ -178,8 +178,8 @@ class _VectorGraphicsWidgetState extends State<VectorGraphic> {
         ),
       );
     } else {
-      child = widget?.placeholderBuilder(context)
-        ?? SizedBox(width: width, height: height)
+      child = widget.placeholderBuilder?.call(context) ??
+          SizedBox(width: widget.width, height: widget.height);
     }
 
     if (!widget.excludeFromSemantics) {

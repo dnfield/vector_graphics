@@ -13,8 +13,6 @@ import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 import 'src/http.dart';
 import 'src/listener.dart';
 
-Widget _defaultPlaceholderBuilder(BuildContext ctx) => const LimitedBox();
-
 /// A widget that displays a [VectorGraphicsCodec] encoded asset.
 ///
 /// This widget will ask the loader to load the bytes whenever its
@@ -40,7 +38,7 @@ class VectorGraphic extends StatefulWidget {
     this.alignment = Alignment.center,
     this.semanticsLabel,
     this.excludeFromSemantics = false,
-    this.placeholderBuilder = _defaultPlaceholderBuilder,
+    this.placeholderBuilder,
   }) : super(key: key);
 
   /// A delegate for fetching the raw bytes of the vector graphic.
@@ -99,7 +97,7 @@ class VectorGraphic extends StatefulWidget {
   final bool excludeFromSemantics;
 
   /// The placeholder to use while fetching, decoding, and parsing the vector_graphics data.
-  final WidgetBuilder placeholderBuilder;
+  final WidgetBuilder? placeholderBuilder;
 
   @override
   State<VectorGraphic> createState() => _VectorGraphicsWidgetState();
@@ -180,7 +178,8 @@ class _VectorGraphicsWidgetState extends State<VectorGraphic> {
         ),
       );
     } else {
-      child = widget.placeholderBuilder(context);
+      child = widget?.placeholderBuilder(context)
+        ?? SizedBox(width: width, height: height)
     }
 
     if (!widget.excludeFromSemantics) {

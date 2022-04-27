@@ -45,7 +45,7 @@ Future<void> main(List<String> args) async {
     if (results.wasParsed('libtessellator')) {
       initializeLibTesselator(results['libtessellator'] as String);
     } else {
-      if (initializeTessellatorFromFlutterCache()) {
+      if (!initializeTessellatorFromFlutterCache()) {
         exit(1);
       }
     }

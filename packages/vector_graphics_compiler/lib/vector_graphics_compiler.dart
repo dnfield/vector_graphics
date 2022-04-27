@@ -22,7 +22,8 @@ export 'src/paint.dart';
 export 'src/svg/theme.dart';
 export 'src/vector_instructions.dart';
 export 'src/svg/tesselator.dart' show initializeLibTesselator;
-export 'src/initialize_tessellator.dart' show initializeTessellatorFromFlutterCache;
+export 'src/initialize_tessellator.dart'
+    show initializeTessellatorFromFlutterCache;
 
 /// Parses an SVG string into a [VectorInstructions] object.
 Future<VectorInstructions> parse(

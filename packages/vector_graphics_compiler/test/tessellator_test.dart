@@ -10,7 +10,7 @@ import 'helpers.dart';
 void main() {
   setUpAll(() {
     if (!initializeTessellatorFromFlutterCache()) {
-      print('error in setup');
+      fail('error in setup');
     }
   });
 

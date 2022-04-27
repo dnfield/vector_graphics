@@ -43,11 +43,21 @@ void main() {
     final FlutterVectorGraphicsListener listener =
         FlutterVectorGraphicsListener();
     final int paintId = codec.writeFill(buffer, 23, 0);
-    final int pathId = codec.writeStartPath(buffer, 0);
-    codec.writeMoveTo(buffer, 1, 2);
-    codec.writeLineTo(buffer, 2, 3);
-    codec.writeClose(buffer);
-    codec.writeFinishPath(buffer);
+    final int pathId = codec.writePath(
+      buffer,
+      Uint8List.fromList(<int>[
+        ControlPointTypes.moveTo,
+        ControlPointTypes.lineTo,
+        ControlPointTypes.close,
+      ]),
+      Float32List.fromList(<double>[
+        1,
+        2,
+        2,
+        3,
+      ]),
+      0,
+    );
     codec.writeDrawPath(buffer, pathId, paintId);
 
     codec.decode(buffer.done(), listener);
@@ -140,6 +150,7 @@ void main() {
 
     expect(fittedBox.fit, BoxFit.fitHeight);
     expect(fittedBox.alignment, Alignment.centerLeft);
+    expect(fittedBox.clipBehavior, Clip.hardEdge);
   });
 
   testWidgets('Sizes VectorGraphic based on encoded viewbox information',
@@ -243,6 +254,22 @@ void main() {
     expect(tester.layers, contains(isA<PictureLayer>()));
   });
 
+  testWidgets('Uses repaint boundary', (WidgetTester tester) async {
+    final TestAssetBundle testBundle = TestAssetBundle();
+
+    await tester.pumpWidget(
+      DefaultAssetBundle(
+        bundle: testBundle,
+        child: const VectorGraphic(
+          loader: AssetBytesLoader('foo.svg'),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byType(RepaintBoundary), findsOneWidget);
+  });
+
   testWidgets('PictureInfo.dispose is safe to call multiple times',
       (WidgetTester tester) async {
     final FlutterVectorGraphicsListener listener =
@@ -342,6 +369,47 @@ void main() {
         isImage: true,
       ),
     );
+  });
+
+  testWidgets('Default placeholder builder', (WidgetTester tester) async {
+    final TestAssetBundle testBundle = TestAssetBundle();
+
+    await tester.pumpWidget(
+      DefaultAssetBundle(
+        bundle: testBundle,
+        child: const Directionality(
+          textDirection: TextDirection.ltr,
+          child: VectorGraphic(
+            loader: AssetBytesLoader('foo.svg'),
+            semanticsLabel: 'Foo',
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byType(SizedBox), findsOneWidget);
+  });
+
+  testWidgets('Custom placeholder builder', (WidgetTester tester) async {
+    final TestAssetBundle testBundle = TestAssetBundle();
+
+    await tester.pumpWidget(
+      DefaultAssetBundle(
+        bundle: testBundle,
+        child: Directionality(
+          textDirection: TextDirection.ltr,
+          child: VectorGraphic(
+            loader: const AssetBytesLoader('foo.svg'),
+            semanticsLabel: 'Foo',
+            placeholderBuilder: (BuildContext context) {
+              return Container(key: const ValueKey<int>(23));
+            },
+          ),
+        ),
+      ),
+    );
+
+    expect(find.byKey(const ValueKey<int>(23)), findsOneWidget);
   });
 }
 

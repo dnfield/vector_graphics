@@ -21,6 +21,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      checkerboardRasterCacheImages: true,
       title: 'Vector Graphics Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,
@@ -29,9 +30,6 @@ class MyApp extends StatelessWidget {
         body: Center(
           child: ListView(
             children: const <Widget>[
-              VectorGraphic(
-                loader: AssetBytesLoader('assets/tiger.bin'),
-              ),
               VectorGraphic(
                 loader: NetworkSvgLoader(
                   'https://upload.wikimedia.org/wikipedia/commons/f/fd/Ghostscript_Tiger.svg',

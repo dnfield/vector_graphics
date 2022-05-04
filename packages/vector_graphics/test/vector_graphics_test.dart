@@ -404,7 +404,8 @@ void main() {
 
   // Show that we avoid compositing extra layers and raster cache the maximum number of paint
   // operations.
-  testWidgets('Only creates a PictureLayer and a repaint boundary', (WidgetTester tester) async {
+  testWidgets('Only creates a PictureLayer and a repaint boundary',
+      (WidgetTester tester) async {
     final TestAssetBundle testBundle = TestAssetBundle();
 
     await tester.pumpWidget(
@@ -425,7 +426,8 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(tester.layers.last, isA<PictureLayer>()); // vg picture
-    expect(tester.layers.elementAt(tester.layers.length - 2), isA<OffsetLayer>()); // Repaint boundary
+    expect(tester.layers.elementAt(tester.layers.length - 2),
+        isA<OffsetLayer>()); // Repaint boundary
   });
 }
 

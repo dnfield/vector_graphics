@@ -39,6 +39,8 @@ class VectorGraphic extends StatefulWidget {
     this.semanticsLabel,
     this.excludeFromSemantics = false,
     this.placeholderBuilder,
+    this.color,
+    this.blendMode = BlendMode.srcIn,
   }) : super(key: key);
 
   /// A delegate for fetching the raw bytes of the vector graphic.
@@ -98,6 +100,16 @@ class VectorGraphic extends StatefulWidget {
 
   /// The placeholder to use while fetching, decoding, and parsing the vector_graphics data.
   final WidgetBuilder? placeholderBuilder;
+
+  /// If provided, a color to blend with the vector graphic according to a
+  /// given [blendMode].
+  final Color? color;
+
+  /// If a [color] is provided, the blend mode used to draw the vector graphic
+  /// with.
+  ///
+  /// Defaults to [BlendMode.srcIn].
+  final BlendMode blendMode;
 
   @override
   State<VectorGraphic> createState() => _VectorGraphicsWidgetState();
@@ -174,6 +186,8 @@ class _VectorGraphicsWidgetState extends State<VectorGraphic> {
             size: pictureInfo.size,
             child: _RawVectorGraphicsWidget(
               pictureInfo: pictureInfo,
+              color: widget.color,
+              blendMode: widget.blendMode,
             ),
           ),
         ),
@@ -297,13 +311,17 @@ class _RawVectorGraphicsWidget extends SingleChildRenderObjectWidget {
   const _RawVectorGraphicsWidget({
     Key? key,
     required this.pictureInfo,
+    required this.color,
+    required this.blendMode,
   }) : super(key: key);
 
   final PictureInfo pictureInfo;
+  final Color? color;
+  final BlendMode blendMode;
 
   @override
   RenderObject createRenderObject(BuildContext context) {
-    return _RenderVectorGraphics(pictureInfo);
+    return _RenderVectorGraphics(pictureInfo, color, blendMode);
   }
 
   @override
@@ -311,12 +329,15 @@ class _RawVectorGraphicsWidget extends SingleChildRenderObjectWidget {
     BuildContext context,
     covariant _RenderVectorGraphics renderObject,
   ) {
-    renderObject.pictureInfo = pictureInfo;
+    renderObject
+      ..pictureInfo = pictureInfo
+      ..color = color
+      ..blendMode = blendMode;
   }
 }
 
 class _RenderVectorGraphics extends RenderBox {
-  _RenderVectorGraphics(this._pictureInfo);
+  _RenderVectorGraphics(this._pictureInfo, this._color, this._blendMode);
 
   PictureInfo get pictureInfo => _pictureInfo;
   PictureInfo _pictureInfo;
@@ -325,6 +346,26 @@ class _RenderVectorGraphics extends RenderBox {
       return;
     }
     _pictureInfo = value;
+    markNeedsPaint();
+  }
+
+  BlendMode get blendMode => _blendMode;
+  BlendMode _blendMode;
+  set blendMode(BlendMode value) {
+    if (blendMode == value) {
+      return;
+    }
+    _blendMode = value;
+    markNeedsPaint();
+  }
+
+  Color? get color => _color;
+  Color? _color;
+  set color(Color? value) {
+    if (color == value) {
+      return;
+    }
+    _color = value;
     markNeedsPaint();
   }
 

@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:ui' as ui;
 import 'dart:developer';
 import 'dart:typed_data';
 
@@ -33,6 +34,8 @@ class MyApp extends StatelessWidget {
                 loader: NetworkSvgLoader(
                   'https://upload.wikimedia.org/wikipedia/commons/f/fd/Ghostscript_Tiger.svg',
                 ),
+                color: Colors.red,
+                blendMode: ui.BlendMode.screen
               )
             ],
           ),

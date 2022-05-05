@@ -393,6 +393,10 @@ class _RenderVectorGraphics extends RenderBox {
     // This is safe to do because the widget itself is wrapped in a repaint
     // boundary.
     context.canvas.drawPicture(_pictureInfo.picture);
+
+    if (color != null) {
+      context.canvas.drawColor(color!, blendMode);
+    }
   }
 }
 

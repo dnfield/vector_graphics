@@ -21,7 +21,6 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      checkerboardRasterCacheImages: true,
       title: 'Vector Graphics Demo',
       theme: ThemeData(
         primarySwatch: Colors.blue,

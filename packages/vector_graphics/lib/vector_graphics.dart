@@ -205,7 +205,7 @@ class _VectorGraphicsWidgetState extends State<VectorGraphic> {
         child: child,
       );
     }
-    return RepaintBoundary(child: child);
+    return child;
   }
 }
 
@@ -321,7 +321,12 @@ class _RawVectorGraphicsWidget extends SingleChildRenderObjectWidget {
 
   @override
   RenderObject createRenderObject(BuildContext context) {
-    return _RenderVectorGraphics(pictureInfo, color, blendMode);
+    return _RenderVectorGraphics(
+      pictureInfo,
+      color,
+      blendMode,
+      MediaQuery.of(context).devicePixelRatio,
+    );
   }
 
   @override
@@ -332,12 +337,28 @@ class _RawVectorGraphicsWidget extends SingleChildRenderObjectWidget {
     renderObject
       ..pictureInfo = pictureInfo
       ..color = color
-      ..blendMode = blendMode;
+      ..blendMode = blendMode
+      ..devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
   }
 }
 
 class _RenderVectorGraphics extends RenderBox {
-  _RenderVectorGraphics(this._pictureInfo, this._color, this._blendMode);
+  _RenderVectorGraphics(
+    this._pictureInfo,
+    this._color,
+    this._blendMode,
+    this._devicePixelRatio,
+  );
+
+  ui.BlendMode get blendMode => _blendMode;
+  ui.BlendMode _blendMode;
+  set blendMode(ui.BlendMode value) {
+    if (value == blendMode) {
+      return;
+    }
+    _blendMode = value;
+    markNeedsPaint();
+  }
 
   PictureInfo get pictureInfo => _pictureInfo;
   PictureInfo _pictureInfo;
@@ -346,16 +367,7 @@ class _RenderVectorGraphics extends RenderBox {
       return;
     }
     _pictureInfo = value;
-    markNeedsPaint();
-  }
-
-  BlendMode get blendMode => _blendMode;
-  BlendMode _blendMode;
-  set blendMode(BlendMode value) {
-    if (blendMode == value) {
-      return;
-    }
-    _blendMode = value;
+    invalidateRaster();
     markNeedsPaint();
   }
 
@@ -366,6 +378,17 @@ class _RenderVectorGraphics extends RenderBox {
       return;
     }
     _color = value;
+    markNeedsPaint();
+  }
+
+  double get devicePixelRatio => _devicePixelRatio;
+  double _devicePixelRatio;
+  set devicePixelRatio(double value) {
+    if (value == devicePixelRatio) {
+      return;
+    }
+    _devicePixelRatio = value;
+    invalidateRaster();
     markNeedsPaint();
   }
 
@@ -380,33 +403,87 @@ class _RenderVectorGraphics extends RenderBox {
     return constraints.smallest;
   }
 
-  final Matrix4 transform = Matrix4.identity();
+  void invalidateRaster() {
+    _lastRasterizedSize = null;
+  }
+
+  // Re-create the raster for a given SVG if the target size
+  // is sufficiently different.
+  Future<void> _maybeUpdateRaster(Size desiredSize) async {
+    double scale = 1.0;
+    if (desiredSize != pictureInfo.size) {
+      scale = math.min(
+        desiredSize.width / pictureInfo.size.width,
+        desiredSize.height / pictureInfo.size.height,
+      );
+    }
+    final int scaledWidth = (pictureInfo.size.width * scale).round();
+    final int scaledHeight = (pictureInfo.size.height * scale).round();
+    if (_lastRasterizedSize != null &&
+        _lastRasterizedSize!.width == scaledWidth &&
+        _lastRasterizedSize!.height == scaledHeight) {
+      return;
+    }
+    final ui.Image result = await pictureInfo.picture.toImage(
+        (scaledWidth * devicePixelRatio).round(),
+        (scaledHeight * devicePixelRatio).round());
+    _currentImage?.dispose();
+    _currentImage = result;
+    _lastRasterizedSize = Size(scaledWidth.toDouble(), scaledHeight.toDouble());
+    markNeedsPaint();
+  }
+
+  Size? _lastRasterizedSize;
+  ui.Image? _currentImage;
+
+  @override
+  void dispose() {
+    _currentImage?.dispose();
+    _currentImage = null;
+    super.dispose();
+  }
 
   @override
   void paint(PaintingContext context, ui.Offset offset) {
-    if (_scaleCanvasToViewBox(transform, size, pictureInfo.size)) {
-      context.canvas.transform(transform.storage);
+    final Offset pictureOffset = _pictureOffset(size, pictureInfo.size);
+    final ui.Image? image = _currentImage;
+    _maybeUpdateRaster(size);
+    if (image == null) {
+      return;
     }
-    // Instead of using an explicit non-owned layer here, we just add
-    // the picture directly. This allows parent render objects to avoid
-    // extra compositing.
-    // This is safe to do because the widget itself is wrapped in a repaint
-    // boundary.
-    context.canvas.drawPicture(_pictureInfo.picture);
 
+    final Paint colorPaint = Paint()..filterQuality = ui.FilterQuality.low;
     if (color != null) {
-      context.canvas.drawColor(color!, blendMode);
+      colorPaint.colorFilter = ui.ColorFilter.mode(color!, _blendMode);
     }
+    final Offset dstOffset = offset + pictureOffset;
+    final Rect src = ui.Rect.fromLTWH(
+      0,
+      0,
+      pictureInfo.size.width,
+      pictureInfo.size.height,
+    );
+    final Rect dst = ui.Rect.fromLTWH(
+      dstOffset.dx,
+      dstOffset.dy,
+      _lastRasterizedSize!.width,
+      _lastRasterizedSize!.height,
+    );
+    context.canvas.drawImageRect(
+      image,
+      src,
+      dst,
+      colorPaint,
+    );
   }
 }
 
-bool _scaleCanvasToViewBox(
-  Matrix4 matrix,
+Offset _pictureOffset(
   Size desiredSize,
   Size pictureSize,
 ) {
   if (desiredSize == pictureSize) {
-    return false;
+    return Offset.zero;
   }
   final double scale = math.min(
     desiredSize.width / pictureSize.width,
@@ -418,9 +495,5 @@ bool _scaleCanvasToViewBox(
     halfDesiredSize.width - scaledHalfViewBoxSize.width,
     halfDesiredSize.height - scaledHalfViewBoxSize.height,
   );
-  matrix
-    ..translate(shift.dx, shift.dy)
-    ..scale(scale, scale);
-
-  return true;
+  return shift;
 }

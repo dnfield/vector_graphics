@@ -26,18 +26,14 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: Scaffold(
+      home: const Scaffold(
         body: Center(
-          child: ListView(
-            children: const <Widget>[
-              VectorGraphic(
-                loader: NetworkSvgLoader(
-                  'https://upload.wikimedia.org/wikipedia/commons/f/fd/Ghostscript_Tiger.svg',
-                ),
-                color: Colors.red,
-                blendMode: ui.BlendMode.screen
-              )
-            ],
+          child: VectorGraphic(
+            loader: NetworkSvgLoader(
+              'https://upload.wikimedia.org/wikipedia/commons/f/fd/Ghostscript_Tiger.svg',
+            ),
+            color: Colors.red,
+            blendMode: ui.BlendMode.colorBurn,
           ),
         ),
       ),
@@ -54,7 +50,6 @@ class NetworkSvgLoader extends BytesLoader {
   Future<ByteData> loadBytes(BuildContext context) async {
     return await compute((String svgUrl) async {
       final http.Response request = await http.get(Uri.parse(svgUrl));
-      // print('Got respone for $svgUrl: (${request.statusCode}) ${request.contentLength} bytes');
       final TimelineTask task = TimelineTask()..start('encodeSvg');
       final Uint8List compiledBytes = await encodeSvg(request.body, svgUrl);
       task.finish();

@@ -316,7 +316,7 @@ class _RawVectorGraphicsWidget extends SingleChildRenderObjectWidget {
     return _RenderVectorGraphics(
       pictureInfo,
       colorFilter,
-      MediaQuery.of(context).devicePixelRatio,
+      MediaQuery.maybeOf(context)?.devicePixelRatio ?? 1.0
     );
   }
 
@@ -328,7 +328,7 @@ class _RawVectorGraphicsWidget extends SingleChildRenderObjectWidget {
     renderObject
       ..pictureInfo = pictureInfo
       ..colorFilter = colorFilter
-      ..devicePixelRatio = MediaQuery.of(context).devicePixelRatio;
+      ..devicePixelRatio = MediaQuery.maybeOf(context)?.devicePixelRatio ?? 1.0;
   }
 }
 
@@ -427,7 +427,7 @@ class _RenderVectorGraphics extends RenderBox {
     final Offset pictureOffset = _pictureOffset(size, pictureInfo.size);
     final ui.Image? image = _currentImage;
     _maybeUpdateRaster(size);
-    if (image == null) {
+    if (image == null || _lastRasterizedSize == null) {
       return;
     }
 

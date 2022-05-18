@@ -41,6 +41,7 @@ class VectorGraphic extends StatefulWidget {
     this.placeholderBuilder,
     this.color,
     this.blendMode = BlendMode.srcIn,
+    this.complex = true, // Intended only for testing
   }) : super(key: key);
 
   /// A delegate for fetching the raw bytes of the vector graphic.
@@ -110,6 +111,8 @@ class VectorGraphic extends StatefulWidget {
   ///
   /// Defaults to [BlendMode.srcIn].
   final BlendMode blendMode;
+
+  final bool complex;
 
   @override
   State<VectorGraphic> createState() => _VectorGraphicsWidgetState();
@@ -188,6 +191,7 @@ class _VectorGraphicsWidgetState extends State<VectorGraphic> {
               pictureInfo: pictureInfo,
               color: widget.color,
               blendMode: widget.blendMode,
+              complex: widget.complex,
             ),
           ),
         ),
@@ -313,11 +317,13 @@ class _RawVectorGraphicsWidget extends SingleChildRenderObjectWidget {
     required this.pictureInfo,
     required this.color,
     required this.blendMode,
+    required this.complex,
   }) : super(key: key);
 
   final PictureInfo pictureInfo;
   final Color? color;
   final BlendMode blendMode;
+  final bool complex;
 
   @override
   RenderObject createRenderObject(BuildContext context) {
@@ -326,6 +332,7 @@ class _RawVectorGraphicsWidget extends SingleChildRenderObjectWidget {
       color,
       blendMode,
       MediaQuery.of(context).devicePixelRatio,
+      complex,
     );
   }
 
@@ -348,7 +355,10 @@ class _RenderVectorGraphics extends RenderBox {
     this._color,
     this._blendMode,
     this._devicePixelRatio,
+    this._complex,
   );
+
+  final bool _complex;
 
   ui.BlendMode get blendMode => _blendMode;
   ui.BlendMode _blendMode;
@@ -443,38 +453,50 @@ class _RenderVectorGraphics extends RenderBox {
     super.dispose();
   }
 
+  final Matrix4 transform = Matrix4.identity();
+
   @override
   void paint(PaintingContext context, ui.Offset offset) {
-    final Offset pictureOffset = _pictureOffset(size, pictureInfo.size);
-    final ui.Image? image = _currentImage;
-    _maybeUpdateRaster(size);
-    if (image == null) {
+    if (_complex) {
+      final Offset pictureOffset = _pictureOffset(size, pictureInfo.size);
+      final ui.Image? image = _currentImage;
+      _maybeUpdateRaster(size);
+      if (image == null) {
+        return;
+      }
+
+      final Paint colorPaint = Paint()..filterQuality = ui.FilterQuality.low;
+      if (color != null) {
+        colorPaint.colorFilter = ui.ColorFilter.mode(color!, _blendMode);
+      }
+      final Offset dstOffset = offset + pictureOffset;
+      final Rect src = ui.Rect.fromLTWH(
+        0,
+        0,
+        pictureInfo.size.width,
+        pictureInfo.size.height,
+      );
+      final Rect dst = ui.Rect.fromLTWH(
+        dstOffset.dx,
+        dstOffset.dy,
+        _lastRasterizedSize!.width,
+        _lastRasterizedSize!.height,
+      );
+      context.canvas.drawImageRect(
+        image,
+        src,
+        dst,
+        colorPaint,
+      );
       return;
     }
 
-    final Paint colorPaint = Paint()..filterQuality = ui.FilterQuality.low;
-    if (color != null) {
-      colorPaint.colorFilter = ui.ColorFilter.mode(color!, _blendMode);
+    // old strategy.
+    if (_scaleCanvasToViewBox(transform, size, pictureInfo.size)) {
+      context.canvas.transform(transform.storage);
     }
-    final Offset dstOffset = offset + pictureOffset;
-    final Rect src = ui.Rect.fromLTWH(
-      0,
-      0,
-      pictureInfo.size.width,
-      pictureInfo.size.height,
-    );
-    final Rect dst = ui.Rect.fromLTWH(
-      dstOffset.dx,
-      dstOffset.dy,
-      _lastRasterizedSize!.width,
-      _lastRasterizedSize!.height,
-    );
-    context.canvas.drawImageRect(
-      image,
-      src,
-      dst,
-      colorPaint,
-    );
+    context.canvas.drawPicture(_pictureInfo.picture);
+
   }
 }
 
@@ -496,4 +518,29 @@ Offset _pictureOffset(
     halfDesiredSize.height - scaledHalfViewBoxSize.height,
   );
   return shift;
+}
+
+bool _scaleCanvasToViewBox(
+  Matrix4 matrix,
+  Size desiredSize,
+  Size pictureSize,
+) {
+  if (desiredSize == pictureSize) {
+    return false;
+  }
+  final double scale = math.min(
+    desiredSize.width / pictureSize.width,
+    desiredSize.height / pictureSize.height,
+  );
+  final Size scaledHalfViewBoxSize = pictureSize * scale / 2.0;
+  final Size halfDesiredSize = desiredSize / 2.0;
+  final Offset shift = Offset(
+    halfDesiredSize.width - scaledHalfViewBoxSize.width,
+    halfDesiredSize.height - scaledHalfViewBoxSize.height,
+  );
+  matrix
+    ..translate(shift.dx, shift.dy)
+    ..scale(scale, scale);
+
+  return true;
 }

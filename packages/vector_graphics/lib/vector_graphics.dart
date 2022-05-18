@@ -313,11 +313,8 @@ class _RawVectorGraphicsWidget extends SingleChildRenderObjectWidget {
 
   @override
   RenderObject createRenderObject(BuildContext context) {
-    return _RenderVectorGraphics(
-      pictureInfo,
-      colorFilter,
-      MediaQuery.maybeOf(context)?.devicePixelRatio ?? 1.0
-    );
+    return _RenderVectorGraphics(pictureInfo, colorFilter,
+        MediaQuery.maybeOf(context)?.devicePixelRatio ?? 1.0);
   }
 
   @override

@@ -2,9 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:math' as math;
 import 'dart:typed_data';
-import 'dart:ui' as ui;
 
 import 'package:flutter/widgets.dart';
 
@@ -12,6 +10,7 @@ import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
 import 'src/http.dart';
 import 'src/listener.dart';
+import 'src/render_vector_graphics.dart';
 
 /// A widget that displays a [VectorGraphicsCodec] encoded asset.
 ///
@@ -40,7 +39,10 @@ class VectorGraphic extends StatefulWidget {
     this.excludeFromSemantics = false,
     this.placeholderBuilder,
     this.colorFilter,
-  }) : super(key: key);
+    this.opacity = 1.0,
+  })  : assert(opacity >= 0.0 && opacity <= 1.0,
+            'opacity must be a value between 0.0 and 1.0'),
+        super(key: key);
 
   /// A delegate for fetching the raw bytes of the vector graphic.
   ///
@@ -106,11 +108,20 @@ class VectorGraphic extends StatefulWidget {
   /// a solid red color.
   final ColorFilter? colorFilter;
 
+  /// An opacity to apply to the entire vector graphic.
+  ///
+  /// If not provided, defaults to `1.0` (fully opaque).
+  ///
+  /// This value does not apply to the widgets created by a [placeholderBuilder].
+  /// Using this value is more efficient than wrapping this widget in an
+  /// [Opacity] or [FadeTransition].
+  final double opacity;
+
   @override
-  State<VectorGraphic> createState() => _VectorGraphicsWidgetState();
+  State<VectorGraphic> createState() => _VectorGraphicWidgetState();
 }
 
-class _VectorGraphicsWidgetState extends State<VectorGraphic> {
+class _VectorGraphicWidgetState extends State<VectorGraphic> {
   PictureInfo? _pictureInfo;
 
   @override
@@ -179,9 +190,10 @@ class _VectorGraphicsWidgetState extends State<VectorGraphic> {
           clipBehavior: Clip.hardEdge,
           child: SizedBox.fromSize(
             size: pictureInfo.size,
-            child: _RawVectorGraphicsWidget(
+            child: _RawVectorGraphicWidget(
               pictureInfo: pictureInfo,
               colorFilter: widget.colorFilter,
+              opacity: widget.opacity,
             ),
           ),
         ),
@@ -301,176 +313,37 @@ class NetworkBytesLoader extends BytesLoader {
   }
 }
 
-class _RawVectorGraphicsWidget extends SingleChildRenderObjectWidget {
-  const _RawVectorGraphicsWidget({
+class _RawVectorGraphicWidget extends SingleChildRenderObjectWidget {
+  const _RawVectorGraphicWidget({
     Key? key,
     required this.pictureInfo,
     required this.colorFilter,
+    required this.opacity,
   }) : super(key: key);
 
   final PictureInfo pictureInfo;
   final ColorFilter? colorFilter;
+  final double opacity;
 
   @override
   RenderObject createRenderObject(BuildContext context) {
-    return _RenderVectorGraphics(pictureInfo, colorFilter,
-        MediaQuery.maybeOf(context)?.devicePixelRatio ?? 1.0);
+    return RenderVectorGraphic(
+      pictureInfo,
+      colorFilter,
+      MediaQuery.maybeOf(context)?.devicePixelRatio ?? 1.0,
+      opacity,
+    );
   }
 
   @override
   void updateRenderObject(
     BuildContext context,
-    covariant _RenderVectorGraphics renderObject,
+    covariant RenderVectorGraphic renderObject,
   ) {
     renderObject
       ..pictureInfo = pictureInfo
       ..colorFilter = colorFilter
-      ..devicePixelRatio = MediaQuery.maybeOf(context)?.devicePixelRatio ?? 1.0;
+      ..devicePixelRatio = MediaQuery.maybeOf(context)?.devicePixelRatio ?? 1.0
+      ..opacity = opacity;
   }
-}
-
-class _RenderVectorGraphics extends RenderBox {
-  _RenderVectorGraphics(
-    this._pictureInfo,
-    this._colorFilter,
-    this._devicePixelRatio,
-  );
-
-  PictureInfo get pictureInfo => _pictureInfo;
-  PictureInfo _pictureInfo;
-  set pictureInfo(PictureInfo value) {
-    if (identical(value, _pictureInfo)) {
-      return;
-    }
-    _pictureInfo = value;
-    invalidateRaster();
-  }
-
-  ColorFilter? get colorFilter => _colorFilter;
-  ColorFilter? _colorFilter;
-  set colorFilter(ColorFilter? value) {
-    if (colorFilter == value) {
-      return;
-    }
-    _colorFilter = value;
-    markNeedsPaint();
-  }
-
-  double get devicePixelRatio => _devicePixelRatio;
-  double _devicePixelRatio;
-  set devicePixelRatio(double value) {
-    if (value == devicePixelRatio) {
-      return;
-    }
-    _devicePixelRatio = value;
-    invalidateRaster();
-  }
-
-  @override
-  bool hitTestSelf(Offset position) => true;
-
-  @override
-  bool get sizedByParent => true;
-
-  @override
-  Size computeDryLayout(BoxConstraints constraints) {
-    return constraints.smallest;
-  }
-
-  void invalidateRaster() {
-    _lastRasterizedSize = null;
-    markNeedsPaint();
-  }
-
-  // Re-create the raster for a given SVG if the target size
-  // is sufficiently different.
-  Future<void> _maybeUpdateRaster(Size desiredSize) async {
-    double scale = 1.0;
-    if (desiredSize != pictureInfo.size) {
-      scale = math.min(
-        desiredSize.width / pictureInfo.size.width,
-        desiredSize.height / pictureInfo.size.height,
-      );
-    }
-    final int scaledWidth = (pictureInfo.size.width * scale).round();
-    final int scaledHeight = (pictureInfo.size.height * scale).round();
-    if (_lastRasterizedSize != null &&
-        _lastRasterizedSize!.width == scaledWidth &&
-        _lastRasterizedSize!.height == scaledHeight) {
-      return;
-    }
-    final ui.Image result = await pictureInfo.picture.toImage(
-        (scaledWidth * devicePixelRatio).round(),
-        (scaledHeight * devicePixelRatio).round());
-    _currentImage?.dispose();
-    _currentImage = result;
-    _lastRasterizedSize = Size(scaledWidth.toDouble(), scaledHeight.toDouble());
-    markNeedsPaint();
-  }
-
-  Size? _lastRasterizedSize;
-  ui.Image? _currentImage;
-
-  @override
-  void dispose() {
-    _currentImage?.dispose();
-    _currentImage = null;
-    super.dispose();
-  }
-
-  @override
-  void paint(PaintingContext context, ui.Offset offset) {
-    final Offset pictureOffset = _pictureOffset(size, pictureInfo.size);
-    final ui.Image? image = _currentImage;
-    _maybeUpdateRaster(size);
-    if (image == null || _lastRasterizedSize == null) {
-      return;
-    }
-
-    // Use `FilterQuality.low` to scale the image, which corresponds to
-    // bilinear interpolation.
-    final Paint colorPaint = Paint()..filterQuality = ui.FilterQuality.low;
-    if (colorFilter != null) {
-      colorPaint.colorFilter = colorFilter!;
-    }
-    final Offset dstOffset = offset + pictureOffset;
-    final Rect src = ui.Rect.fromLTWH(
-      0,
-      0,
-      pictureInfo.size.width,
-      pictureInfo.size.height,
-    );
-    final Rect dst = ui.Rect.fromLTWH(
-      dstOffset.dx,
-      dstOffset.dy,
-      _lastRasterizedSize!.width,
-      _lastRasterizedSize!.height,
-    );
-    context.canvas.drawImageRect(
-      image,
-      src,
-      dst,
-      colorPaint,
-    );
-  }
-}
-
-Offset _pictureOffset(
-  Size desiredSize,
-  Size pictureSize,
-) {
-  if (desiredSize == pictureSize) {
-    return Offset.zero;
-  }
-  final double scale = math.min(
-    desiredSize.width / pictureSize.width,
-    desiredSize.height / pictureSize.height,
-  );
-  final Size scaledHalfViewBoxSize = pictureSize * scale / 2.0;
-  final Size halfDesiredSize = desiredSize / 2.0;
-  final Offset shift = Offset(
-    halfDesiredSize.width - scaledHalfViewBoxSize.width,
-    halfDesiredSize.height - scaledHalfViewBoxSize.height,
-  );
-  return shift;
 }

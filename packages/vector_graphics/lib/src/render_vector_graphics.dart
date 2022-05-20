@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:io';
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
@@ -130,6 +131,13 @@ class RenderVectorGraphic extends RenderBox {
 
   @override
   void paint(PaintingContext context, ui.Offset offset) {
+    if (kDebugMode) {
+      final String? skip = Platform.environment['VECTOR_GRAPHICS_SKIP_RASTER'];
+      if (skip == 'true') {
+        return;
+      }
+    }
+
     if (opacity <= 0.0) {
       return;
     }

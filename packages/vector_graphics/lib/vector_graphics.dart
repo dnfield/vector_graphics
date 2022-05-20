@@ -40,7 +40,7 @@ class VectorGraphic extends StatefulWidget {
     this.placeholderBuilder,
     this.colorFilter,
     this.opacity = 1.0,
-  })  : assert(opacity >= 0.0 && opacity <= 1.0,
+  }) : assert(opacity >= 0.0 && opacity <= 1.0,
             'opacity must be a value between 0.0 and 1.0');
 
   /// A delegate for fetching the raw bytes of the vector graphic.

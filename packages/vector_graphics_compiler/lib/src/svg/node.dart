@@ -213,8 +213,7 @@ class SaveLayerNode extends ParentNode {
     SvgAttributes attributes, {
     required this.paint,
     super.children,
-  }) : super(attributes,
-            precalculatedTransform: AffineMatrix.identity);
+  }) : super(attributes, precalculatedTransform: AffineMatrix.identity);
 
   /// The paint to apply to the saved layer.
   final Paint paint;

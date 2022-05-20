@@ -344,7 +344,6 @@ class _RenderVectorGraphics extends RenderBox {
     }
     _pictureInfo = value;
     invalidateRaster();
-    markNeedsPaint();
   }
 
   ColorFilter? get colorFilter => _colorFilter;
@@ -365,7 +364,6 @@ class _RenderVectorGraphics extends RenderBox {
     }
     _devicePixelRatio = value;
     invalidateRaster();
-    markNeedsPaint();
   }
 
   @override
@@ -381,6 +379,7 @@ class _RenderVectorGraphics extends RenderBox {
 
   void invalidateRaster() {
     _lastRasterizedSize = null;
+    markNeedsPaint();
   }
 
   // Re-create the raster for a given SVG if the target size
@@ -428,6 +427,8 @@ class _RenderVectorGraphics extends RenderBox {
       return;
     }
 
+    // Use `FilterQuality.low` to scale the image, which corresponds to
+    // bilinear interpolation.
     final Paint colorPaint = Paint()..filterQuality = ui.FilterQuality.low;
     if (colorFilter != null) {
       colorPaint.colorFilter = colorFilter!;
@@ -451,7 +452,6 @@ class _RenderVectorGraphics extends RenderBox {
       dst,
       colorPaint,
     );
-    return;
   }
 }
 

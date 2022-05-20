@@ -12,7 +12,6 @@ import 'listener.dart';
 
 /// A render object which draws a vector graphic instance as a raster.
 class RenderVectorGraphic extends RenderBox {
-
   /// Create a new [RenderVectorGraphic].
   RenderVectorGraphic(
     this._pictureInfo,
@@ -58,7 +57,7 @@ class RenderVectorGraphic extends RenderBox {
   double get opacity => _opacity;
   double _opacity;
   set opacity(double value) {
-    assert(value >= 0.0  && value <= 1.0);
+    assert(value >= 0.0 && value <= 1.0);
     if (value == opacity) {
       return;
     }
@@ -90,6 +89,7 @@ class RenderVectorGraphic extends RenderBox {
     }
     return _pendingRasterUpdate;
   }
+
   Future<void>? _pendingRasterUpdate;
 
   // Re-create the raster for a given SVG if the target size

@@ -187,7 +187,6 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
         scale = math.min(
             pictureInfo.size.width / width, pictureInfo.size.height / height);
       }
-      print(scale);
 
       child = SizedBox(
         width: width,

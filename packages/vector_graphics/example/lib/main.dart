@@ -25,11 +25,18 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const Scaffold(
+      home: Scaffold(
         body: Center(
-          child: VectorGraphic(
-            loader: NetworkSvgLoader(
-              'https://upload.wikimedia.org/wikipedia/commons/f/fd/Ghostscript_Tiger.svg',
+          child: Container(
+            decoration: BoxDecoration(border: Border.all()),
+            child: VectorGraphic(
+              width: 200,
+              height: 200,
+              fit: BoxFit.fill,
+              alignment: Alignment.centerLeft,
+              loader: NetworkSvgLoader(
+                'https://upload.wikimedia.org/wikipedia/commons/f/fd/Ghostscript_Tiger.svg',
+              ),
             ),
           ),
         ),
@@ -37,6 +44,12 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+const String circle = r'''
+<svg height="100" width="100">
+  <circle cx="50" cy="50" r="40" stroke="black" stroke-width="3" fill="red" />
+</svg>
+''';
 
 class NetworkSvgLoader extends BytesLoader {
   const NetworkSvgLoader(this.url);
@@ -48,7 +61,7 @@ class NetworkSvgLoader extends BytesLoader {
     return await compute((String svgUrl) async {
       final http.Response request = await http.get(Uri.parse(svgUrl));
       final TimelineTask task = TimelineTask()..start('encodeSvg');
-      final Uint8List compiledBytes = await encodeSvg(request.body, svgUrl);
+      final Uint8List compiledBytes = await encodeSvg(circle, svgUrl);
       task.finish();
       // sendAndExit will make sure this isn't copied.
       return compiledBytes.buffer.asByteData();

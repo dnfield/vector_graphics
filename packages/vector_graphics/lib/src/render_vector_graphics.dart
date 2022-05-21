@@ -109,7 +109,13 @@ class RenderVectorGraphic extends RenderBox {
   // Re-create the raster for a given vector graphic if the target size
   // is sufficiently different.
   Future<void> _maybeUpdateRaster(Size desiredSize) async {
-    if (_lastRasterizedSize != null && _lastRasterizedSize == desiredSize) {
+    final int scaledWidth =
+        (pictureInfo.size.width * devicePixelRatio / scale).round();
+    final int scaledHeight =
+        (pictureInfo.size.height * devicePixelRatio / scale).round();
+    if (_lastRasterizedSize != null &&
+        _lastRasterizedSize!.width != scaledWidth &&
+        _lastRasterizedSize!.height != scaledHeight) {
       return;
     }
     // In order to scale a picture, it must be placed in a new picture
@@ -123,10 +129,7 @@ class RenderVectorGraphic extends RenderBox {
         (Matrix4.identity()..scale(devicePixelRatio / scale)).storage);
     canvas.drawPicture(pictureInfo.picture);
     final ui.Picture rasterPicture = recorder.endRecording();
-    final int scaledWidth =
-        (pictureInfo.size.width * devicePixelRatio / scale).round();
-    final int scaledHeight =
-        (pictureInfo.size.height * devicePixelRatio / scale).round();
+
     final ui.Image result =
         await rasterPicture.toImage(scaledWidth, scaledHeight);
     _currentImage?.dispose();

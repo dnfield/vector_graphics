@@ -30,7 +30,7 @@ class VectorGraphic extends StatefulWidget {
   ///
   /// See [VectorGraphic].
   const VectorGraphic({
-    Key? key,
+    super.key,
     required this.loader,
     this.width,
     this.height,
@@ -41,9 +41,8 @@ class VectorGraphic extends StatefulWidget {
     this.placeholderBuilder,
     this.colorFilter,
     this.opacity = 1.0,
-  })  : assert(opacity >= 0.0 && opacity <= 1.0,
-            'opacity must be a value between 0.0 and 1.0'),
-        super(key: key);
+  }) : assert(opacity >= 0.0 && opacity <= 1.0,
+            'opacity must be a value between 0.0 and 1.0');
 
   /// A delegate for fetching the raw bytes of the vector graphic.
   ///
@@ -324,12 +323,11 @@ class NetworkBytesLoader extends BytesLoader {
 
 class _RawVectorGraphicWidget extends SingleChildRenderObjectWidget {
   const _RawVectorGraphicWidget({
-    Key? key,
     required this.pictureInfo,
     required this.colorFilter,
     required this.opacity,
     required this.scale,
-  }) : super(key: key);
+  });
 
   final PictureInfo pictureInfo;
   final ColorFilter? colorFilter;

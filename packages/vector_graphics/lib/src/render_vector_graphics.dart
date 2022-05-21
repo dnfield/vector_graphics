@@ -72,6 +72,7 @@ class RenderVectorGraphic extends RenderBox {
   double get scale => _scale;
   double _scale;
   set scale(double value) {
+    assert(value != 0);
     if (value == scale) {
       return;
     }
@@ -114,8 +115,8 @@ class RenderVectorGraphic extends RenderBox {
     final int scaledHeight =
         (pictureInfo.size.height * devicePixelRatio / scale).round();
     if (_lastRasterizedSize != null &&
-        _lastRasterizedSize!.width != scaledWidth &&
-        _lastRasterizedSize!.height != scaledHeight) {
+        _lastRasterizedSize!.width == scaledWidth &&
+        _lastRasterizedSize!.height == scaledHeight) {
       return;
     }
     // In order to scale a picture, it must be placed in a new picture

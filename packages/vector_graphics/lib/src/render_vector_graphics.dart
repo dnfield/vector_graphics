@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
@@ -18,6 +17,7 @@ class RenderVectorGraphic extends RenderBox {
     this._colorFilter,
     this._devicePixelRatio,
     this._opacity,
+    this._scale,
   );
 
   /// The [PictureInfo] which contains the vector graphic and size to draw.
@@ -65,6 +65,20 @@ class RenderVectorGraphic extends RenderBox {
     markNeedsPaint();
   }
 
+  /// An additional ratio the picture will be transformed by.
+  ///
+  /// This value is used to ensure the computed raster does not
+  /// have extra pixelation from scaling.
+  double get scale => _scale;
+  double _scale;
+  set scale(double value) {
+    if (value == scale) {
+      return;
+    }
+    _scale = value;
+    _invalidateRaster();
+  }
+
   @override
   bool hitTestSelf(Offset position) => true;
 
@@ -92,26 +106,29 @@ class RenderVectorGraphic extends RenderBox {
 
   Future<void>? _pendingRasterUpdate;
 
-  // Re-create the raster for a given SVG if the target size
+  // Re-create the raster for a given vector graphic if the target size
   // is sufficiently different.
   Future<void> _maybeUpdateRaster(Size desiredSize) async {
-    double scale = 1.0;
-    if (desiredSize != pictureInfo.size) {
-      scale = math.min(
-        desiredSize.width / pictureInfo.size.width,
-        desiredSize.height / pictureInfo.size.height,
-      );
-    }
-    final int scaledWidth = (pictureInfo.size.width * scale).round();
-    final int scaledHeight = (pictureInfo.size.height * scale).round();
-    if (_lastRasterizedSize != null &&
-        _lastRasterizedSize!.width == scaledWidth &&
-        _lastRasterizedSize!.height == scaledHeight) {
+    if (_lastRasterizedSize != null && _lastRasterizedSize == desiredSize) {
       return;
     }
-    final ui.Image result = await pictureInfo.picture.toImage(
-        (scaledWidth * devicePixelRatio).round(),
-        (scaledHeight * devicePixelRatio).round());
+    // In order to scale a picture, it must be placed in a new picture
+    // with a transform applied. Surprisingly, the height and width
+    // arguments of Picture.toImage do not control the resolution that the
+    // picture is rendered at, instead it controls how much of the picture to
+    // capture in a raster.
+    final ui.PictureRecorder recorder = ui.PictureRecorder();
+    final ui.Canvas canvas = ui.Canvas(recorder);
+    canvas.transform(
+        (Matrix4.identity()..scale(devicePixelRatio / scale)).storage);
+    canvas.drawPicture(pictureInfo.picture);
+    final ui.Picture rasterPicture = recorder.endRecording();
+    final int scaledWidth =
+        (pictureInfo.size.width * devicePixelRatio / scale).round();
+    final int scaledHeight =
+        (pictureInfo.size.height * devicePixelRatio / scale).round();
+    final ui.Image result =
+        await rasterPicture.toImage(scaledWidth, scaledHeight);
     _currentImage?.dispose();
     _currentImage = result;
     _lastRasterizedSize = Size(scaledWidth.toDouble(), scaledHeight.toDouble());
@@ -130,11 +147,11 @@ class RenderVectorGraphic extends RenderBox {
 
   @override
   void paint(PaintingContext context, ui.Offset offset) {
+    assert(size == pictureInfo.size);
     if (opacity <= 0.0) {
       return;
     }
 
-    final Offset pictureOffset = _pictureOffset(size, pictureInfo.size);
     final ui.Image? image = _currentImage;
     _pendingRasterUpdate = _maybeUpdateRaster(size);
     if (image == null || _lastRasterizedSize == null) {
@@ -148,18 +165,17 @@ class RenderVectorGraphic extends RenderBox {
       colorPaint.colorFilter = colorFilter!;
     }
     colorPaint.color = const Color(0xFFFFFFFF).withOpacity(opacity);
-    final Offset dstOffset = offset + pictureOffset;
     final Rect src = ui.Rect.fromLTWH(
       0,
       0,
-      pictureInfo.size.width,
-      pictureInfo.size.height,
-    );
-    final Rect dst = ui.Rect.fromLTWH(
-      dstOffset.dx,
-      dstOffset.dy,
       _lastRasterizedSize!.width,
       _lastRasterizedSize!.height,
+    );
+    final Rect dst = ui.Rect.fromLTWH(
+      offset.dx,
+      offset.dy,
+      pictureInfo.size.width,
+      pictureInfo.size.height,
     );
     context.canvas.drawImageRect(
       image,
@@ -168,24 +184,4 @@ class RenderVectorGraphic extends RenderBox {
       colorPaint,
     );
   }
-}
-
-Offset _pictureOffset(
-  Size desiredSize,
-  Size pictureSize,
-) {
-  if (desiredSize == pictureSize) {
-    return Offset.zero;
-  }
-  final double scale = math.min(
-    desiredSize.width / pictureSize.width,
-    desiredSize.height / pictureSize.height,
-  );
-  final Size scaledHalfViewBoxSize = pictureSize * scale / 2.0;
-  final Size halfDesiredSize = desiredSize / 2.0;
-  final Offset shift = Offset(
-    halfDesiredSize.width - scaledHalfViewBoxSize.width,
-    halfDesiredSize.height - scaledHalfViewBoxSize.height,
-  );
-  return shift;
 }

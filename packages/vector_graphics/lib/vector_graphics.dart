@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'dart:typed_data';
+import 'dart:math' as math;
 
 import 'package:flutter/widgets.dart';
 
@@ -181,6 +182,13 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
         height = width / pictureInfo.size.width * pictureInfo.size.height;
       }
 
+      double scale = 1.0;
+      if (width != null && height != null) {
+        scale = math.min(
+            pictureInfo.size.width / width, pictureInfo.size.height / height);
+      }
+      print(scale);
+
       child = SizedBox(
         width: width,
         height: height,
@@ -194,6 +202,7 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
               pictureInfo: pictureInfo,
               colorFilter: widget.colorFilter,
               opacity: widget.opacity,
+              scale: scale,
             ),
           ),
         ),
@@ -319,11 +328,13 @@ class _RawVectorGraphicWidget extends SingleChildRenderObjectWidget {
     required this.pictureInfo,
     required this.colorFilter,
     required this.opacity,
+    required this.scale,
   }) : super(key: key);
 
   final PictureInfo pictureInfo;
   final ColorFilter? colorFilter;
   final double opacity;
+  final double scale;
 
   @override
   RenderObject createRenderObject(BuildContext context) {
@@ -332,6 +343,7 @@ class _RawVectorGraphicWidget extends SingleChildRenderObjectWidget {
       colorFilter,
       MediaQuery.maybeOf(context)?.devicePixelRatio ?? 1.0,
       opacity,
+      scale,
     );
   }
 
@@ -344,6 +356,7 @@ class _RawVectorGraphicWidget extends SingleChildRenderObjectWidget {
       ..pictureInfo = pictureInfo
       ..colorFilter = colorFilter
       ..devicePixelRatio = MediaQuery.maybeOf(context)?.devicePixelRatio ?? 1.0
-      ..opacity = opacity;
+      ..opacity = opacity
+      ..scale = scale;
   }
 }

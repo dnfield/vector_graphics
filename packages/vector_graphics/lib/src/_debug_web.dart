@@ -2,7 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-/// Skip rasterization on web platform debug mode.
+/// Don't skip rasterization on web platform debug mode.
+// TODO: determine how this will be enabled/disabled.
 bool get debugSkipRaster {
-  return true;
+  return false;
 }

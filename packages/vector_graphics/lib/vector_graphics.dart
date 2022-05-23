@@ -39,9 +39,8 @@ class VectorGraphic extends StatefulWidget {
     this.excludeFromSemantics = false,
     this.placeholderBuilder,
     this.colorFilter,
-    this.opacity = 1.0,
-  }) : assert(opacity >= 0.0 && opacity <= 1.0,
-            'opacity must be a value between 0.0 and 1.0');
+    this.opacity,
+  });
 
   /// A delegate for fetching the raw bytes of the vector graphic.
   ///
@@ -114,7 +113,7 @@ class VectorGraphic extends StatefulWidget {
   /// This value does not apply to the widgets created by a [placeholderBuilder].
   /// Using this value is more efficient than wrapping this widget in an
   /// [Opacity] or [FadeTransition].
-  final double opacity;
+  final Animation<double>? opacity;
 
   @override
   State<VectorGraphic> createState() => _VectorGraphicWidgetState();
@@ -321,7 +320,7 @@ class _RawVectorGraphicWidget extends SingleChildRenderObjectWidget {
 
   final PictureInfo pictureInfo;
   final ColorFilter? colorFilter;
-  final double opacity;
+  final Animation<double>? opacity;
 
   @override
   RenderObject createRenderObject(BuildContext context) {

@@ -88,7 +88,14 @@ class RenderVectorGraphic extends RenderBox {
   /// An additional ratio the picture will be transformed by.
   ///
   /// This value is used to ensure the computed raster does not
-  /// have extra pixelation from scaling.
+  /// have extra pixelation from scaling in the case that a the [BoxFit]
+  /// value used in the [VectorGraphic] widget implies a scaling factor
+  /// greater than 1.0.
+  ///
+  /// For example, if the vector graphic widget is sized at 100x100,
+  /// the vector graphic itself has a size of 50x50, and [BoxFit.fill]
+  /// is used. This will compute a scale of 2.0, which will result in a
+  /// raster that is 100x100.
   double get scale => _scale;
   double _scale;
   set scale(double value) {

@@ -198,9 +198,9 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
         width = height / pictureInfo.size.height * pictureInfo.size.width;
       } else if (width != null && !pictureInfo.size.isEmpty) {
         height = width / pictureInfo.size.width * pictureInfo.size.height;
-      } else {
-        assert(false);
       }
+
+      assert(width != null && height != null);
 
       double scale = 1.0;
       scale = math.min(

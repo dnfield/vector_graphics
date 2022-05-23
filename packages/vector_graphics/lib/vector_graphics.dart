@@ -198,13 +198,15 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
         width = height / pictureInfo.size.height * pictureInfo.size.width;
       } else if (width != null && !pictureInfo.size.isEmpty) {
         height = width / pictureInfo.size.width * pictureInfo.size.height;
+      } else {
+        assert(false);
       }
 
       double scale = 1.0;
-      if (width != null && height != null) {
-        scale = math.min(
-            pictureInfo.size.width / width, pictureInfo.size.height / height);
-      }
+      scale = math.min(
+        pictureInfo.size.width / width!,
+        pictureInfo.size.height / height!,
+      );
 
       child = SizedBox(
         width: width,

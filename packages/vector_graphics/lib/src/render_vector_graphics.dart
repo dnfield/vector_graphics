@@ -153,8 +153,10 @@ class RenderVectorGraphic extends RenderBox {
     // capture in a raster.
     final ui.PictureRecorder recorder = ui.PictureRecorder();
     final ui.Canvas canvas = ui.Canvas(recorder);
+
+    final double totalScale = devicePixelRatio / scale;
     canvas.transform(
-        (Matrix4.identity()..scale(devicePixelRatio / scale)).storage);
+        Matrix4.diagonal3Values(totalScale, totalScale, totalScale).storage);
     canvas.drawPicture(pictureInfo.picture);
     final ui.Picture rasterPicture = recorder.endRecording();
 

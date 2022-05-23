@@ -4,10 +4,12 @@
 
 import 'dart:ui' as ui;
 
+import 'package:flutter/animation.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/rendering.dart';
 
 import 'listener.dart';
+import 'debug.dart';
 
 /// A render object which draws a vector graphic instance as a raster.
 class RenderVectorGraphic extends RenderBox {
@@ -18,7 +20,10 @@ class RenderVectorGraphic extends RenderBox {
     this._devicePixelRatio,
     this._opacity,
     this._scale,
-  );
+  ) {
+    _opacity?.addListener(_updateOpacity);
+    _updateOpacity();
+  }
 
   /// The [PictureInfo] which contains the vector graphic and size to draw.
   PictureInfo get pictureInfo => _pictureInfo;
@@ -53,15 +58,30 @@ class RenderVectorGraphic extends RenderBox {
     _invalidateRaster();
   }
 
+  double _opacityValue = 1.0;
+
   /// An opacity to draw the rasterized vector graphic with.
-  double get opacity => _opacity;
-  double _opacity;
-  set opacity(double value) {
-    assert(value >= 0.0 && value <= 1.0);
+  Animation<double>? get opacity => _opacity;
+  Animation<double>? _opacity;
+  set opacity(Animation<double>? value) {
     if (value == opacity) {
       return;
     }
+    _opacity?.removeListener(_updateOpacity);
     _opacity = value;
+    _opacity?.addListener(_updateOpacity);
+    markNeedsPaint();
+  }
+
+  void _updateOpacity() {
+    if (opacity == null) {
+      return;
+    }
+    final double newValue = opacity!.value;
+    if (newValue == _opacityValue) {
+      return;
+    }
+    _opacityValue = newValue;
     markNeedsPaint();
   }
 
@@ -143,16 +163,36 @@ class RenderVectorGraphic extends RenderBox {
   ui.Image? _currentImage;
 
   @override
+  void attach(covariant PipelineOwner owner) {
+    _opacity?.addListener(_updateOpacity);
+    _updateOpacity();
+    super.attach(owner);
+  }
+
+  @override
+  void detach() {
+    _opacity?.removeListener(_updateOpacity);
+    super.detach();
+  }
+
+  @override
   void dispose() {
     _currentImage?.dispose();
     _currentImage = null;
+    _opacity?.removeListener(_updateOpacity);
     super.dispose();
   }
 
   @override
   void paint(PaintingContext context, ui.Offset offset) {
     assert(size == pictureInfo.size);
-    if (opacity <= 0.0) {
+    if (kDebugMode && debugSkipRaster) {
+      context.canvas
+          .drawRect(offset & size, Paint()..color = const Color(0xFFFF00FF));
+      return;
+    }
+
+    if (_opacityValue <= 0.0) {
       return;
     }
 
@@ -168,7 +208,7 @@ class RenderVectorGraphic extends RenderBox {
     if (colorFilter != null) {
       colorPaint.colorFilter = colorFilter!;
     }
-    colorPaint.color = const Color(0xFFFFFFFF).withOpacity(opacity);
+    colorPaint.color = const Color(0xFFFFFFFF).withOpacity(_opacityValue);
     final Rect src = ui.Rect.fromLTWH(
       0,
       0,

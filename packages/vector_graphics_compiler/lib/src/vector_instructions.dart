@@ -53,6 +53,14 @@ class VectorInstructions {
   /// If drawing using vertices, the [Paint.stroke] property is ignored.
   final List<DrawCommand> commands;
 
+  /// Whether or not this is a "complex" vg that requires eager rasterization.
+  bool get isComplex {
+    return text.isNotEmpty ||
+        commands.length > 1 ||
+        paints.any((Paint paint) =>
+            paint.fill?.shader != null || paint.stroke?.shader != null);
+  }
+
   @override
   int get hashCode => Object.hash(
       width,

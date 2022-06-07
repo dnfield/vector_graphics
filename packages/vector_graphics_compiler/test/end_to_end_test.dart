@@ -66,7 +66,7 @@ void main() {
     final TestListener listener = TestListener();
     codec.decode(bytes.buffer.asByteData(), listener);
     expect(listener.commands, <Object>[
-      const OnSize(120, 120),
+      const OnHeader(120, 120, true),
       OnLinearGradient(
         id: 0,
         fromX: 69,
@@ -124,7 +124,7 @@ void main() {
     final TestListener listener = TestListener();
     codec.decode(bytes.buffer.asByteData(), listener);
     expect(listener.commands, <Object>[
-      const OnSize(1000, 300),
+      const OnHeader(1000, 300, true),
       OnPaintObject(
         color: 4278190335,
         strokeCap: null,
@@ -332,8 +332,8 @@ class TestListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onSize(double width, double height) {
-    commands.add(OnSize(width, height));
+  void onHeader(double width, double height, bool complex) {
+    commands.add(OnHeader(width, height, complex));
   }
 
   @override
@@ -702,21 +702,25 @@ class OnPathStart {
   String toString() => 'OnPathStart($id, $fillType)';
 }
 
-class OnSize {
-  const OnSize(this.width, this.height);
+class OnHeader {
+  const OnHeader(this.width, this.height, this.complex);
 
   final double width;
   final double height;
+  final bool complex;
 
   @override
   int get hashCode => Object.hash(width, height);
 
   @override
   bool operator ==(Object other) =>
-      other is OnSize && other.width == width && other.height == height;
+      other is OnHeader &&
+      other.width == width &&
+      other.height == height &&
+      other.complex == complex;
 
   @override
-  String toString() => 'OnSize($width, $height)';
+  String toString() => 'OnHeader($width, $height, $complex)';
 }
 
 class OnTextConfig {

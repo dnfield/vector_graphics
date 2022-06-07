@@ -92,7 +92,7 @@ Future<Uint8List> encodeSvg(String input, String filename) async {
   final VectorInstructions instructions = await parse(input, key: filename);
   final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
 
-  codec.writeSize(buffer, instructions.width, instructions.height);
+  codec.writeHeader(buffer, instructions.width, instructions.height, true);
 
   final Map<int, int> fillIds = <int, int>{};
   final Map<int, int> strokeIds = <int, int>{};

@@ -15,6 +15,25 @@ abstract class ControlPointTypes {
   static const int close = 3;
 }
 
+/// Data that is used to decode a vector graphic.
+@immutable
+class VectorGraphicHeader {
+  /// Create a new [VectorGraphicHeader].
+  const VectorGraphicHeader(
+      {required this.width, required this.height, required this.complex});
+
+  /// The width of the vector graphic, in pixels.
+  final double width;
+
+  /// The height of the vector graphic, in pixels.
+  final double height;
+
+  /// A hint that can be used by clients. It indicates that
+  /// the vector graphic would be simple to re-render. This parameter can be
+  /// ignored.
+  final bool complex;
+}
+
 /// The [VectorGraphicsCodec] provides support for both encoding and
 /// decoding the vector_graphics binary format.
 class VectorGraphicsCodec {
@@ -40,7 +59,7 @@ class VectorGraphicsCodec {
   static const int _restoreTag = 38;
   static const int _linearGradientTag = 39;
   static const int _radialGradientTag = 40;
-  static const int _sizeTag = 41;
+  static const int _headerTag = 41;
   static const int _clipPathTag = 42;
   static const int _maskTag = 43;
   static const int _drawTextTag = 44;
@@ -49,15 +68,7 @@ class VectorGraphicsCodec {
   static const int _version = 1;
   static const int _magicNumber = 0x00882d62;
 
-  /// Decode the vector_graphics binary.
-  ///
-  /// Without a provided [VectorGraphicsCodecListener], this method will only
-  /// validate the basic structure of an object. decoders that wish to construct
-  /// a dart:ui Picture object should implement [VectorGraphicsCodecListener].
-  ///
-  /// Throws a [StateError] If the message is invalid.
-  void decode(ByteData data, VectorGraphicsCodecListener? listener) {
-    final _ReadBuffer buffer = _ReadBuffer(data);
+  void _verifyBytes(_ReadBuffer buffer) {
     if (data.lengthInBytes < 5) {
       throw StateError(
           'The provided data was not a vector_graphics binary asset.');
@@ -72,6 +83,18 @@ class VectorGraphicsCodec {
       throw StateError(
           'The provided data does not match the currently supported version.');
     }
+  }
+
+  /// Decode the vector_graphics binary.
+  ///
+  /// Without a provided [VectorGraphicsCodecListener], this method will only
+  /// validate the basic structure of an object. decoders that wish to construct
+  /// a dart:ui Picture object should implement [VectorGraphicsCodecListener].
+  ///
+  /// Throws a [StateError] If the message is invalid.
+  void decode(ByteData data, VectorGraphicsCodecListener? listener) {
+    final _ReadBuffer buffer = _ReadBuffer(data);
+    _verifyBytes(buffer);
     while (buffer.hasRemaining) {
       final int type = buffer.getUint8();
       switch (type) {
@@ -102,8 +125,8 @@ class VectorGraphicsCodec {
         case _saveLayerTag:
           _readSaveLayer(buffer, listener);
           continue;
-        case _sizeTag:
-          _readSize(buffer, listener);
+        case _headerTag:
+          _readHeader(buffer, listener);
           continue;
         case _clipPathTag:
           _readClipPath(buffer, listener);
@@ -123,19 +146,35 @@ class VectorGraphicsCodec {
     }
   }
 
+  /// Read the vector graphic header without decoding the rest of the bytes.
+  ///
+  /// Throws a [StateError] If the message is invalid.
+  VectorGraphicHeader peek(ByteData data) {
+    final _ReadBuffer buffer = _ReadBuffer(data);
+    _verifyBytes(buffer);
+    final int type = buffer.getUint8();
+    if (type != _headerTag) {
+      throw StateError(
+          'Invalid vector graphic, expected tag $_headerTag but found $type');
+    }
+    return _decodeHeader(buffer);
+  }
+
   /// Encode the dimensions of the vector graphic.
   ///
   /// This should be the first attribute encoded.
-  void writeSize(
+  void writeHeader(
     VectorGraphicsBuffer buffer,
     double width,
     double height,
+    bool complex,
   ) {
     if (buffer._decodePhase.index != _CurrentSection.size.index) {
       throw StateError('Size already written');
     }
     buffer._decodePhase = _CurrentSection.shaders;
-    buffer._putUint8(_sizeTag);
+    buffer._putUint8(_headerTag);
+    buffer._putUint8(complex ? 1 : 0);
     buffer._putFloat32(width);
     buffer._putFloat32(height);
   }
@@ -626,10 +665,20 @@ class VectorGraphicsCodec {
     listener?.onClipPath(pathId);
   }
 
-  void _readSize(_ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
+  VectorGraphicHeader _decodeHeader(_ReadBuffer buffer) {
+    final bool complex = buffer.getUint8() == 1;
     final double width = buffer.getFloat32();
     final double height = buffer.getFloat32();
-    listener?.onSize(width, height);
+    return VectorGraphicHeader(
+      width: width,
+      height: height,
+      complex: complex,
+    );
+  }
+
+  void _readHeader(_ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
+    final VectorGraphicHeader header = _decodeHeader(buffer);
+    listener?.onHeader(header.width, header.height, header.complex);
   }
 
   void _readTextConfig(
@@ -665,10 +714,18 @@ class VectorGraphicsCodec {
 /// Implement this listener class to support decoding of vector_graphics binary
 /// assets.
 abstract class VectorGraphicsCodecListener {
-  /// The size of the vector graphic has been decoded.
-  void onSize(
+  /// The header of the vector graphic has been decoded.
+  ///
+  /// The [width] and [height] are the dimensions of the vector graphic
+  /// in pixels.
+  ///
+  /// [complex] is a hint that can be used by clients. It indicates that
+  /// the vector graphic would be simple to re-render. This parameter can be
+  /// ignored.
+  void onHeader(
     double width,
     double height,
+    bool complex,
   );
 
   /// A paint object has been decoded.

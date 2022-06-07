@@ -439,21 +439,31 @@ void main() {
     expect(listener.commands, [const OnMask()]);
   });
 
-  test('Encodes a size', () {
+  test('Encodes a header', () {
     final buffer = VectorGraphicsBuffer();
     final TestListener listener = TestListener();
 
-    codec.writeSize(buffer, 20, 30);
+    codec.writeHeader(buffer, 20, 30, false);
     codec.decode(buffer.done(), listener);
 
-    expect(listener.commands, [const OnSize(20, 30)]);
+    expect(listener.commands, [const OnHeader(20, 30, false)]);
   });
 
-  test('Only supports a single size', () {
+  test('Encodes a header with complex', () {
+    final buffer = VectorGraphicsBuffer();
+    final TestListener listener = TestListener();
+
+    codec.writeHeader(buffer, 20, 30, true);
+    codec.decode(buffer.done(), listener);
+
+    expect(listener.commands, [const OnHeader(20, 30, true)]);
+  });
+
+  test('Only supports a single header', () {
     final buffer = VectorGraphicsBuffer();
 
-    codec.writeSize(buffer, 20, 30);
-    expect(() => codec.writeSize(buffer, 1, 1), throwsStateError);
+    codec.writeHeader(buffer, 20, 30, false);
+    expect(() => codec.writeHeader(buffer, 1, 1, false), throwsStateError);
   });
 
   test('Encodes text', () {
@@ -779,8 +789,8 @@ class TestListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onSize(double width, double height) {
-    commands.add(OnSize(width, height));
+  void onHeader(double width, double height, bool complex) {
+    commands.add(OnHeader(width, height, complex));
   }
 
   @override
@@ -1149,21 +1159,25 @@ class OnPathStart {
   String toString() => 'OnPathStart($id, $fillType)';
 }
 
-class OnSize {
-  const OnSize(this.width, this.height);
+class OnHeader {
+  const OnHeader(this.width, this.height, this.complex);
 
   final double width;
   final double height;
+  final bool complex;
 
   @override
-  int get hashCode => Object.hash(width, height);
+  int get hashCode => Object.hash(width, height, complex);
 
   @override
   bool operator ==(Object other) =>
-      other is OnSize && other.width == width && other.height == height;
+      other is OnHeader &&
+      other.width == width &&
+      other.height == height &&
+      other.complex == complex;
 
   @override
-  String toString() => 'OnSize($width, $height)';
+  String toString() => 'OnHeader($width, $height, $complex)';
 }
 
 class OnTextConfig {

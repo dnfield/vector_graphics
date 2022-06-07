@@ -11,7 +11,8 @@ import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
 import 'src/http.dart';
 import 'src/listener.dart';
-import 'src/render_vector_graphics.dart';
+import 'src/render_vector_graphic.dart';
+import 'src/render_simple_vector_graphic.dart';
 
 /// A widget that displays a [VectorGraphicsCodec] encoded asset.
 ///
@@ -142,6 +143,7 @@ class VectorGraphic extends StatefulWidget {
 
 class _VectorGraphicWidgetState extends State<VectorGraphic> {
   PictureInfo? _pictureInfo;
+  SimplePictureInfo? _simplePictureInfo;
 
   @override
   void didChangeDependencies() {
@@ -161,6 +163,7 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
   void dispose() {
     _pictureInfo?.picture.dispose();
     _pictureInfo = null;
+    _simplePictureInfo = null;
     super.dispose();
   }
 
@@ -169,24 +172,43 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
       if (!mounted) {
         return;
       }
-      final PictureInfo pictureInfo = decodeVectorGraphics(
-        data,
-        locale: Localizations.maybeLocaleOf(context),
-        textDirection: Directionality.maybeOf(context),
-      );
-      setState(() {
-        _pictureInfo?.picture.dispose();
-        _pictureInfo = pictureInfo;
-      });
+      final VectorGraphicHeader header = peekHeader(data);
+      if (header.complex) {
+        final PictureInfo pictureInfo = decodeVectorGraphics(
+          data,
+          locale: Localizations.maybeLocaleOf(context),
+          textDirection: Directionality.maybeOf(context),
+        );
+        setState(() {
+          _pictureInfo?.picture.dispose();
+          _pictureInfo = pictureInfo;
+          _simplePictureInfo = null;
+        });
+      } else {
+        final SimplePictureInfo simplePictureInfo =
+            decodeVectorGraphicsToSimplePicture(data);
+        setState(() {
+          _pictureInfo?.picture.dispose();
+          _pictureInfo = null;
+          _simplePictureInfo = simplePictureInfo;
+        });
+      }
     });
   }
+
+  double get _pictureWidth =>
+      (_pictureInfo?.size.width ?? _simplePictureInfo?.size.width)!;
+
+  double get _pictureHeight =>
+      (_pictureInfo?.size.height ?? _simplePictureInfo?.size.height)!;
 
   @override
   Widget build(BuildContext context) {
     final PictureInfo? pictureInfo = _pictureInfo;
+    final SimplePictureInfo? simplePictureInfo = _simplePictureInfo;
 
     Widget child;
-    if (pictureInfo != null) {
+    if (pictureInfo != null || simplePictureInfo != null) {
       // If the caller did not specify a width or height, fall back to the
       // size of the graphic.
       // If the caller did specify a width or height, preserve the aspect ratio
@@ -195,21 +217,37 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
       double? height = widget.height;
 
       if (width == null && height == null) {
-        width = pictureInfo.size.width;
-        height = pictureInfo.size.height;
-      } else if (height != null && !pictureInfo.size.isEmpty) {
-        width = height / pictureInfo.size.height * pictureInfo.size.width;
-      } else if (width != null && !pictureInfo.size.isEmpty) {
-        height = width / pictureInfo.size.width * pictureInfo.size.height;
+        width = _pictureWidth;
+        height = _pictureHeight;
+      } else if (height != null) {
+        width = height / (_pictureWidth * _pictureHeight);
+      } else if (width != null) {
+        height = width / (_pictureWidth * _pictureHeight);
       }
 
       assert(width != null && height != null);
 
       double scale = 1.0;
       scale = math.min(
-        pictureInfo.size.width / width!,
-        pictureInfo.size.height / height!,
+        _pictureWidth / width!,
+        _pictureHeight / height!,
       );
+
+      Widget vectorGraphic;
+      if (_pictureInfo != null) {
+        vectorGraphic = _RawVectorGraphicWidget(
+          pictureInfo: _pictureInfo!,
+          colorFilter: widget.colorFilter,
+          opacity: widget.opacity,
+          scale: scale,
+        );
+      } else {
+        vectorGraphic = _RawSimpleVectorGraphicWidget(
+          pictureInfo: _simplePictureInfo!,
+          opacity: widget.opacity,
+          colorFilter: widget.colorFilter,
+        );
+      }
 
       child = SizedBox(
         width: width,
@@ -219,13 +257,8 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
           alignment: widget.alignment,
           clipBehavior: Clip.hardEdge,
           child: SizedBox.fromSize(
-            size: pictureInfo.size,
-            child: _RawVectorGraphicWidget(
-              pictureInfo: pictureInfo,
-              colorFilter: widget.colorFilter,
-              opacity: widget.opacity,
-              scale: scale,
-            ),
+            size: Size(_pictureWidth, _pictureHeight),
+            child: vectorGraphic,
           ),
         ),
       );
@@ -379,5 +412,37 @@ class _RawVectorGraphicWidget extends SingleChildRenderObjectWidget {
       ..devicePixelRatio = MediaQuery.maybeOf(context)?.devicePixelRatio ?? 1.0
       ..opacity = opacity
       ..scale = scale;
+  }
+}
+
+class _RawSimpleVectorGraphicWidget extends SingleChildRenderObjectWidget {
+  const _RawSimpleVectorGraphicWidget({
+    required this.pictureInfo,
+    required this.colorFilter,
+    required this.opacity,
+  });
+
+  final SimplePictureInfo pictureInfo;
+  final ColorFilter? colorFilter;
+  final Animation<double>? opacity;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return RenderSimpleVectorGraphic(
+      pictureInfo,
+      colorFilter,
+      opacity,
+    );
+  }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    covariant RenderSimpleVectorGraphic renderObject,
+  ) {
+    renderObject
+      ..pictureInfo = pictureInfo
+      ..colorFilter = colorFilter
+      ..opacity = opacity;
   }
 }

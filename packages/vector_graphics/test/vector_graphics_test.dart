@@ -97,7 +97,7 @@ void main() {
   testWidgets('Creates layout widgets when VectorGraphic is sized (1:1 ratio)',
       (WidgetTester tester) async {
     final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
-    const VectorGraphicsCodec().writeSize(buffer, 50, 50);
+    const VectorGraphicsCodec().writeHeader(buffer, 50, 50, true);
     await tester.pumpWidget(VectorGraphic(
       loader: TestBytesLoader(buffer.done()),
       width: 100,
@@ -117,7 +117,7 @@ void main() {
   testWidgets('Creates layout widgets when VectorGraphic is sized (3:5 ratio)',
       (WidgetTester tester) async {
     final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
-    const VectorGraphicsCodec().writeSize(buffer, 30, 50);
+    const VectorGraphicsCodec().writeHeader(buffer, 30, 50, true);
     await tester.pumpWidget(VectorGraphic(
       loader: TestBytesLoader(buffer.done()),
       width: 100,
@@ -157,7 +157,7 @@ void main() {
   testWidgets('Sizes VectorGraphic based on encoded viewbox information',
       (WidgetTester tester) async {
     final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
-    codec.writeSize(buffer, 100, 200);
+    codec.writeHeader(buffer, 100, 200, true);
 
     await tester.pumpWidget(VectorGraphic(
       loader: TestBytesLoader(buffer.done()),
@@ -411,7 +411,7 @@ class TestAssetBundle extends Fake implements AssetBundle {
   Future<ByteData> load(String key) async {
     loadKeys.add(key);
     final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
-    codec.writeSize(buffer, 100, 200);
+    codec.writeHeader(buffer, 100, 200, true);
     return buffer.done();
   }
 }

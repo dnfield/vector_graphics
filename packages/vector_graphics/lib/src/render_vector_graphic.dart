@@ -70,6 +70,7 @@ class RenderVectorGraphic extends RenderBox {
     _opacity?.removeListener(_updateOpacity);
     _opacity = value;
     _opacity?.addListener(_updateOpacity);
+    _updateOpacity();
     markNeedsPaint();
   }
 

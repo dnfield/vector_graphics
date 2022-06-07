@@ -11,9 +11,10 @@ import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 const VectorGraphicsCodec _codec = VectorGraphicsCodec();
 
 /// The deocded result of a vector graphics asset.
+@immutable
 class PictureInfo {
   /// Construct a new [PictureInfo].
-  PictureInfo._(this.picture, this.size);
+  const PictureInfo._(this.picture, this.size);
 
   /// A picture generated from a vector graphics image.
   final ui.Picture picture;
@@ -23,6 +24,48 @@ class PictureInfo {
   /// This information should be used to scale and position
   /// the picture based on the available space and alignment.
   final ui.Size size;
+}
+
+/// The deocded result of a simple vector graphics asset.
+@immutable
+class SimplePictureInfo {
+  const SimplePictureInfo._(
+      this.size, this._sourcePaint, this._sourcePath, this._sourceVertices)
+      : assert(_sourcePath != null || _sourceVertices != null);
+
+  /// The target size of the picture.
+  ///
+  /// This information should be used to scale and position
+  /// the picture based on the available space and alignment.
+  final ui.Size size;
+
+  final ui.Paint _sourcePaint;
+
+  // one of _sourcePath or _sourceVertices must be non-null.
+  final ui.Path? _sourcePath;
+  final ui.Vertices? _sourceVertices;
+
+  /// Draw the vector graphic defined by this simple picture into the provided canvas.
+  void draw(
+      Canvas canvas, ui.Paint paint, double opacity, ColorFilter? colorFilter) {
+    canvas.clipRect(ui.Offset.zero & size);
+
+    paint.strokeCap = _sourcePaint.strokeCap;
+    paint.strokeJoin = _sourcePaint.strokeJoin;
+    paint.strokeMiterLimit = _sourcePaint.strokeMiterLimit;
+    paint.style = _sourcePaint.style;
+
+    if (colorFilter != null) {
+      paint.colorFilter = colorFilter;
+    }
+    paint.color =
+        _sourcePaint.color.withOpacity(opacity * _sourcePaint.color.opacity);
+    if (_sourcePath != null) {
+      canvas.drawPath(_sourcePath!, paint);
+    } else {
+      canvas.drawVertices(_sourceVertices!, BlendMode.srcOver, paint);
+    }
+  }
 }
 
 /// Internal testing only.
@@ -35,7 +78,12 @@ Locale? _debugLastLocale;
 TextDirection? get debugLastTextDirection => _debugLastTextDirection;
 TextDirection? _debugLastTextDirection;
 
-/// Decode a vector graphics binary asset into a [ui.Picture].
+/// Read the [VectorGraphicHeader] from the binary data.
+VectorGraphicHeader peekHeader(ByteData data) {
+  return _codec.peek(data);
+}
+
+/// Decode a vector graphics binary asset into a [PictureInfo].
 ///
 /// Throws a [StateError] if the data is invalid.
 PictureInfo decodeVectorGraphics(
@@ -54,6 +102,16 @@ PictureInfo decodeVectorGraphics(
   );
   _codec.decode(data, listener);
   return listener.toPicture();
+}
+
+/// Decode a vector graphics binary asset into a [SimplePictureInfo].
+///
+/// Throws a [StateError] if the data is invalid.
+SimplePictureInfo decodeVectorGraphicsToSimplePicture(ByteData data) {
+  final FlutterSimpleVectorGraphicsListener listener =
+      FlutterSimpleVectorGraphicsListener();
+  _codec.decode(data, listener);
+  return listener.toSimplePictureInfo();
 }
 
 /// A listener implementation for the vector graphics codec that converts the
@@ -301,7 +359,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onSize(double width, double height) {
+  void onHeader(double width, double height, bool complex) {
     _canvas.clipRect(ui.Offset.zero & ui.Size(width, height));
     _size = ui.Size(width, height);
   }
@@ -383,4 +441,169 @@ class _TextConfig {
   final double dy;
   final ui.FontWeight fontWeight;
   final Float64List? transform;
+}
+
+/// A listener implementation for the vector graphics codec that converts the
+/// format into a [SimplePictureInfo].
+class FlutterSimpleVectorGraphicsListener extends VectorGraphicsCodecListener {
+  int _drawCount = 0;
+
+  ui.Path? _path;
+  ui.Vertices? _vertices;
+  ui.Paint? _paint;
+
+  late double _width;
+  late double _height;
+
+  /// Convert to a [SimplePictureInfo].
+  SimplePictureInfo toSimplePictureInfo() {
+    return SimplePictureInfo._(
+        ui.Size(_width, _height), _paint!, _path, _vertices);
+  }
+
+  @override
+  void onClipPath(int pathId) {
+    assert(false);
+  }
+
+  @override
+  void onDrawPath(int pathId, int? paintId) {
+    assert(_drawCount == 0);
+    _drawCount++;
+  }
+
+  @override
+  void onDrawText(int textId, int paintId) {
+    assert(false);
+  }
+
+  @override
+  void onDrawVertices(Float32List vertices, Uint16List? indices, int? paintId) {
+    assert(_drawCount == 0);
+    assert(_vertices == null);
+
+    _drawCount++;
+    _vertices =
+        ui.Vertices.raw(ui.VertexMode.triangles, vertices, indices: indices);
+  }
+
+  @override
+  void onHeader(double width, double height, bool complex) {
+    assert(!complex);
+    _width = width;
+    _height = height;
+  }
+
+  @override
+  void onLinearGradient(double fromX, double fromY, double toX, double toY,
+      Int32List colors, Float32List? offsets, int tileMode, int id) {
+    assert(false);
+  }
+
+  @override
+  void onMask() {
+    assert(false);
+  }
+
+  @override
+  void onPaintObject({
+    required int color,
+    required int? strokeCap,
+    required int? strokeJoin,
+    required int blendMode,
+    required double? strokeMiterLimit,
+    required double? strokeWidth,
+    required int paintStyle,
+    required int id,
+    required int? shaderId,
+  }) {
+    assert(_paint == null);
+
+    final ui.Paint paint = ui.Paint()..color = ui.Color(color);
+    if (blendMode != 0) {
+      paint.blendMode = ui.BlendMode.values[blendMode];
+    }
+
+    assert(shaderId == null);
+
+    if (paintStyle == 1) {
+      paint.style = ui.PaintingStyle.stroke;
+      if (strokeCap != null && strokeCap != 0) {
+        paint.strokeCap = ui.StrokeCap.values[strokeCap];
+      }
+      if (strokeJoin != null && strokeJoin != 0) {
+        paint.strokeJoin = ui.StrokeJoin.values[strokeJoin];
+      }
+      if (strokeMiterLimit != null && strokeMiterLimit != 4.0) {
+        paint.strokeMiterLimit = strokeMiterLimit;
+      }
+      // SVG's default stroke width is 1.0. Flutter's default is 0.0.
+      if (strokeWidth != null && strokeWidth != 0.0) {
+        paint.strokeWidth = strokeWidth;
+      }
+    }
+    _paint = paint;
+  }
+
+  @override
+  void onPathClose() {
+    _path!.close();
+  }
+
+  @override
+  void onPathCubicTo(
+      double x1, double y1, double x2, double y2, double x3, double y3) {
+    _path!.cubicTo(x1, y1, x2, y2, x3, y3);
+  }
+
+  @override
+  void onPathFinished() {}
+
+  @override
+  void onPathLineTo(double x, double y) {
+    _path!.lineTo(x, y);
+  }
+
+  @override
+  void onPathMoveTo(double x, double y) {
+    _path!.moveTo(x, y);
+  }
+
+  @override
+  void onPathStart(int id, int fillType) {
+    assert(_path == null);
+
+    _path = ui.Path()..fillType = ui.PathFillType.values[fillType];
+  }
+
+  @override
+  void onRadialGradient(
+      double centerX,
+      double centerY,
+      double radius,
+      double? focalX,
+      double? focalY,
+      Int32List colors,
+      Float32List? offsets,
+      Float64List? transform,
+      int tileMode,
+      int id) {
+    assert(false);
+  }
+
+  @override
+  void onRestoreLayer() {
+    assert(false);
+  }
+
+  @override
+  void onSaveLayer(int paintId) {
+    assert(false);
+  }
+
+  @override
+  void onTextConfig(String text, String? fontFamily, double x, double y,
+      int fontWeight, double fontSize, Float64List? transform, int id) {
+    assert(false);
+  }
 }

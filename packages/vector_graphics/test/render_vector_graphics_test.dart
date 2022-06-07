@@ -15,7 +15,7 @@ void main() {
 
   setUpAll(() {
     final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
-    const VectorGraphicsCodec().writeSize(buffer, 50, 50);
+    const VectorGraphicsCodec().writeHeader(buffer, 50, 50, true);
 
     pictureInfo = decodeVectorGraphics(
       buffer.done(),

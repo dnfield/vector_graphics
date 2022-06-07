@@ -42,6 +42,7 @@ class VectorGraphic extends StatefulWidget {
     this.placeholderBuilder,
     this.colorFilter,
     this.opacity,
+    this.complex,
   });
 
   /// A delegate for fetching the raw bytes of the vector graphic.
@@ -137,6 +138,8 @@ class VectorGraphic extends StatefulWidget {
   /// ```
   final Animation<double>? opacity;
 
+  final bool? complex;
+
   @override
   State<VectorGraphic> createState() => _VectorGraphicWidgetState();
 }
@@ -173,7 +176,7 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
         return;
       }
       final VectorGraphicHeader header = peekHeader(data);
-      if (header.complex) {
+      if (widget.complex ?? header.complex) {
         final PictureInfo pictureInfo = decodeVectorGraphics(
           data,
           locale: Localizations.maybeLocaleOf(context),

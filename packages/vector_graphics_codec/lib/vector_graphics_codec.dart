@@ -16,11 +16,13 @@ abstract class ControlPointTypes {
 }
 
 /// Data that is used to decode a vector graphic.
-@immutable
 class VectorGraphicHeader {
   /// Create a new [VectorGraphicHeader].
-  const VectorGraphicHeader(
-      {required this.width, required this.height, required this.complex});
+  const VectorGraphicHeader({
+    required this.width,
+    required this.height,
+    required this.complex,
+  });
 
   /// The width of the vector graphic, in pixels.
   final double width;
@@ -69,7 +71,7 @@ class VectorGraphicsCodec {
   static const int _magicNumber = 0x00882d62;
 
   void _verifyBytes(_ReadBuffer buffer) {
-    if (data.lengthInBytes < 5) {
+    if (buffer.data.lengthInBytes < 5) {
       throw StateError(
           'The provided data was not a vector_graphics binary asset.');
     }

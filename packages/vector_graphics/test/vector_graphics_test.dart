@@ -78,6 +78,8 @@ void main() {
       'Creates layout widgets when VectorGraphic is sized (0x0 graphic)',
       (WidgetTester tester) async {
     final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
+    codec.writeHeader(buffer, 0, 0, true);
+
     await tester.pumpWidget(VectorGraphic(
       loader: TestBytesLoader(buffer.done()),
       width: 100,
@@ -97,7 +99,8 @@ void main() {
   testWidgets('Creates layout widgets when VectorGraphic is sized (1:1 ratio)',
       (WidgetTester tester) async {
     final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
-    const VectorGraphicsCodec().writeHeader(buffer, 50, 50, true);
+    codec.writeHeader(buffer, 50, 50, true);
+
     await tester.pumpWidget(VectorGraphic(
       loader: TestBytesLoader(buffer.done()),
       width: 100,
@@ -117,7 +120,8 @@ void main() {
   testWidgets('Creates layout widgets when VectorGraphic is sized (3:5 ratio)',
       (WidgetTester tester) async {
     final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
-    const VectorGraphicsCodec().writeHeader(buffer, 30, 50, true);
+    codec.writeHeader(buffer, 30, 50, true);
+
     await tester.pumpWidget(VectorGraphic(
       loader: TestBytesLoader(buffer.done()),
       width: 100,
@@ -137,6 +141,8 @@ void main() {
   testWidgets('Creates alignment widgets when VectorGraphic is aligned',
       (WidgetTester tester) async {
     final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
+    codec.writeHeader(buffer, 100, 100, true);
+
     await tester.pumpWidget(VectorGraphic(
       loader: TestBytesLoader(buffer.done()),
       alignment: Alignment.centerLeft,

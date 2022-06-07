@@ -204,11 +204,8 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
 
   @override
   Widget build(BuildContext context) {
-    final PictureInfo? pictureInfo = _pictureInfo;
-    final SimplePictureInfo? simplePictureInfo = _simplePictureInfo;
-
     Widget child;
-    if (pictureInfo != null || simplePictureInfo != null) {
+    if (_pictureInfo != null || _simplePictureInfo != null) {
       // If the caller did not specify a width or height, fall back to the
       // size of the graphic.
       // If the caller did specify a width or height, preserve the aspect ratio
@@ -219,10 +216,10 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
       if (width == null && height == null) {
         width = _pictureWidth;
         height = _pictureHeight;
-      } else if (height != null) {
-        width = height / (_pictureWidth * _pictureHeight);
-      } else if (width != null) {
-        height = width / (_pictureWidth * _pictureHeight);
+      } else if (height != null && _pictureHeight > 0) {
+        width = height / _pictureHeight * _pictureWidth;
+      } else if (width != null && _pictureWidth > 0) {
+        height = width / _pictureWidth * _pictureHeight;
       }
 
       assert(width != null && height != null);

@@ -239,7 +239,8 @@ class RenderVectorGraphic extends RenderBox {
       _rasterData = data;
       return null; // immediate update.
     }
-    return _createRaster(key, devicePixelRatio / scale).then((_RasterData data) {
+    return _createRaster(key, devicePixelRatio / scale)
+        .then((_RasterData data) {
       data.count += 1;
       // Ensure this is only added to the live cache once.
       if (data.count == 1) {

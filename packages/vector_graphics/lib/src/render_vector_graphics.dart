@@ -13,25 +13,22 @@ import 'debug.dart';
 
 @immutable
 class _RasterKey {
-  const _RasterKey(this.info, this.width, this.height);
+  const _RasterKey(this.assetKey, this.width, this.height);
 
-  // While picture info doesn't implement equality, the caching at the vector graphic
-  // state object level ensures multiple widgets that request the same bytes will get
-  // the same picture instance. Thus we rely on identical picture infos being equal.
-  final PictureInfo info;
+  final Object assetKey;
   final int width;
   final int height;
 
   @override
   bool operator ==(Object other) {
     return other is _RasterKey &&
-        other.info == info &&
+        other.assetKey == assetKey &&
         other.width == width &&
         other.height == height;
   }
 
   @override
-  int get hashCode => Object.hash(info, width, height);
+  int get hashCode => Object.hash(assetKey, width, height);
 }
 
 class _RasterData {
@@ -57,6 +54,7 @@ class RenderVectorGraphic extends RenderBox {
   /// Create a new [RenderVectorGraphic].
   RenderVectorGraphic(
     this._pictureInfo,
+    this._assetKey,
     this._colorFilter,
     this._devicePixelRatio,
     this._opacity,
@@ -70,6 +68,18 @@ class RenderVectorGraphic extends RenderBox {
       <_RasterKey, _RasterData>{};
   static final Map<_RasterKey, Future<_RasterData>> _pendingRasterCache =
       <_RasterKey, Future<_RasterData>>{};
+
+  /// A key that uniquely identifies the [pictureInfo] used for this vg.
+  Object get assetKey => _assetKey;
+  Object _assetKey;
+  set assetKey(Object value) {
+    if (value == assetKey) {
+      return;
+    }
+    _assetKey = value;
+    // Dont call mark needs paint here since a change in just the asset key
+    // isn't sufficient to force a re-draw.
+  }
 
   /// The [PictureInfo] which contains the vector graphic and size to draw.
   PictureInfo get pictureInfo => _pictureInfo;
@@ -176,12 +186,12 @@ class RenderVectorGraphic extends RenderBox {
   Future<void>? _pendingRasterUpdate;
   bool _disposed = false;
 
-  static Future<_RasterData> _createRaster(_RasterKey key, double scaleFactor) {
+  static Future<_RasterData> _createRaster(
+      _RasterKey key, double scaleFactor, PictureInfo info) {
     if (_pendingRasterCache.containsKey(key)) {
       return _pendingRasterCache[key]!;
     }
 
-    final PictureInfo info = key.info;
     final int scaledWidth = key.width;
     final int scaledHeight = key.height;
     // In order to scale a picture, it must be placed in a new picture
@@ -226,7 +236,7 @@ class RenderVectorGraphic extends RenderBox {
         (pictureInfo.size.width * devicePixelRatio / scale).round();
     final int scaledHeight =
         (pictureInfo.size.height * devicePixelRatio / scale).round();
-    final _RasterKey key = _RasterKey(_pictureInfo, scaledWidth, scaledHeight);
+    final _RasterKey key = _RasterKey(assetKey, scaledWidth, scaledHeight);
 
     // First check if the raster is available synchronously. This also handles
     // a no-op change that would resolve to an identical picture.
@@ -239,7 +249,7 @@ class RenderVectorGraphic extends RenderBox {
       _rasterData = data;
       return null; // immediate update.
     }
-    return _createRaster(key, devicePixelRatio / scale)
+    return _createRaster(key, devicePixelRatio / scale, pictureInfo)
         .then((_RasterData data) {
       data.count += 1;
       // Ensure this is only added to the live cache once.

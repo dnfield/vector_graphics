@@ -307,6 +307,7 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
             size: pictureInfo.size,
             child: _RawVectorGraphicWidget(
               pictureInfo: pictureInfo,
+              assetKey: _pictureInfo!.key,
               colorFilter: widget.colorFilter,
               opacity: widget.opacity,
               scale: scale,
@@ -478,17 +479,20 @@ class _RawVectorGraphicWidget extends SingleChildRenderObjectWidget {
     required this.colorFilter,
     required this.opacity,
     required this.scale,
+    required this.assetKey,
   });
 
   final PictureInfo pictureInfo;
   final ColorFilter? colorFilter;
   final double scale;
   final Animation<double>? opacity;
+  final Object assetKey;
 
   @override
   RenderObject createRenderObject(BuildContext context) {
     return RenderVectorGraphic(
       pictureInfo,
+      assetKey,
       colorFilter,
       MediaQuery.maybeOf(context)?.devicePixelRatio ?? 1.0,
       opacity,
@@ -503,6 +507,7 @@ class _RawVectorGraphicWidget extends SingleChildRenderObjectWidget {
   ) {
     renderObject
       ..pictureInfo = pictureInfo
+      ..assetKey = assetKey
       ..colorFilter = colorFilter
       ..devicePixelRatio = MediaQuery.maybeOf(context)?.devicePixelRatio ?? 1.0
       ..opacity = opacity

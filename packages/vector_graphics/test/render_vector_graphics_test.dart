@@ -33,6 +33,7 @@ void main() {
   test('Rasterizes a picture to a draw image call', () async {
     final RenderVectorGraphic renderVectorGraphic = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       1.0,
       null,
@@ -58,6 +59,7 @@ void main() {
   test('Multiple render objects with the same scale share a raster', () async {
     final RenderVectorGraphic renderVectorGraphicA = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       1.0,
       null,
@@ -65,6 +67,7 @@ void main() {
     );
     final RenderVectorGraphic renderVectorGraphicB = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       1.0,
       null,
@@ -94,6 +97,7 @@ void main() {
   test('disposing render object release raster', () async {
     final RenderVectorGraphic renderVectorGraphicA = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       1.0,
       null,
@@ -101,6 +105,7 @@ void main() {
     );
     final RenderVectorGraphic renderVectorGraphicB = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       1.0,
       null,
@@ -132,6 +137,7 @@ void main() {
       () async {
     final RenderVectorGraphic renderVectorGraphicA = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       1.0,
       null,
@@ -139,6 +145,7 @@ void main() {
     );
     final RenderVectorGraphic renderVectorGraphicB = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       1.0,
       null,
@@ -169,6 +176,7 @@ void main() {
   test('Changing color filter does not re-rasterize', () async {
     final RenderVectorGraphic renderVectorGraphic = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       1.0,
       null,
@@ -198,6 +206,7 @@ void main() {
       () async {
     final RenderVectorGraphic renderVectorGraphic = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       1.0,
       null,
@@ -225,6 +234,7 @@ void main() {
   test('Changing scale does re-rasterize and dispose old raster', () async {
     final RenderVectorGraphic renderVectorGraphic = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       1.0,
       null,
@@ -252,6 +262,7 @@ void main() {
   test('The raster size is increased by the inverse picture scale', () async {
     final RenderVectorGraphic renderVectorGraphic = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       1.0,
       null,
@@ -272,6 +283,7 @@ void main() {
   test('The raster size is increased by the device pixel ratio', () async {
     final RenderVectorGraphic renderVectorGraphic = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       2.0,
       null,
@@ -292,6 +304,7 @@ void main() {
       () async {
     final RenderVectorGraphic renderVectorGraphic = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       2.0,
       null,
@@ -312,6 +325,7 @@ void main() {
       () async {
     final RenderVectorGraphic renderVectorGraphic = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       1.0,
       null,
@@ -334,6 +348,7 @@ void main() {
     final FixedOpacityAnimation opacity = FixedOpacityAnimation(0.0);
     final RenderVectorGraphic renderVectorGraphic = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       1.0,
       opacity,
@@ -363,6 +378,7 @@ void main() {
     final FixedOpacityAnimation opacity = FixedOpacityAnimation(0.5);
     final RenderVectorGraphic renderVectorGraphic = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       1.0,
       opacity,
@@ -382,6 +398,7 @@ void main() {
   test('Disposing render object disposes picture', () async {
     final RenderVectorGraphic renderVectorGraphic = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       1.0,
       null,
@@ -405,6 +422,7 @@ void main() {
       () async {
     final RenderVectorGraphic renderVectorGraphic = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       1.0,
       null,
@@ -422,6 +440,7 @@ void main() {
     final FixedOpacityAnimation opacity = FixedOpacityAnimation(0.5);
     final RenderVectorGraphic renderVectorGraphic = RenderVectorGraphic(
       pictureInfo,
+      'test',
       null,
       1.0,
       opacity,

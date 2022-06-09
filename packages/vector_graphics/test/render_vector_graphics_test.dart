@@ -13,6 +13,12 @@ import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 void main() {
   late PictureInfo pictureInfo;
 
+  tearDown(() {
+    // Since we don't always explicitly dispose render objects in unit tests, manually clear
+    // the rasters.
+    debugClearRasteCaches();
+  });
+
   setUpAll(() {
     final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
     const VectorGraphicsCodec().writeSize(buffer, 50, 50);
@@ -47,6 +53,117 @@ void main() {
     renderVectorGraphic.paint(context, Offset.zero);
 
     expect(context.canvas.lastImage, isNotNull);
+  });
+
+  test('Multiple render objects with the same scale share a raster', () async {
+    final RenderVectorGraphic renderVectorGraphicA = RenderVectorGraphic(
+      pictureInfo,
+      null,
+      1.0,
+      null,
+      1.0,
+    );
+    final RenderVectorGraphic renderVectorGraphicB = RenderVectorGraphic(
+      pictureInfo,
+      null,
+      1.0,
+      null,
+      1.0,
+    );
+    renderVectorGraphicA.layout(BoxConstraints.tight(const Size(50, 50)));
+    renderVectorGraphicB.layout(BoxConstraints.tight(const Size(50, 50)));
+    final FakeHistoryPaintingContext context = FakeHistoryPaintingContext();
+
+    renderVectorGraphicA.paint(context, Offset.zero);
+    renderVectorGraphicB.paint(context, Offset.zero);
+
+    // No rasterization yet.
+    expect(context.canvas.images, isEmpty);
+
+    await renderVectorGraphicA.pendingRasterUpdate;
+    await renderVectorGraphicB.pendingRasterUpdate;
+
+    renderVectorGraphicA.paint(context, Offset.zero);
+    renderVectorGraphicB.paint(context, Offset.zero);
+
+    // Same image is recycled.
+    expect(context.canvas.images, hasLength(2));
+    expect(identical(context.canvas.images[0], context.canvas.images[1]), true);
+  });
+
+  test('disposing render object release raster', () async {
+    final RenderVectorGraphic renderVectorGraphicA = RenderVectorGraphic(
+      pictureInfo,
+      null,
+      1.0,
+      null,
+      1.0,
+    );
+    final RenderVectorGraphic renderVectorGraphicB = RenderVectorGraphic(
+      pictureInfo,
+      null,
+      1.0,
+      null,
+      1.0,
+    );
+    renderVectorGraphicA.layout(BoxConstraints.tight(const Size(50, 50)));
+    final FakeHistoryPaintingContext context = FakeHistoryPaintingContext();
+
+    renderVectorGraphicA.paint(context, Offset.zero);
+    await renderVectorGraphicA.pendingRasterUpdate;
+
+    renderVectorGraphicA.paint(context, Offset.zero);
+
+    expect(context.canvas.images, hasLength(1));
+    renderVectorGraphicA.dispose();
+
+    renderVectorGraphicB.layout(BoxConstraints.tight(const Size(50, 50)));
+    renderVectorGraphicB.paint(context, Offset.zero);
+    await renderVectorGraphicB.pendingRasterUpdate;
+
+    renderVectorGraphicB.paint(context, Offset.zero);
+    expect(context.canvas.images, hasLength(2));
+    expect(
+        identical(context.canvas.images[0], context.canvas.images[1]), false);
+  });
+
+  test(
+      'Multiple render objects with the same scale share a raster, different load order',
+      () async {
+    final RenderVectorGraphic renderVectorGraphicA = RenderVectorGraphic(
+      pictureInfo,
+      null,
+      1.0,
+      null,
+      1.0,
+    );
+    final RenderVectorGraphic renderVectorGraphicB = RenderVectorGraphic(
+      pictureInfo,
+      null,
+      1.0,
+      null,
+      1.0,
+    );
+    renderVectorGraphicA.layout(BoxConstraints.tight(const Size(50, 50)));
+    final FakeHistoryPaintingContext context = FakeHistoryPaintingContext();
+
+    renderVectorGraphicA.paint(context, Offset.zero);
+
+    // No rasterization yet.
+    expect(context.canvas.images, isEmpty);
+
+    await renderVectorGraphicA.pendingRasterUpdate;
+
+    renderVectorGraphicA.paint(context, Offset.zero);
+    expect(context.canvas.images, hasLength(1));
+
+    // Second rasterization immediately paints image.
+    renderVectorGraphicB.layout(BoxConstraints.tight(const Size(50, 50)));
+    renderVectorGraphicB.paint(context, Offset.zero);
+
+    expect(renderVectorGraphicB.pendingRasterUpdate, isNull);
+    expect(context.canvas.images, hasLength(2));
+    expect(identical(context.canvas.images[0], context.canvas.images[1]), true);
   });
 
   test('Changing color filter does not re-rasterize', () async {
@@ -342,9 +459,23 @@ class FakeCanvas extends Fake implements Canvas {
   }
 }
 
+class FakeHistoryCanvas extends Fake implements Canvas {
+  final List<ui.Image> images = <ui.Image>[];
+
+  @override
+  void drawImageRect(ui.Image image, Rect src, Rect dst, Paint paint) {
+    images.add(image);
+  }
+}
+
 class FakePaintingContext extends Fake implements PaintingContext {
   @override
   final FakeCanvas canvas = FakeCanvas();
+}
+
+class FakeHistoryPaintingContext extends Fake implements PaintingContext {
+  @override
+  final FakeHistoryCanvas canvas = FakeHistoryCanvas();
 }
 
 class FixedOpacityAnimation extends Animation<double> {

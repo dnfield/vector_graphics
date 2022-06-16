@@ -1,6 +1,6 @@
 import 'node.dart';
 import 'tessellator_unsupported.dart'
-    if (dart.library.ffi) 'tesselator_ffi.dart' as impl;
+    if (dart.library.ffi) 'tessellator_ffi.dart' as impl;
 import 'visitor.dart';
 
 /// Whether or not tesselation should be used.

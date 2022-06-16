@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'svg/tesselator.dart';
+import 'svg/tessellator.dart';
 
 /// Look up the location of the tessellator from flutter's artifact cache.
 bool initializeTessellatorFromFlutterCache() {

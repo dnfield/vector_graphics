@@ -146,7 +146,8 @@ class VectorGraphic extends StatefulWidget {
 ///
 /// It is the caller's responsibility to handle disposing the picture when
 /// they are done with it.
-Future<PictureInfo> loadPicture(BytesLoader loader, BuildContext context) async {
+Future<PictureInfo> loadPicture(
+    BytesLoader loader, BuildContext context) async {
   // This intentionally does not use the picture cache so that disposal does not
   // happen automatically.
   final Locale? locale = Localizations.maybeLocaleOf(context);

@@ -13,6 +13,8 @@ import 'src/http.dart';
 import 'src/listener.dart';
 import 'src/render_vector_graphics.dart';
 
+export 'src/listener.dart' show PictureInfo;
+
 /// A widget that displays a [VectorGraphicsCodec] encoded asset.
 ///
 /// This widget will ask the loader to load the bytes whenever its
@@ -138,6 +140,24 @@ class VectorGraphic extends StatefulWidget {
 
   @override
   State<VectorGraphic> createState() => _VectorGraphicWidgetState();
+}
+
+/// Load the [PictureInfo] from a given [loader].
+///
+/// It is the caller's responsibility to handle disposing the picture when
+/// they are done with it.
+Future<PictureInfo> loadPicture(BytesLoader loader, BuildContext context) async {
+  // This intentionally does not use the picture cache so that disposal does not
+  // happen automatically.
+  final Locale? locale = Localizations.maybeLocaleOf(context);
+  final TextDirection? textDirection = Directionality.maybeOf(context);
+  return loader.loadBytes(context).then((ByteData data) {
+    return decodeVectorGraphics(
+      data,
+      locale: locale,
+      textDirection: textDirection,
+    );
+  });
 }
 
 class _PictureData {

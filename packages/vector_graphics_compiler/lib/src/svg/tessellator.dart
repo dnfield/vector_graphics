@@ -1,6 +1,10 @@
+// Copyright 2013 The Flutter Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 import 'node.dart';
-import 'tessellator_unsupported.dart'
-    if (dart.library.ffi) 'tessellator_ffi.dart' as impl;
+import '_tessellator_unsupported.dart'
+    if (dart.library.ffi) '_tessellator_ffi.dart' as impl;
 import 'visitor.dart';
 
 /// Whether or not tesselation should be used.
@@ -10,7 +14,7 @@ bool get isTesselatorInitialized => impl.isTesselatorInitialized;
 ///
 /// This method must be called before [VerticesBuilder] can be used or
 /// constructed.
-void initializeLibTesselator(String path) => impl.initializeLibTesselator;
+void initializeLibTesselator(String path) => impl.initializeLibTesselator(path);
 
 /// Information about how to approximate points on a curved path segment.
 ///

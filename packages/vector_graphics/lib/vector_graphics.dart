@@ -142,25 +142,6 @@ class VectorGraphic extends StatefulWidget {
   State<VectorGraphic> createState() => _VectorGraphicWidgetState();
 }
 
-/// Load the [PictureInfo] from a given [loader].
-///
-/// It is the caller's responsibility to handle disposing the picture when
-/// they are done with it.
-Future<PictureInfo> loadPicture(
-    BytesLoader loader, BuildContext context) async {
-  // This intentionally does not use the picture cache so that disposal does not
-  // happen automatically.
-  final Locale? locale = Localizations.maybeLocaleOf(context);
-  final TextDirection? textDirection = Directionality.maybeOf(context);
-  return loader.loadBytes(context).then((ByteData data) {
-    return decodeVectorGraphics(
-      data,
-      locale: locale,
-      textDirection: textDirection,
-    );
-  });
-}
-
 class _PictureData {
   _PictureData(this.pictureInfo, this.count, this.key);
 
@@ -535,3 +516,32 @@ class _RawVectorGraphicWidget extends SingleChildRenderObjectWidget {
       ..scale = scale;
   }
 }
+
+/// Utility functionality for interaction with vector graphic assets.
+class VectorGraphicUtilities {
+  const VectorGraphicUtilities._();
+
+  /// Load the [PictureInfo] from a given [loader].
+  ///
+  /// It is the caller's responsibility to handle disposing the picture when
+  /// they are done with it.
+  Future<PictureInfo> loadPicture(
+    BytesLoader loader,
+    BuildContext context,
+  ) async {
+    // This intentionally does not use the picture cache so that disposal does not
+    // happen automatically.
+    final Locale? locale = Localizations.maybeLocaleOf(context);
+    final TextDirection? textDirection = Directionality.maybeOf(context);
+    return loader.loadBytes(context).then((ByteData data) {
+      return decodeVectorGraphics(
+        data,
+        locale: locale,
+        textDirection: textDirection,
+      );
+    });
+  }
+}
+
+/// The [VectorGraphicUtilities] instance.
+const VectorGraphicUtilities vg = VectorGraphicUtilities._();

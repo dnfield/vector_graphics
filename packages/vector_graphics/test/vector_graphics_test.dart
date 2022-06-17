@@ -391,7 +391,8 @@ void main() {
           child: DefaultAssetBundle(
             bundle: testBundle,
             child: Builder(builder: (BuildContext context) {
-              loadPicture(const AssetBytesLoader('foo.svg'), context)
+              vg
+                  .loadPicture(const AssetBytesLoader('foo.svg'), context)
                   .then(completer.complete);
               return const Center();
             }),

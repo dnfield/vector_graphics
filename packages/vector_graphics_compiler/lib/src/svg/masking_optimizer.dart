@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:vector_graphics_compiler/src/svg/node.dart';
 import 'package:vector_graphics_compiler/src/svg/parser.dart';
 import 'package:vector_graphics_compiler/src/svg/resolver.dart';
@@ -33,10 +35,10 @@ class _Result {
 
 /// Converts vector_graphics Path to PathKit Path
 pathkit.Path toPathKitPath(Path path) {
-  pathkit.Path newPath = pathkit.Path();
+  final pathkit.Path newPath = pathkit.Path();
 
   if (path.fillType == PathFillType.evenOdd) {
-    pathkit.Path newPath = pathkit.Path(pathkit.FillType.evenOdd);
+    final pathkit.Path newPath = pathkit.Path(pathkit.FillType.evenOdd);
   }
 
   for (PathCommand command in path.commands) {
@@ -78,10 +80,10 @@ pathkit.Path toPathKitPath(Path path) {
 
 /// Converts PathKit Path to VectorGraphicsPath
 Path toVectorGraphicsPath(pathkit.Path path) {
-  List<PathCommand> newCommands = [];
+  final List<PathCommand> newCommands = [];
 
   int index = 0;
-  Float32List points = path.points;
+  final Float32List points = path.points;
   for (pathkit.PathVerb verb in path.verbs.toList()) {
     switch (verb) {
       case pathkit.PathVerb.moveTo:
@@ -255,66 +257,73 @@ class MaskingOptimizer extends Visitor<_Result, Node>
       final _Result maskResult = maskNode.mask.accept(this, maskNode);
       final _Result childResult = maskNode.child.accept(this, maskNode);
 
-      if (childResult.childCount <= 1 && maskResult.childCount == 1) {
+      if (maskResult.childCount == 1) {
         final ResolvedPathNode maskPathNode =
             maskInstructions[maskNode]?.single as ResolvedPathNode;
 
-        if (childResult.childCount == 1) {
-          final ResolvedPathNode pathNode =
-              pathNodesWithMasks[maskNode]?.single as ResolvedPathNode;
+        if (childResult.childCount <= 1) {
+          ResolvedPathNode pathNode = ResolvedPathNode(
+              paint: Paint(), bounds: Rect.fromCircle(0, 0, 0), path: Path());
 
-          pathkit.Path maskPathKitPath = toPathKitPath(maskPathNode.path);
-          maskPathKitPath.applyOp(
-              toPathKitPath(pathNode.path), pathkit.PathOp.intersect);
-          Path newPath = toVectorGraphicsPath(maskPathKitPath);
-          final ResolvedPathNode newPathNode = ResolvedPathNode(
-              paint: pathNode.paint,
-              bounds: maskPathNode.bounds,
-              path: newPath);
-          _result = _Result(newPathNode);
-        } else if (childResult.childCount == 0) {
-          final ResolvedPathNode pathNode =
-              childResult.node as ResolvedPathNode;
-
-          pathkit.Path maskPathKitPath = toPathKitPath(maskPathNode.path);
-          maskPathKitPath.applyOp(
-              toPathKitPath(pathNode.path), pathkit.PathOp.intersect);
-          Path newPath = toVectorGraphicsPath(maskPathKitPath);
-          final ResolvedPathNode newPathNode = ResolvedPathNode(
-              paint: pathNode.paint,
-              bounds: maskPathNode.bounds,
-              path: newPath);
-          _result = _Result(newPathNode);
-        }
-      }
-    }
-    /*
-     to revisit later ...
-    else {
-      if (childResult.childCount == 1) {
-        ResolvedPathNode pathNode =
-            pathNodesWithMasks[maskNode]?.single as ResolvedPathNode;
-        
-        List<PathCommand> commandsToAdd = [];
-
-        for (ResolvedPathNode maskPathNode
-            in maskInstructions[maskNode] as List<ResolvedPathNode>) {
-          if (isInside(pathNode.bounds, maskPathNode.bounds) && ) {
-            pathNode.path.commands.toList();
+          if (childResult.childCount == 0) {
+            pathNode = childResult.node as ResolvedPathNode;
+          } else if (childResult.childCount == 1) {
+            pathNode = pathNodesWithMasks[maskNode]?.single as ResolvedPathNode;
           }
+          final pathkit.Path maskPathKitPath = toPathKitPath(maskPathNode.path);
+          maskPathKitPath.applyOp(
+              toPathKitPath(pathNode.path), pathkit.PathOp.intersect);
+          final Path newPath = toVectorGraphicsPath(maskPathKitPath);
+          final ResolvedPathNode newPathNode = ResolvedPathNode(
+              paint: pathNode.paint,
+              bounds: maskPathNode.bounds,
+              path: newPath);
+          _result = _Result(newPathNode);
+        } else {
+          final ParentNode parentNode = childResult.node as ParentNode;
+          final List<Node> newChildren = [];
+          for (Node child in parentNode.children) {
+            if (child.runtimeType.toString() == 'ResolvedPathNode') {
+              final ResolvedPathNode pathNode = child as ResolvedPathNode;
+              final pathkit.Path maskPathKitPath =
+                  toPathKitPath(maskPathNode.path);
+              maskPathKitPath.applyOp(
+                  toPathKitPath(pathNode.path), pathkit.PathOp.intersect);
+              final Path newPath = toVectorGraphicsPath(maskPathKitPath);
+              final ResolvedPathNode newPathNode = ResolvedPathNode(
+                  paint: pathNode.paint,
+                  bounds: maskPathNode.bounds,
+                  path: newPath);
+              newChildren.add(newPathNode);
+            } else if (child.runtimeType.toString() == 'ResolvedMaskNode' ||
+                child.runtimeType.toString() == 'ParentNode') {
+              final _Result recurseResult = child.accept(this, parentNode);
+              newChildren.add(recurseResult.node);
+            } else {
+              newChildren.add(child);
+            }
+          }
+          final ParentNode newParentNode = ParentNode(parentNode.attributes,
+              precalculatedTransform: parentNode.transform,
+              children: newChildren);
+          _result = _Result(newParentNode);
+          _result.children = newChildren;
+          _result.childCount = newChildren.length;
         }
       }
     }
-
-    */
-
     return _result;
   }
 
   @override
   _Result visitResolvedClipNode(ResolvedClipNode clipNode, Node data) {
-    // TODO: implement visitResolvedClipNode
-    throw UnimplementedError();
+    final _Result childResult = clipNode.child.accept(this, clipNode);
+    ResolvedClipNode newClipNode =
+        ResolvedClipNode(clips: clipNode.clips, child: childResult.node);
+    _Result _result = _Result(newClipNode);
+    _result.children.add(childResult.node);
+    _result.childCount = 1;
+    return _result;
   }
 
   @override

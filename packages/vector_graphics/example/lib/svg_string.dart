@@ -67,7 +67,7 @@ class _MyAppState extends State<MyApp> {
           _data = data;
         });
       }, onError: (Object error) {
-        print(error);
+        debugPrint(error.toString());
       });
     });
   }

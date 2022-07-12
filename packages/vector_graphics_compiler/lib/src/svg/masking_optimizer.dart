@@ -27,10 +27,9 @@ class _Result {
 
   final Node node;
   int childCount = 0;
-  int grandchildCount = 0;
   List<Node> children = [];
   Node parent = _EmptyNode();
-  bool deleteNode = false;
+  bool deleteMaskNode = true;
 }
 
 /// Converts vector_graphics Path to PathKit Path
@@ -171,6 +170,9 @@ Future<Node> parseAndResolve(String source) async {
 /// Simplifies masking operations into PathNodes
 class MaskingOptimizer extends Visitor<_Result, Node>
     with ErrorOnUnResolvedNode<_Result, Node> {
+  ///List of masks to add.
+  List<ResolvedPathNode> masksToApply = [];
+
   ///Holds ResolvedMaskNode Type for children refrences between function calls.
   Map<String, ResolvedMaskNode> resolvedMaskDict = {};
 
@@ -222,6 +224,31 @@ class MaskingOptimizer extends Visitor<_Result, Node>
   @override
   _Result visitParentNode(ParentNode parentNode, Node data) {
     List<Node> newChildren = [];
+    bool deleteMaskNode = true;
+
+    //print("START: PARENT");
+
+    for (Node child in parentNode.children) {
+      _Result childResult = child.accept(this, parentNode);
+      newChildren.add(childResult.node);
+      if (childResult.deleteMaskNode == false) {
+        deleteMaskNode = false;
+      }
+    }
+
+    ParentNode newParentNode = ParentNode(parentNode.attributes,
+        precalculatedTransform: parentNode.transform, children: newChildren);
+
+    _Result _result = _Result(newParentNode);
+
+    _result.deleteMaskNode = deleteMaskNode;
+
+    //print("END: PARENT");
+
+    return _result;
+
+    /*
+    List<Node> newChildren = [];
 
     try {
       pathNodesWithMasks[resolvedMaskDict[parentNode.hashCode.toString()]
@@ -261,14 +288,12 @@ class MaskingOptimizer extends Visitor<_Result, Node>
     _result.childCount = _result.children.length;
 
     return _result;
+    */
   }
 
   @override
   _Result visitMaskNode(MaskNode maskNode, Node data) {
     final _Result _result = _Result(maskNode);
-
-    final _Result parentNode = maskNode.child.accept(this, maskNode);
-    _result.grandchildCount = parentNode.childCount;
 
     return _result;
   }
@@ -282,6 +307,39 @@ class MaskingOptimizer extends Visitor<_Result, Node>
   @override
   _Result visitResolvedMaskNode(ResolvedMaskNode maskNode, void data) {
     _Result _result = _Result(maskNode);
+    ResolvedPathNode? singleMaskPathNode = getSingleChild(maskNode.mask);
+    bool deleteMaskNode = true;
+
+    //print("START: MASK");
+
+    if (singleMaskPathNode != null) {
+      masksToApply.add(singleMaskPathNode);
+      _Result childResult = maskNode.child.accept(this, maskNode);
+      masksToApply.removeLast();
+
+      if (childResult.deleteMaskNode == true) {
+        _result = _Result(childResult.node);
+      } else {
+        ResolvedMaskNode newMaskNode = ResolvedMaskNode(
+            child: childResult.node,
+            mask: maskNode.mask,
+            blendMode: maskNode.blendMode);
+        _result = _Result(newMaskNode);
+      }
+    } else {
+      _Result childResult = maskNode.child.accept(this, maskNode);
+      ResolvedMaskNode newMaskNode = ResolvedMaskNode(
+          child: childResult.node,
+          mask: maskNode.mask,
+          blendMode: maskNode.blendMode);
+      _result = _Result(newMaskNode);
+    }
+
+    //print("END: MASK");
+
+    return _result;
+
+    /*
 
     resolvedMaskDict[maskNode.child.hashCode.toString()] = maskNode;
     maskDict[maskNode.mask.hashCode.toString()] = maskNode;
@@ -382,7 +440,7 @@ class MaskingOptimizer extends Visitor<_Result, Node>
       _result.children.add(childResult.node);
       _result.childCount = 1;
     }
-    return _result;
+    */
   }
 
   @override
@@ -399,7 +457,34 @@ class MaskingOptimizer extends Visitor<_Result, Node>
 
   @override
   _Result visitResolvedPath(ResolvedPathNode pathNode, Node data) {
-    final _Result _result = _Result(pathNode);
+    //print("IN PATH");
+    _Result _result = _Result(pathNode);
+    bool deleteMaskNode = true;
+    bool hasStrokeWidth = false;
+
+    if (pathNode.paint.stroke != null) {
+      if (pathNode.paint.stroke!.width != null) {
+        hasStrokeWidth = true;
+        _result.deleteMaskNode = false;
+      }
+    }
+
+    if (masksToApply.isNotEmpty && !hasStrokeWidth) {
+      ResolvedPathNode newPathNode = pathNode;
+      for (ResolvedPathNode maskPathNode in masksToApply) {
+        ResolvedPathNode intersection = applyMask(newPathNode, maskPathNode);
+        if (intersection.path.commands.isNotEmpty) {
+          newPathNode = intersection;
+        } else {
+          _result = _Result(pathNode);
+          _result.deleteMaskNode = false;
+          break;
+        }
+      }
+
+      _result = _Result(newPathNode);
+    }
+
     return _result;
   }
 

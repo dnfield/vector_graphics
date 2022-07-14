@@ -642,7 +642,6 @@ class SvgParser {
     final Tessellator tessellator = Tessellator();
     final MaskingOptimizer maskingOptimizer = MaskingOptimizer();
 
-
     Node newRoot = _root!.accept(resolvingVisitor, AffineMatrix.identity);
     if (isTesselatorInitialized) {
       newRoot = newRoot.accept(tessellator, null);

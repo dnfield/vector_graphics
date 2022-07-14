@@ -15,7 +15,12 @@ dependencies:
   path_parsing: ^1.0.0
   xml: ^5.3.1
   vector_graphics_codec: 0.0.1
+  js: any
+  url_launcher: ^6.1.4
+  http: ^0.13.4
+  html: ^0.15.0
 
+#CHANGE pathkit path, add to package
 dev_dependencies:
   args: ^2.3.0
   flutter_lints: ^1.0.0
@@ -27,6 +32,8 @@ dev_dependencies:
     sdk: flutter
   vector_graphics:
     path: ../vector_graphics
+  path_ops:
+    path: /Users/chiamaka/engine/tools/path_ops/dart
 
 dependency_overrides:
   vector_graphics_codec:

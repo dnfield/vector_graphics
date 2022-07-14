@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:vector_graphics_compiler/src/svg/node.dart';
 import 'package:vector_graphics_compiler/src/svg/parser.dart';
 import 'package:vector_graphics_compiler/src/svg/resolver.dart';
@@ -284,9 +282,7 @@ class MaskingOptimizer extends Visitor<_Result, Node>
 
   @override
   _Result visitResolvedPath(ResolvedPathNode pathNode, Node data) {
-    //print("IN PATH");
     _Result _result = _Result(pathNode);
-    //bool deleteMaskNode = true;
     bool hasStrokeWidth = false;
 
     if (pathNode.paint.stroke != null) {

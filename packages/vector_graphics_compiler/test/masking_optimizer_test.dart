@@ -1,23 +1,8 @@
-import 'dart:ui';
-
-import 'dart:typed_data';
-
-import 'dart:math' as math;
-
-import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
-
 import 'package:test/test.dart';
 import 'package:vector_graphics_compiler/src/svg/node.dart';
 import 'package:vector_graphics_compiler/src/svg/masking_optimizer.dart';
 import 'package:vector_graphics_compiler/src/svg/resolver.dart';
 import 'dart:core';
-import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
-import 'package:vector_graphics/src/listener.dart';
-import 'dart:convert';
-import 'dart:ui' show ImageByteFormat;
-import 'package:flutter/material.dart';
-
-import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
 void main() {
   test('Only resolve MaskNode if the mask is described by a singular PathNode',

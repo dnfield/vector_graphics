@@ -127,7 +127,7 @@ ResolvedPathNode? getSingleChild(Node node) {
     return node as ResolvedPathNode;
   } else if (node.runtimeType.toString() == 'ParentNode') {
     if ((node as ParentNode).children.length == 1) {
-      return getSingleChild((node as ParentNode).children.single);
+      return getSingleChild(node.children.single);
     } else {
       return null;
     }
@@ -202,21 +202,21 @@ class MaskingOptimizer extends Visitor<_Result, Node>
 
   @override
   _Result visitParentNode(ParentNode parentNode, Node data) {
-    List<Node> newChildren = [];
+    final List<Node> newChildren = [];
     bool deleteMaskNode = true;
 
     for (Node child in parentNode.children) {
-      _Result childResult = child.accept(this, parentNode);
+      final _Result childResult = child.accept(this, parentNode);
       newChildren.add(childResult.node);
       if (childResult.deleteMaskNode == false) {
         deleteMaskNode = false;
       }
     }
 
-    ParentNode newParentNode = ParentNode(parentNode.attributes,
+    final ParentNode newParentNode = ParentNode(parentNode.attributes,
         precalculatedTransform: parentNode.transform, children: newChildren);
 
-    _Result _result = _Result(newParentNode);
+    final _Result _result = _Result(newParentNode);
 
     _result.deleteMaskNode = deleteMaskNode;
 
@@ -239,26 +239,26 @@ class MaskingOptimizer extends Visitor<_Result, Node>
   @override
   _Result visitResolvedMaskNode(ResolvedMaskNode maskNode, void data) {
     _Result _result = _Result(maskNode);
-    ResolvedPathNode? singleMaskPathNode = getSingleChild(maskNode.mask);
+    final ResolvedPathNode? singleMaskPathNode = getSingleChild(maskNode.mask);
     //bool deleteMaskNode = true;
 
     if (singleMaskPathNode != null) {
       masksToApply.add(singleMaskPathNode);
-      _Result childResult = maskNode.child.accept(this, maskNode);
+      final _Result childResult = maskNode.child.accept(this, maskNode);
       masksToApply.removeLast();
 
       if (childResult.deleteMaskNode == true) {
         _result = _Result(childResult.node);
       } else {
-        ResolvedMaskNode newMaskNode = ResolvedMaskNode(
+        final ResolvedMaskNode newMaskNode = ResolvedMaskNode(
             child: childResult.node,
             mask: maskNode.mask,
             blendMode: maskNode.blendMode);
         _result = _Result(newMaskNode);
       }
     } else {
-      _Result childResult = maskNode.child.accept(this, maskNode);
-      ResolvedMaskNode newMaskNode = ResolvedMaskNode(
+      final _Result childResult = maskNode.child.accept(this, maskNode);
+      final ResolvedMaskNode newMaskNode = ResolvedMaskNode(
           child: childResult.node,
           mask: maskNode.mask,
           blendMode: maskNode.blendMode);
@@ -295,7 +295,8 @@ class MaskingOptimizer extends Visitor<_Result, Node>
     if (masksToApply.isNotEmpty && !hasStrokeWidth) {
       ResolvedPathNode newPathNode = pathNode;
       for (ResolvedPathNode maskPathNode in masksToApply) {
-        ResolvedPathNode intersection = applyMask(newPathNode, maskPathNode);
+        final ResolvedPathNode intersection =
+            applyMask(newPathNode, maskPathNode);
         if (intersection.path.commands.isNotEmpty) {
           newPathNode = intersection;
         } else {
@@ -326,15 +327,15 @@ class MaskingOptimizer extends Visitor<_Result, Node>
 
   @override
   _Result visitSaveLayerNode(SaveLayerNode layerNode, Node data) {
-    List<Node> newChildren = [];
+    final List<Node> newChildren = [];
     for (Node child in layerNode.children) {
-      _Result childResult = child.accept(this, layerNode);
+      final _Result childResult = child.accept(this, layerNode);
       newChildren.add(childResult.node);
     }
-    SaveLayerNode newLayerNode = SaveLayerNode(layerNode.attributes,
+    final SaveLayerNode newLayerNode = SaveLayerNode(layerNode.attributes,
         paint: layerNode.paint, children: newChildren);
 
-    _Result _result = _Result(layerNode);
+    final _Result _result = _Result(newLayerNode);
     _result.children = newChildren;
     _result.childCount = newChildren.length;
     return _result;

@@ -173,34 +173,6 @@ void main() {
     expect(sizedBox.height, 200);
   });
 
-  testWidgets('Reloads bytes when position changes in tree',
-      (WidgetTester tester) async {
-    final TestAssetBundle testBundle = TestAssetBundle();
-    final GlobalKey key = GlobalKey();
-
-    await tester.pumpWidget(DefaultAssetBundle(
-      key: UniqueKey(),
-      bundle: testBundle,
-      child: VectorGraphic(
-        key: key,
-        loader: const AssetBytesLoader('foo.svg'),
-      ),
-    ));
-
-    expect(testBundle.loadKeys.single, 'foo.svg');
-
-    await tester.pumpWidget(DefaultAssetBundle(
-      key: UniqueKey(),
-      bundle: testBundle,
-      child: VectorGraphic(
-        key: key,
-        loader: const AssetBytesLoader('foo.svg'),
-      ),
-    ));
-
-    expect(testBundle.loadKeys, <String>['foo.svg', 'foo.svg']);
-  });
-
   testWidgets('Reloads bytes when configuration changes',
       (WidgetTester tester) async {
     final TestAssetBundle testBundle = TestAssetBundle();
@@ -389,6 +361,8 @@ void main() {
 
   testWidgets('Does not call setState after unmounting',
       (WidgetTester tester) async {
+    final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
+    codec.writeSize(buffer, 100, 200);
     final Completer<ByteData> completer = Completer<ByteData>();
 
     await tester.pumpWidget(
@@ -400,7 +374,37 @@ void main() {
       ),
     );
     await tester.pumpWidget(const Placeholder());
-    completer.complete(ByteData(0));
+    completer.complete(buffer.done());
+  });
+
+  testWidgets('Loads a picture with loadPicture', (WidgetTester tester) async {
+    final TestAssetBundle testBundle = TestAssetBundle();
+    final Completer<PictureInfo> completer = Completer<PictureInfo>();
+    await tester.pumpWidget(
+      Localizations(
+        delegates: const <LocalizationsDelegate<Object>>[
+          DefaultWidgetsLocalizations.delegate
+        ],
+        locale: const Locale('fr', 'CH'),
+        child: Directionality(
+          textDirection: TextDirection.rtl,
+          child: DefaultAssetBundle(
+            bundle: testBundle,
+            child: Builder(builder: (BuildContext context) {
+              vg
+                  .loadPicture(const AssetBytesLoader('foo.svg'), context)
+                  .then(completer.complete);
+              return const Center();
+            }),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(await completer.future, isA<PictureInfo>());
+    expect(debugLastLocale, const Locale('fr', 'CH'));
+    expect(debugLastTextDirection, TextDirection.rtl);
   });
 }
 

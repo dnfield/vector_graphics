@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 import 'dart:developer';
-import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';

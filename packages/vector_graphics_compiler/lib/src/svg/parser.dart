@@ -2,7 +2,8 @@ import 'dart:collection';
 
 import 'package:meta/meta.dart';
 import 'package:vector_graphics_compiler/src/svg/masking_optimizer.dart';
-import 'package:vector_graphics_compiler/src/svg/tesselator.dart';
+import 'package:vector_graphics_compiler/src/svg/tessellator.dart';
+
 import 'package:xml/xml_events.dart';
 
 import '../geometry/basic_types.dart';
@@ -637,12 +638,16 @@ class SvgParser {
     final ResolvingVisitor resolvingVisitor = ResolvingVisitor();
     final OpacityPeepholeOptimizer opacityPeepholeOptimizer =
         OpacityPeepholeOptimizer();
+<<<<<<< HEAD
     final Tesselator tesselator = Tesselator();
     final MaskingOptimizer maskingOptimizer = MaskingOptimizer();
+=======
+    final Tessellator tessellator = Tessellator();
+>>>>>>> 917cf4952f94ee8d9bfc18a272bf41f195b9b9a0
 
     Node newRoot = _root!.accept(resolvingVisitor, AffineMatrix.identity);
     if (isTesselatorInitialized) {
-      newRoot = newRoot.accept(tesselator, null);
+      newRoot = newRoot.accept(tessellator, null);
     }
 
     newRoot = maskingOptimizer.apply(newRoot);

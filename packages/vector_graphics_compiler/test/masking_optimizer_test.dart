@@ -64,14 +64,8 @@ void main() {
       "Don't resolve a MaskNode if one of PathNodes it's applied to has stroke.width set",
       () async {
     final Node node = await parseAndResolve(
-        ''' <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <mask id="a" maskUnits="userSpaceOnUse" x="3" y="7" width="18" height="11">
-    <path fill-rule="evenodd" clip-rule="evenodd" d="M15.094 17.092a.882.882 0 01-.623-1.503l2.656-2.66H4.28a.883.883 0 010-1.765h12.846L14.47 8.503a.88.88 0 011.245-1.245l4.611 4.611a.252.252 0 010 .354l-4.611 4.611a.876.876 0 01-.622.258z" fill="#fff" />
-  </mask>
-  <g mask="url(#a)">
-    <path fill-rule="evenodd" clip-rule="evenodd" stroke-width="3" d="M0 0h24v24.375H0V0z" fill="#fff" />
-  </g>
-</svg>''');
+        ''' <svg xmlns="http://www.w3.org/2000/svg" width="94" height="92" viewBox="0 0 94 92" fill="none"><mask id="c" maskUnits="userSpaceOnUse" x="46" y="16" width="15" height="15"><path d="M58.645 16.232L46.953 28.72l2.024 1.895 11.691-12.486" fill="#fff"/></mask><g mask="url(#c)"><path d="M51.797 28.046l-2.755-2.578" stroke="#FDDA73" stroke-width="2"/></g></svg>
+        ''');
 
     final MaskingOptimizer visitor = MaskingOptimizer();
     final Node newNode = visitor.apply(node);
@@ -82,23 +76,17 @@ void main() {
     final List<ResolvedPathNode> pathNodesNew =
         queryChildren<ResolvedPathNode>(newNode);
 
-    for (ResolvedPathNode child in pathNodesNew) {
-      print(child.path.commands);
-    }
     expect(maskNodesNew.length, 1);
   });
 
   test("Don't resolve MaskNode if intersection of Mask and Path is empty",
       () async {
     final Node node = await parseAndResolve(
-        '''<svg width="24" height="24" viewBox="0 0 24 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <mask id="a" maskUnits="userSpaceOnUse" x="3" y="7" width="18" height="11">
-    <path fill-rule="evenodd" clip-rule="evenodd" d="M15.094 17.092a.882.882 0 01-.623-1.503l2.656-2.66H4.28a.883.883 0 010-1.765h12.846L14.47 8.503a.88.88 0 011.245-1.245l4.611 4.611a.252.252 0 010 .354l-4.611 4.611a.876.876 0 01-.622.258z" fill="#fff" />
-  </mask>
-  <g mask="url(#a)">
-    <path fill-rule="evenodd" clip-rule="evenodd" d="M0 24h24v48.375H0V0z" fill="red" />
-  </g>
-</svg> ''');
+        '''<svg width="24px" height="24px" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+<mask id="a"><path  d="M58.645 16.232L46.953 28.72l2.024 1.895 11.691-12.486"/></mask>
+<path mask="url(#a)" d="M0 0 z"/>
+</svg>
+''');
     final MaskingOptimizer visitor = MaskingOptimizer();
     final Node newNode = visitor.apply(node);
 

@@ -58,9 +58,6 @@ void main() {
     final List<ResolvedMaskNode> maskNodesNew =
         queryChildren<ResolvedMaskNode>(newNode);
 
-    final List<ResolvedPathNode> pathNodesNew =
-        queryChildren<ResolvedPathNode>(newNode);
-
     expect(maskNodesNew.length, 1);
   });
 

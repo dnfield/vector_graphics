@@ -343,7 +343,7 @@ class MaskingOptimizer extends Visitor<_Result, Node>
 
   @override
   _Result visitViewportNode(ViewportNode viewportNode, void data) {
-    final List<Node> children = [];
+    final List<Node> children = [] ; 
     for (Node child in viewportNode.children) {
       final _Result childNode = child.accept(this, viewportNode);
       children.add(childNode.node);

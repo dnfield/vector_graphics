@@ -638,12 +638,10 @@ class SvgParser {
     final ResolvingVisitor resolvingVisitor = ResolvingVisitor();
     final OpacityPeepholeOptimizer opacityPeepholeOptimizer =
         OpacityPeepholeOptimizer();
-<<<<<<< HEAD
-    final Tesselator tesselator = Tesselator();
-    final MaskingOptimizer maskingOptimizer = MaskingOptimizer();
-=======
+
     final Tessellator tessellator = Tessellator();
->>>>>>> 917cf4952f94ee8d9bfc18a272bf41f195b9b9a0
+    final MaskingOptimizer maskingOptimizer = MaskingOptimizer();
+
 
     Node newRoot = _root!.accept(resolvingVisitor, AffineMatrix.identity);
     if (isTesselatorInitialized) {

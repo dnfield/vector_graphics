@@ -1,5 +1,4 @@
 import 'package:vector_graphics_compiler/src/svg/node.dart';
-import 'package:vector_graphics_compiler/src/svg/parser.dart';
 import 'package:vector_graphics_compiler/src/svg/resolver.dart';
 import 'package:vector_graphics_compiler/src/svg/visitor.dart';
 import 'dart:core';
@@ -19,24 +18,36 @@ class _EmptyNode extends Node {
   void visitChildren(NodeCallback visitor) {}
 }
 
-// TODO: Edit result class to pass children information to parent
 class _Result {
   _Result(this.node);
 
   final Node node;
-  int childCount = 0;
-  List<Node> children = [];
+  final List<Node> children = [];
   Node parent = _EmptyNode();
   bool deleteMaskNode = true;
 }
 
-/// Converts vector_graphics Path to path_ops Path
-path_ops.Path toPathOpsPath(Path path) {
-  path_ops.Path newPath = path_ops.Path();
-
-  if (path.fillType == PathFillType.evenOdd) {
-    newPath = path_ops.Path(path_ops.FillType.evenOdd);
+/// Converts a vector_graphics PathFillType to a path_ops FillType.
+path_ops.FillType toPathOpsFillTyle(PathFillType fill) {
+  if (fill == PathFillType.evenOdd) {
+    return path_ops.FillType.evenOdd;
+  } else {
+    return path_ops.FillType.nonZero;
   }
+}
+
+/// Converts a path_ops FillType to a vector_graphics PathFillType
+PathFillType toVectorGraphicsFillType(path_ops.FillType fill) {
+  if (fill == path_ops.FillType.evenOdd) {
+    return PathFillType.evenOdd;
+  } else {
+    return PathFillType.nonZero;
+  }
+}
+
+/// Converts vector_graphics Path to path_ops Path.
+path_ops.Path toPathOpsPath(Path path) {
+  final path_ops.Path newPath = path_ops.Path(toPathOpsFillTyle(path.fillType));
 
   for (PathCommand command in path.commands) {
     switch (command.type) {
@@ -75,7 +86,7 @@ path_ops.Path toPathOpsPath(Path path) {
   return newPath;
 }
 
-/// Converts path_ops Path to VectorGraphicsPath
+/// Converts path_ops Path to VectorGraphicsPath.
 Path toVectorGraphicsPath(path_ops.Path path) {
   final List<PathCommand> newCommands = [];
 
@@ -111,22 +122,19 @@ Path toVectorGraphicsPath(path_ops.Path path) {
     }
   }
 
-  Path newPath = Path(commands: newCommands);
-
-  if (path.fillType == path_ops.FillType.evenOdd) {
-    newPath = Path(commands: newCommands, fillType: PathFillType.evenOdd);
-  }
+  final Path newPath = Path(
+      commands: newCommands, fillType: toVectorGraphicsFillType(path.fillType));
 
   return newPath;
 }
 
 /// Gets the single child recursively,
-/// returns null if there are 0 children or more than 1
+/// returns null if there are 0 children or more than 1.
 ResolvedPathNode? getSingleChild(Node node) {
-  if (node.runtimeType.toString() == 'ResolvedPathNode') {
-    return node as ResolvedPathNode;
-  } else if (node.runtimeType.toString() == 'ParentNode') {
-    if ((node as ParentNode).children.length == 1) {
+  if (node is ResolvedPathNode) {
+    return node;
+  } else if (node is ParentNode) {
+    if (node.children.length == 1) {
       return getSingleChild(node.children.single);
     } else {
       return null;
@@ -136,42 +144,13 @@ ResolvedPathNode? getSingleChild(Node node) {
   }
 }
 
-/// Traverses all children of a given node
-List<T> queryChildren<T extends Node>(Node node) {
-  final List<T> children = <T>[];
-  void visitor(Node child) {
-    if (child is T) {
-      children.add(child);
-    }
-    child.visitChildren(visitor);
-  }
-
-  node.visitChildren(visitor);
-  return children;
-}
-
-/// Checks if one shape is inside another using rectagle bounds
-bool isInside(Rect outerShape, Rect innerShape) {
-  return ((innerShape.left > outerShape.left) &&
-      (innerShape.right < outerShape.right) &&
-      (innerShape.top > outerShape.top) &&
-      (innerShape.bottom < outerShape.bottom));
-}
-
-/// Parses SVG string to node tree and runs it through the resolver
-Future<Node> parseAndResolve(String source) async {
-  final Node node = await parseToNodeTree(source);
-  final ResolvingVisitor visitor = ResolvingVisitor();
-  return node.accept(visitor, AffineMatrix.identity);
-}
-
-/// Simplifies masking operations into PathNodes
+/// Simplifies masking operations into PathNodes.
 class MaskingOptimizer extends Visitor<_Result, Node>
     with ErrorOnUnResolvedNode<_Result, Node> {
-  ///List of masks to add.
-  List<ResolvedPathNode> masksToApply = [];
+  /// List of masks to add.
+  final List<ResolvedPathNode> masksToApply = [];
 
-  /// Applies visitor to given node
+  /// Applies visitor to given node.
   Node apply(Node node) {
     final Node newNode = node.accept(this, null).node;
     return newNode;
@@ -181,11 +160,17 @@ class MaskingOptimizer extends Visitor<_Result, Node>
   ResolvedPathNode applyMask(Node child, ResolvedPathNode maskPathNode) {
     final ResolvedPathNode pathNode = child as ResolvedPathNode;
     final path_ops.Path maskPathOpsPath = toPathOpsPath(maskPathNode.path);
-    maskPathOpsPath.applyOp(
-        toPathOpsPath(pathNode.path), path_ops.PathOp.intersect);
-    final Path newPath = toVectorGraphicsPath(maskPathOpsPath);
+    final path_ops.Path pathPathOpsPath = toPathOpsPath(pathNode.path);
+    final path_ops.Path intersection =
+        maskPathOpsPath.applyOp(pathPathOpsPath, path_ops.PathOp.intersect);
+    final Path newPath = toVectorGraphicsPath(intersection);
     final ResolvedPathNode newPathNode = ResolvedPathNode(
         paint: pathNode.paint, bounds: maskPathNode.bounds, path: newPath);
+
+    maskPathOpsPath.dispose();
+    pathPathOpsPath.dispose();
+    intersection.dispose();
+
     return newPathNode;
   }
 
@@ -240,7 +225,6 @@ class MaskingOptimizer extends Visitor<_Result, Node>
   _Result visitResolvedMaskNode(ResolvedMaskNode maskNode, void data) {
     _Result _result = _Result(maskNode);
     final ResolvedPathNode? singleMaskPathNode = getSingleChild(maskNode.mask);
-    //bool deleteMaskNode = true;
 
     if (singleMaskPathNode != null) {
       masksToApply.add(singleMaskPathNode);
@@ -275,7 +259,6 @@ class MaskingOptimizer extends Visitor<_Result, Node>
         ResolvedClipNode(clips: clipNode.clips, child: childResult.node);
     final _Result _result = _Result(newClipNode);
     _result.children.add(childResult.node);
-    _result.childCount = 1;
 
     return _result;
   }
@@ -336,14 +319,13 @@ class MaskingOptimizer extends Visitor<_Result, Node>
         paint: layerNode.paint, children: newChildren);
 
     final _Result _result = _Result(newLayerNode);
-    _result.children = newChildren;
-    _result.childCount = newChildren.length;
+    _result.children.addAll(newChildren);
     return _result;
   }
 
   @override
   _Result visitViewportNode(ViewportNode viewportNode, void data) {
-    final List<Node> children = [] ; 
+    final List<Node> children = [];
     for (Node child in viewportNode.children) {
       final _Result childNode = child.accept(this, viewportNode);
       children.add(childNode.node);
@@ -358,10 +340,7 @@ class MaskingOptimizer extends Visitor<_Result, Node>
     );
 
     final _Result _result = _Result(node);
-    _result.children = children;
-    _result.childCount = children.length;
+    _result.children.addAll(children);
     return _result;
   }
 }
-
-//void main() async {}

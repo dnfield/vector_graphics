@@ -50,16 +50,12 @@ class ClippingOptimizer extends Visitor<_Result, Node>
     ResolvedPathNode newPathNode = ResolvedPathNode(
         paint: pathNode.paint, bounds: newPath.bounds(), path: newPath);
 
-    if (isInside(clipPath.bounds(), pathNode.bounds)) {
-      //print("Reached this line");
-      newPathNode = pathNode;
-    } else {
-      print("ELSE statement reached");
-      print(pathNode.path);
-      print(newPathNode.path);
-      //print(clipPath.bounds());
-      //print(pathNode.bounds);
-    }
+    print("ELSE statement reached");
+    print(pathNode.path);
+    print(newPathNode.path);
+    //print(clipPath.bounds());
+    //print(pathNode.bounds);
+
     return newPathNode;
   }
 

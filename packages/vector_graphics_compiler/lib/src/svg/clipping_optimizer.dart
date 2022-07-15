@@ -28,13 +28,13 @@ class _Result {
   bool deleteClipNode = true;
 }
 
-/// Applies and removes trivial cases of clipping
+/// Applies and removes trivial cases of clipping.
 class ClippingOptimizer extends Visitor<_Result, Node>
     with ErrorOnUnResolvedNode<_Result, Node> {
   ///List of clips to apply.
   List<Path> clipsToApply = [];
 
-  /// Applies visitor to given node
+  /// Applies visitor to given node.
   Node apply(Node node) {
     final Node newNode = node.accept(this, null).node;
     return newNode;
@@ -44,17 +44,16 @@ class ClippingOptimizer extends Visitor<_Result, Node>
   ResolvedPathNode applyClip(Node child, Path clipPath) {
     final ResolvedPathNode pathNode = child as ResolvedPathNode;
     final path_ops.Path clipPathOpsPath = toPathOpsPath(clipPath);
-    clipPathOpsPath.applyOp(
-        toPathOpsPath(pathNode.path), path_ops.PathOp.intersect);
-    final Path newPath = toVectorGraphicsPath(clipPathOpsPath);
-    ResolvedPathNode newPathNode = ResolvedPathNode(
+    final path_ops.Path pathPathOpsPath = toPathOpsPath(pathNode.path);
+    final path_ops.Path intersection =
+        clipPathOpsPath.applyOp(pathPathOpsPath, path_ops.PathOp.intersect);
+    final Path newPath = toVectorGraphicsPath(intersection);
+    final ResolvedPathNode newPathNode = ResolvedPathNode(
         paint: pathNode.paint, bounds: newPath.bounds(), path: newPath);
 
-    print("ELSE statement reached");
-    print(pathNode.path);
-    print(newPathNode.path);
-    //print(clipPath.bounds());
-    //print(pathNode.bounds);
+    clipPathOpsPath.dispose();
+    pathPathOpsPath.dispose();
+    intersection.dispose();
 
     return newPathNode;
   }

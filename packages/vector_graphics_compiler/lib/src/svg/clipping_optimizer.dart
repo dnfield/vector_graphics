@@ -47,8 +47,19 @@ class ClippingOptimizer extends Visitor<_Result, Node>
     clipPathOpsPath.applyOp(
         toPathOpsPath(pathNode.path), path_ops.PathOp.intersect);
     final Path newPath = toVectorGraphicsPath(clipPathOpsPath);
-    final ResolvedPathNode newPathNode = ResolvedPathNode(
+    ResolvedPathNode newPathNode = ResolvedPathNode(
         paint: pathNode.paint, bounds: newPath.bounds(), path: newPath);
+
+    if (isInside(clipPath.bounds(), pathNode.bounds)) {
+      //print("Reached this line");
+      newPathNode = pathNode;
+    } else {
+      print("ELSE statement reached");
+      print(pathNode.path);
+      print(newPathNode.path);
+      //print(clipPath.bounds());
+      //print(pathNode.bounds);
+    }
     return newPathNode;
   }
 
@@ -117,7 +128,7 @@ class ClippingOptimizer extends Visitor<_Result, Node>
   _Result visitResolvedClipNode(ResolvedClipNode clipNode, Node data) {
     _Result _result = _Result(clipNode);
 
-    Path? singleClipPath = null;
+    Path? singleClipPath;
     if (clipNode.clips.length == 1) {
       singleClipPath = clipNode.clips.single;
     }
@@ -158,9 +169,8 @@ class ClippingOptimizer extends Visitor<_Result, Node>
 
     if (clipsToApply.isNotEmpty && !hasStrokeWidth) {
       ResolvedPathNode newPathNode = pathNode;
-      for (Path clipPathNode in clipsToApply) {
-        final ResolvedPathNode intersection =
-            applyClip(newPathNode, clipPathNode);
+      for (Path clipPath in clipsToApply) {
+        final ResolvedPathNode intersection = applyClip(newPathNode, clipPath);
         if (intersection.path.commands.isNotEmpty) {
           newPathNode = intersection;
         } else {

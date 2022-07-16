@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:vector_graphics_compiler/src/svg/node.dart';
 import 'package:vector_graphics_compiler/src/svg/resolver.dart';
 import 'package:vector_graphics_compiler/src/svg/visitor.dart';
 import 'dart:core';
+import 'package:test/test.dart';
+import 'package:vector_graphics_compiler/src/svg/parser.dart';
 import 'package:vector_graphics_compiler/src/svg/masking_optimizer.dart';
 import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 import 'package:path_ops/path_ops.dart' as path_ops;
@@ -72,13 +76,13 @@ class ClippingOptimizer extends Visitor<_Result, Node>
   @override
   _Result visitParentNode(ParentNode parentNode, Node data) {
     final List<Node> newChildren = [];
-    bool deleteMaskNode = true;
+    bool deleteClipNode = true;
 
     for (Node child in parentNode.children) {
       final _Result childResult = child.accept(this, parentNode);
       newChildren.add(childResult.node);
       if (childResult.deleteClipNode == false) {
-        deleteMaskNode = false;
+        deleteClipNode = false;
       }
     }
 
@@ -87,7 +91,7 @@ class ClippingOptimizer extends Visitor<_Result, Node>
 
     final _Result _result = _Result(newParentNode);
 
-    _result.deleteClipNode = deleteMaskNode;
+    _result.deleteClipNode = deleteClipNode;
 
     return _result;
   }
@@ -146,7 +150,6 @@ class ClippingOptimizer extends Visitor<_Result, Node>
           ResolvedClipNode(child: childResult.node, clips: clipNode.clips);
       _result = _Result(newClipNode);
     }
-
     return _result;
   }
 
@@ -154,6 +157,7 @@ class ClippingOptimizer extends Visitor<_Result, Node>
   _Result visitResolvedPath(ResolvedPathNode pathNode, Node data) {
     _Result _result = _Result(pathNode);
     bool hasStrokeWidth = false;
+    bool deleteClipNode = true;
 
     if (pathNode.paint.stroke != null) {
       if (pathNode.paint.stroke!.width != null) {
@@ -171,13 +175,13 @@ class ClippingOptimizer extends Visitor<_Result, Node>
         } else {
           _result = _Result(pathNode);
           _result.deleteClipNode = false;
+          deleteClipNode = false;
           break;
         }
       }
-
       _result = _Result(newPathNode);
+      _result.deleteClipNode = deleteClipNode;
     }
-
     return _result;
   }
 

@@ -14,7 +14,8 @@ import 'src/listener.dart';
 import 'src/render_vector_graphics.dart';
 
 export 'src/listener.dart' show PictureInfo;
-export 'package:vector_graphics_codec/vector_graphics_codec.dart' show kVectorGraphicsEncodingVersion;
+export 'package:vector_graphics_codec/vector_graphics_codec.dart'
+    show kVectorGraphicsEncodingVersion;
 
 /// A widget that displays a [VectorGraphicsCodec] encoded asset.
 ///

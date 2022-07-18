@@ -181,8 +181,11 @@ class MaskingOptimizer extends Visitor<_Result, Node>
   }
 
   @override
-  _Result visitChildren(Node node, void data) {
-    throw UnimplementedError();
+  _Result visitChildren(Node node, _Result data) {
+    if (node is ResolvedMaskNode) {
+      data = node.child.accept(this, data);
+    }
+    return data;
   }
 
   @override
@@ -267,6 +270,7 @@ class MaskingOptimizer extends Visitor<_Result, Node>
   _Result visitResolvedPath(ResolvedPathNode pathNode, Node data) {
     _Result _result = _Result(pathNode);
     bool hasStrokeWidth = false;
+    bool deleteMaskNode = true;
 
     if (pathNode.paint.stroke != null) {
       if (pathNode.paint.stroke!.width != null) {
@@ -283,13 +287,12 @@ class MaskingOptimizer extends Visitor<_Result, Node>
         if (intersection.path.commands.isNotEmpty) {
           newPathNode = intersection;
         } else {
-          _result = _Result(pathNode);
-          _result.deleteMaskNode = false;
+          deleteMaskNode = false;
           break;
         }
       }
-
       _result = _Result(newPathNode);
+      _result.deleteMaskNode = deleteMaskNode;
     }
 
     return _result;

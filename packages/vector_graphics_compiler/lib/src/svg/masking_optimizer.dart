@@ -1,8 +1,9 @@
+import 'dart:core';
+import 'dart:typed_data';
+
 import 'package:vector_graphics_compiler/src/svg/node.dart';
 import 'package:vector_graphics_compiler/src/svg/resolver.dart';
 import 'package:vector_graphics_compiler/src/svg/visitor.dart';
-import 'dart:core';
-import 'dart:typed_data';
 import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 import 'package:path_ops/path_ops.dart' as path_ops;
 
@@ -29,19 +30,31 @@ class _Result {
 
 /// Converts a vector_graphics PathFillType to a path_ops FillType.
 path_ops.FillType toPathOpsFillTyle(PathFillType fill) {
-  if (fill == PathFillType.evenOdd) {
-    return path_ops.FillType.evenOdd;
-  } else {
-    return path_ops.FillType.nonZero;
+  switch (fill) {
+    case PathFillType.evenOdd:
+      {
+        return path_ops.FillType.evenOdd;
+      }
+
+    case PathFillType.nonZero:
+      {
+        return path_ops.FillType.nonZero;
+      }
   }
 }
 
 /// Converts a path_ops FillType to a vector_graphics PathFillType
 PathFillType toVectorGraphicsFillType(path_ops.FillType fill) {
-  if (fill == path_ops.FillType.evenOdd) {
-    return PathFillType.evenOdd;
-  } else {
-    return PathFillType.nonZero;
+  switch (fill) {
+    case path_ops.FillType.evenOdd:
+      {
+        return PathFillType.evenOdd;
+      }
+
+    case path_ops.FillType.nonZero:
+      {
+        return PathFillType.nonZero;
+      }
   }
 }
 
@@ -135,7 +148,7 @@ ResolvedPathNode? getSingleChild(Node node) {
     return node;
   } else if (node is ParentNode) {
     if (node.children.length == 1) {
-      return getSingleChild(node.children.single);
+      return getSingleChild(node.children.first);
     } else {
       return null;
     }

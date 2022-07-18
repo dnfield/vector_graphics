@@ -18,6 +18,10 @@ void bufferContains(VectorGraphicsBuffer buffer, List<int> expectedBytes) {
 }
 
 void main() {
+  test('version changed landmine', () {
+    expect(kVectorGraphicsEncodingVersion, 1);
+  });
+
   test('Messages begin with a magic number and version', () {
     final buffer = VectorGraphicsBuffer();
 

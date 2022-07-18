@@ -5,6 +5,12 @@
 import 'dart:typed_data';
 import 'dart:convert';
 
+/// The current version of the vector graphics encoding.
+///
+/// The encoding has no forwards or backwards compatibility and can
+/// only decode exact version matches.
+const int kVectorGraphicsEncodingVersion = 1;
+
 /// enumeration of the types of control points accepted by [VectorGraphicsCodec.writePath].
 abstract class ControlPointTypes {
   const ControlPointTypes._();
@@ -46,7 +52,6 @@ class VectorGraphicsCodec {
   static const int _drawTextTag = 44;
   static const int _textConfigTag = 45;
 
-  static const int _version = 1;
   static const int _magicNumber = 0x00882d62;
 
   /// Decode the vector_graphics binary.
@@ -68,7 +73,7 @@ class VectorGraphicsCodec {
           'The provided data was not a vector_graphics binary asset.');
     }
     final int version = buffer.getUint8();
-    if (version != _version) {
+    if (version != kVectorGraphicsEncodingVersion) {
       throw StateError(
           'The provided data does not match the currently supported version.');
     }
@@ -807,7 +812,7 @@ class VectorGraphicsBuffer {
     _eightBytesAsList = _eightBytes.buffer.asUint8List();
     // Begin message with the magic number and current version.
     _putUint32(VectorGraphicsCodec._magicNumber);
-    _putUint8(VectorGraphicsCodec._version);
+    _putUint8(kVectorGraphicsEncodingVersion);
   }
 
   List<int> _buffer;

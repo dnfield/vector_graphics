@@ -648,7 +648,6 @@ class SvgParser {
     }
 
     newRoot = maskingOptimizer.apply(newRoot);
-
     newRoot = opacityPeepholeOptimizer.apply(newRoot);
 
     /// Convert to vector instructions

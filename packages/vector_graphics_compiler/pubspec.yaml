@@ -15,10 +15,6 @@ dependencies:
   path_parsing: ^1.0.0
   xml: ^6.0.1
   vector_graphics_codec: 0.0.1
-  js: any
-  url_launcher: ^6.1.4
-  http: ^0.13.4
-  html: ^0.15.0
 
 dev_dependencies:
   args: ^2.3.0

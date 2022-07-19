@@ -27,8 +27,8 @@ final ArgParser argParser = ArgParser()
         'raster times at the cost of slightly larger file sizes.',
   )
   ..addFlag(
-    'pathops',
-    help: 'Allows for pathops library to be used when'
+    'path-ops',
+    help: 'Allows for path_ops library to be used when'
         'calculating path intersections.',
   )
   ..addOption('input',
@@ -57,6 +57,16 @@ Future<void> main(List<String> args) async {
       initializeLibTesselator(results['libtessellator'] as String);
     } else {
       if (!initializeTessellatorFromFlutterCache()) {
+        exit(1);
+      }
+    }
+  }
+
+  if (results['pathops'] == true) {
+    if (results.wasParsed('libpathops')) {
+      initializeLibPathOps(results['libpathops'] as String);
+    } else {
+      if (!initializePathOpsFromFlutterCache()) {
         exit(1);
       }
     }

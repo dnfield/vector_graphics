@@ -1,6 +1,8 @@
 // Copyright 2013 The Flutter Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
+// Copied from flutter/engine repository: https://github.com/flutter/engine/tree/main/tools/path_ops
+// NOTE: For now, this copy and flutter/engine copy should be kept in sync.
 
 // ignore_for_file: camel_case_types, non_constant_identifier_names
 
@@ -305,6 +307,17 @@ final ffi.DynamicLibrary _dylib = () {
   }
   throw UnsupportedError('Unknown platform: ${Platform.operatingSystem}');
 }();
+late final String _dylibPath;
+
+/// Whether or not PathOps should be used.
+bool get isPathOpsInitialized => _isPathOpsInitialized;
+bool _isPathOpsInitialized = false;
+
+/// Initialize the libpathops dynamic library.
+void initializeLibPathOps(String path) {
+  _dylibPath = path;
+  _isPathOpsInitialized = true;
+}
 
 class _SkPath extends ffi.Opaque {}
 

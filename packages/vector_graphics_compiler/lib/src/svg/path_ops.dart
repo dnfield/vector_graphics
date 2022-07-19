@@ -195,11 +195,19 @@ class Path implements PathProxy {
   /// [cubicTo], and [close] after [applyOp] is invoked.
   ///
   /// This list determines the meaning of the [points] array.
+
+  Map<int, PathVerb> pathVerbDict = {
+    0: PathVerb.moveTo,
+    1: PathVerb.lineTo,
+    4: PathVerb.cubicTo,
+    5: PathVerb.close
+  };
+
   Iterable<PathVerb> get verbs {
     _updatePathData();
     final int count = _pathData!.ref.verb_count;
     return List<PathVerb>.generate(count, (int index) {
-      return PathVerb.values[_pathData!.ref.verbs.elementAt(index).value];
+      return pathVerbDict[_pathData!.ref.verbs.elementAt(index).value]!;
     }, growable: false);
   }
 

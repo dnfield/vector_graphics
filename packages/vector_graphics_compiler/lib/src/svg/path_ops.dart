@@ -196,13 +196,14 @@ class Path implements PathProxy {
   ///
   /// This list determines the meaning of the [points] array.
 
-  Map<int, PathVerb> pathVerbDict = {
+  Map<int, PathVerb> pathVerbDict = <int, PathVerb>{
     0: PathVerb.moveTo,
     1: PathVerb.lineTo,
     4: PathVerb.cubicTo,
     5: PathVerb.close
   };
 
+  /// Retrieves PathVerbs.
   Iterable<PathVerb> get verbs {
     _updatePathData();
     final int count = _pathData!.ref.verb_count;

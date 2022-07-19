@@ -11,11 +11,73 @@ import 'package:flutter/rendering.dart';
 import 'listener.dart';
 import 'debug.dart';
 
+/// The cache key for a rasterized vector graphic.
+@immutable
+class RasterKey {
+  /// Create a new [RasterKey].
+  const RasterKey(this.assetKey, this.width, this.height);
+
+  /// An object that is used to identify the raster data this key will store.
+  ///
+  /// Typically this is the value returned from [BytesLoader.cacheKey].
+  final Object assetKey;
+
+  /// The height of this vector graphic raster, in physical pixels.
+  final int width;
+
+  /// The width of this vector graphic raster, in physical pixels.
+  final int height;
+
+  @override
+  bool operator ==(Object other) {
+    return other is RasterKey &&
+        other.assetKey == assetKey &&
+        other.width == width &&
+        other.height == height;
+  }
+
+  @override
+  int get hashCode => Object.hash(assetKey, width, height);
+}
+
+/// The cache entry for a rasterized vector graphic.
+class RasterData {
+  /// Create a new [RasterData].
+  RasterData(this._image, this.count, this.key);
+
+  /// The rasterized vector graphic.
+  ui.Image get image => _image!;
+  ui.Image? _image;
+
+  /// The cache key used to identify this vector graphic.
+  final RasterKey key;
+
+  /// The number of render objects currently using this
+  /// vector graphic raster data.
+  int count = 0;
+
+  /// Dispose this raster data.
+  void dispose() {
+    _image?.dispose();
+    _image = null;
+  }
+}
+
+/// For testing only, clear all pending rasters.
+@visibleForTesting
+void debugClearRasteCaches() {
+  if (!kDebugMode) {
+    return;
+  }
+  RenderVectorGraphic._liveRasterCache.clear();
+}
+
 /// A render object which draws a vector graphic instance as a raster.
 class RenderVectorGraphic extends RenderBox {
   /// Create a new [RenderVectorGraphic].
   RenderVectorGraphic(
     this._pictureInfo,
+    this._assetKey,
     this._colorFilter,
     this._devicePixelRatio,
     this._opacity,
@@ -23,6 +85,21 @@ class RenderVectorGraphic extends RenderBox {
   ) {
     _opacity?.addListener(_updateOpacity);
     _updateOpacity();
+  }
+
+  static final Map<RasterKey, RasterData> _liveRasterCache =
+      <RasterKey, RasterData>{};
+
+  /// A key that uniquely identifies the [pictureInfo] used for this vg.
+  Object get assetKey => _assetKey;
+  Object _assetKey;
+  set assetKey(Object value) {
+    if (value == assetKey) {
+      return;
+    }
+    _assetKey = value;
+    // Dont call mark needs paint here since a change in just the asset key
+    // isn't sufficient to force a re-draw.
   }
 
   /// The [PictureInfo] which contains the vector graphic and size to draw.
@@ -33,7 +110,7 @@ class RenderVectorGraphic extends RenderBox {
       return;
     }
     _pictureInfo = value;
-    _invalidateRaster();
+    markNeedsPaint();
   }
 
   /// An optional [ColorFilter] to apply to the rasterized vector graphic.
@@ -55,7 +132,7 @@ class RenderVectorGraphic extends RenderBox {
       return;
     }
     _devicePixelRatio = value;
-    _invalidateRaster();
+    markNeedsPaint();
   }
 
   double _opacityValue = 1.0;
@@ -104,7 +181,7 @@ class RenderVectorGraphic extends RenderBox {
       return;
     }
     _scale = value;
-    _invalidateRaster();
+    markNeedsPaint();
   }
 
   @override
@@ -118,35 +195,10 @@ class RenderVectorGraphic extends RenderBox {
     return constraints.smallest;
   }
 
-  void _invalidateRaster() {
-    _lastRasterizedSize = null;
-    markNeedsPaint();
-  }
-
-  /// Visible for testing only.
-  @visibleForTesting
-  Future<void>? get pendingRasterUpdate {
-    if (kReleaseMode) {
-      return null;
-    }
-    return _pendingRasterUpdate;
-  }
-
-  Future<void>? _pendingRasterUpdate;
-  bool _disposed = false;
-
-  // Re-create the raster for a given vector graphic if the target size
-  // is sufficiently different.
-  Future<void> _maybeUpdateRaster(Size desiredSize) async {
-    final int scaledWidth =
-        (pictureInfo.size.width * devicePixelRatio / scale).round();
-    final int scaledHeight =
-        (pictureInfo.size.height * devicePixelRatio / scale).round();
-    if (_lastRasterizedSize != null &&
-        _lastRasterizedSize!.width == scaledWidth &&
-        _lastRasterizedSize!.height == scaledHeight) {
-      return;
-    }
+  static RasterData _createRaster(
+      RasterKey key, double scaleFactor, PictureInfo info) {
+    final int scaledWidth = key.width;
+    final int scaledHeight = key.height;
     // In order to scale a picture, it must be placed in a new picture
     // with a transform applied. Surprisingly, the height and width
     // arguments of Picture.toImage do not control the resolution that the
@@ -155,24 +207,61 @@ class RenderVectorGraphic extends RenderBox {
     final ui.PictureRecorder recorder = ui.PictureRecorder();
     final ui.Canvas canvas = ui.Canvas(recorder);
 
-    canvas.scale(devicePixelRatio / scale);
-    canvas.drawPicture(pictureInfo.picture);
+    canvas.scale(scaleFactor);
+    canvas.drawPicture(info.picture);
     final ui.Picture rasterPicture = recorder.endRecording();
 
-    final ui.Image result =
-        await rasterPicture.toImage(scaledWidth, scaledHeight);
-    if (_disposed) {
-      result.dispose();
-      return;
-    }
-    _currentImage?.dispose();
-    _currentImage = result;
-    _lastRasterizedSize = Size(scaledWidth.toDouble(), scaledHeight.toDouble());
-    markNeedsPaint();
+    final ui.Image pending =
+        rasterPicture.toImageSync(scaledWidth, scaledHeight);
+    return RasterData(pending, 0, key);
   }
 
-  Size? _lastRasterizedSize;
-  ui.Image? _currentImage;
+  void _maybeReleaseRaster(RasterData? data) {
+    if (data == null) {
+      return;
+    }
+    data.count -= 1;
+    if (data.count == 0 && _liveRasterCache.containsKey(data.key)) {
+      _liveRasterCache.remove(data.key);
+      data.dispose();
+    }
+  }
+
+  // Re-create the raster for a given vector graphic if the target size
+  // is sufficiently different. Returns `null` if rasterData has been
+  // updated immediately.
+  void _maybeUpdateRaster() {
+    final int scaledWidth =
+        (pictureInfo.size.width * devicePixelRatio / scale).round();
+    final int scaledHeight =
+        (pictureInfo.size.height * devicePixelRatio / scale).round();
+    final RasterKey key = RasterKey(assetKey, scaledWidth, scaledHeight);
+
+    // First check if the raster is available synchronously. This also handles
+    // a no-op change that would resolve to an identical picture.
+    if (_liveRasterCache.containsKey(key)) {
+      final RasterData data = _liveRasterCache[key]!;
+      if (data != _rasterData) {
+        _maybeReleaseRaster(_rasterData);
+        data.count += 1;
+      }
+      _rasterData = data;
+      return;
+    }
+    final RasterData data =
+        _createRaster(key, devicePixelRatio / scale, pictureInfo);
+    data.count += 1;
+
+    assert(!_liveRasterCache.containsKey(key));
+    assert(data.count == 1);
+    assert(!debugDisposed!);
+
+    _liveRasterCache[key] = data;
+    _maybeReleaseRaster(_rasterData);
+    _rasterData = data;
+  }
+
+  RasterData? _rasterData;
 
   @override
   void attach(covariant PipelineOwner owner) {
@@ -189,9 +278,7 @@ class RenderVectorGraphic extends RenderBox {
 
   @override
   void dispose() {
-    _disposed = true;
-    _currentImage?.dispose();
-    _currentImage = null;
+    _maybeReleaseRaster(_rasterData);
     _opacity?.removeListener(_updateOpacity);
     super.dispose();
   }
@@ -209,11 +296,10 @@ class RenderVectorGraphic extends RenderBox {
       return;
     }
 
-    final ui.Image? image = _currentImage;
-    _pendingRasterUpdate = _maybeUpdateRaster(size);
-    if (image == null || _lastRasterizedSize == null) {
-      return;
-    }
+    _maybeUpdateRaster();
+    final ui.Image image = _rasterData!.image;
+    final int width = _rasterData!.key.width;
+    final int height = _rasterData!.key.height;
 
     // Use `FilterQuality.low` to scale the image, which corresponds to
     // bilinear interpolation.
@@ -225,8 +311,8 @@ class RenderVectorGraphic extends RenderBox {
     final Rect src = ui.Rect.fromLTWH(
       0,
       0,
-      _lastRasterizedSize!.width,
-      _lastRasterizedSize!.height,
+      width.toDouble(),
+      height.toDouble(),
     );
     final Rect dst = ui.Rect.fromLTWH(
       offset.dx,
@@ -234,6 +320,7 @@ class RenderVectorGraphic extends RenderBox {
       pictureInfo.size.width,
       pictureInfo.size.height,
     );
+
     context.canvas.drawImageRect(
       image,
       src,

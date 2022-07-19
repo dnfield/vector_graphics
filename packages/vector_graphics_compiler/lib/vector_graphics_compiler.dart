@@ -23,6 +23,7 @@ export 'src/svg/theme.dart';
 export 'src/vector_instructions.dart';
 export 'src/svg/tesselator.dart' show initializeLibTesselator;
 export 'src/svg/path_ops.dart' show initializeLibPathOps;
+
 export 'src/initialize_tessellator.dart'
     show initializeTessellatorFromFlutterCache;
 export 'src/initialize_path_ops.dart' show initializePathOpsFromFlutterCache;

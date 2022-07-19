@@ -1,7 +1,6 @@
 import 'dart:collection';
 
 import 'package:meta/meta.dart';
-import 'package:vector_graphics_compiler/src/svg/masking_optimizer.dart';
 import 'package:vector_graphics_compiler/src/svg/tessellator.dart';
 
 import 'package:xml/xml_events.dart';
@@ -640,14 +639,12 @@ class SvgParser {
         OpacityPeepholeOptimizer();
 
     final Tessellator tessellator = Tessellator();
-    final MaskingOptimizer maskingOptimizer = MaskingOptimizer();
 
     Node newRoot = _root!.accept(resolvingVisitor, AffineMatrix.identity);
     if (isTesselatorInitialized) {
       newRoot = newRoot.accept(tessellator, null);
     }
 
-    newRoot = maskingOptimizer.apply(newRoot);
     newRoot = opacityPeepholeOptimizer.apply(newRoot);
 
     /// Convert to vector instructions

@@ -17,7 +17,7 @@ bool initializePathOpsFromFlutterCache() {
   final String executable;
   if (Platform.isWindows) {
     platform = 'windows-x64';
-    executable = 'libpathops.dll';
+    executable = 'path_ops.dll';
   } else if (Platform.isMacOS) {
     platform = 'darwin-x64';
     executable = 'libpathops.dylib';

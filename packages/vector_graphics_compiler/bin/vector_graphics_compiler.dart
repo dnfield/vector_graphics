@@ -15,10 +15,21 @@ final ArgParser argParser = ArgParser()
     valueHelp: 'path/to/libtessellator.dylib',
     hide: true,
   )
+  ..addOption(
+    'libpathops',
+    help: 'The path to a libpathops dynamic library',
+    valueHelp: 'path/to/libpathops.dylib',
+    hide: true,
+  )
   ..addFlag(
     'tessellate',
     help: 'Convert path fills into a tessellated shape. This will improve '
         'raster times at the cost of slightly larger file sizes.',
+  )
+  ..addFlag(
+    'pathops',
+    help: 'Allows for pathops library to be used when'
+        'calculating path intersections.',
   )
   ..addOption('input',
       abbr: 'i',

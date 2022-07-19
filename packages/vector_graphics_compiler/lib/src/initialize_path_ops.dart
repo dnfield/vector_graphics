@@ -20,7 +20,7 @@ bool initializePathOpsFromFlutterCache() {
     executable = 'path_ops.dll';
   } else if (Platform.isMacOS) {
     platform = 'darwin-x64';
-    executable = 'libpathops.dylib';
+    executable = 'libpath_ops.dylib';
   } else if (Platform.isLinux) {
     platform = 'linux-x64';
     executable = 'libpathops.so';

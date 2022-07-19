@@ -18,7 +18,7 @@ final ArgParser argParser = ArgParser()
   ..addOption(
     'libpathops',
     help: 'The path to a libpathops dynamic library',
-    valueHelp: 'path/to/libpathops.dylib',
+    valueHelp: 'path/to/libpath_ops.dylib',
     hide: true,
   )
   ..addFlag(

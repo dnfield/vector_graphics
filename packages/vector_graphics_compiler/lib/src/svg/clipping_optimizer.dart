@@ -1,11 +1,7 @@
-import 'dart:async';
-
+import 'dart:core';
 import 'package:vector_graphics_compiler/src/svg/node.dart';
 import 'package:vector_graphics_compiler/src/svg/resolver.dart';
 import 'package:vector_graphics_compiler/src/svg/visitor.dart';
-import 'dart:core';
-import 'package:test/test.dart';
-import 'package:vector_graphics_compiler/src/svg/parser.dart';
 import 'package:vector_graphics_compiler/src/svg/masking_optimizer.dart';
 import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 import 'package:path_ops/path_ops.dart' as path_ops;
@@ -69,8 +65,11 @@ class ClippingOptimizer extends Visitor<_Result, Node>
   }
 
   @override
-  _Result visitChildren(Node node, void data) {
-    throw UnimplementedError();
+  _Result visitChildren(Node node, _Result data) {
+    if (node is ResolvedClipNode) {
+      data = node.child.accept(this, data);
+    }
+    return data;
   }
 
   @override

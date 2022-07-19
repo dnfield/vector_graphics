@@ -196,7 +196,7 @@ class Path implements PathProxy {
   ///
   /// This list determines the meaning of the [points] array.
 
-  Map<int, PathVerb> pathVerbDict = <int, PathVerb>{
+  static const Map<int, PathVerb> pathVerbDict = <int, PathVerb>{
     0: PathVerb.moveTo,
     1: PathVerb.lineTo,
     4: PathVerb.cubicTo,

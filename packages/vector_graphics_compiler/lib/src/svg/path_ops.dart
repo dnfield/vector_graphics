@@ -54,9 +54,6 @@ enum PathVerb {
   /// A straight line from the current point to the specified point.
   lineTo,
 
-  _quadTo,
-  _conicTo,
-
   /// A cubic bezier curve from the current point.
   ///
   /// The next two points are used as the first control point. The next two
@@ -173,12 +170,6 @@ class Path implements PathProxy {
           break;
         case PathVerb.lineTo:
           proxy.lineTo(points[index++], points[index++]);
-          break;
-        case PathVerb._quadTo:
-          assert(false);
-          break;
-        case PathVerb._conicTo:
-          assert(false);
           break;
         case PathVerb.cubicTo:
           proxy.cubicTo(

@@ -23,8 +23,8 @@ class _Result {
   _Result(this.node);
 
   final Node node;
-  final List<Node> children = [];
-  Node parent = _EmptyNode();
+  final List<Node> children = <Node>[];
+  Node parent = const _EmptyNode();
   bool deleteMaskNode = true;
 }
 
@@ -101,7 +101,7 @@ path_ops.Path toPathOpsPath(Path path) {
 
 /// Converts path_ops Path to VectorGraphicsPath.
 Path toVectorGraphicsPath(path_ops.Path path) {
-  final List<PathCommand> newCommands = [];
+  final List<PathCommand> newCommands = <PathCommand>[];
 
   int index = 0;
   final Float32List points = path.points;
@@ -161,7 +161,7 @@ ResolvedPathNode? getSingleChild(Node node) {
 class MaskingOptimizer extends Visitor<_Result, Node>
     with ErrorOnUnResolvedNode<_Result, Node> {
   /// List of masks to add.
-  final List<ResolvedPathNode> masksToApply = [];
+  final List<ResolvedPathNode> masksToApply = <ResolvedPathNode>[];
 
   /// Applies visitor to given node.
   Node apply(Node node) {
@@ -193,7 +193,7 @@ class MaskingOptimizer extends Visitor<_Result, Node>
     return _result;
   }
 
-  @override
+  /// Visits applies optimizer to all children of ResolvedMaskNode.
   _Result visitChildren(Node node, _Result data) {
     if (node is ResolvedMaskNode) {
       data = node.child.accept(this, data);
@@ -203,7 +203,7 @@ class MaskingOptimizer extends Visitor<_Result, Node>
 
   @override
   _Result visitParentNode(ParentNode parentNode, Node data) {
-    final List<Node> newChildren = [];
+    final List<Node> newChildren = <Node>[];
     bool deleteMaskNode = true;
 
     for (Node child in parentNode.children) {
@@ -326,7 +326,7 @@ class MaskingOptimizer extends Visitor<_Result, Node>
 
   @override
   _Result visitSaveLayerNode(SaveLayerNode layerNode, Node data) {
-    final List<Node> newChildren = [];
+    final List<Node> newChildren = <Node>[];
     for (Node child in layerNode.children) {
       final _Result childResult = child.accept(this, layerNode);
       newChildren.add(childResult.node);
@@ -341,7 +341,7 @@ class MaskingOptimizer extends Visitor<_Result, Node>
 
   @override
   _Result visitViewportNode(ViewportNode viewportNode, void data) {
-    final List<Node> children = [];
+    final List<Node> children = <Node>[];
     for (Node child in viewportNode.children) {
       final _Result childNode = child.accept(this, viewportNode);
       children.add(childNode.node);

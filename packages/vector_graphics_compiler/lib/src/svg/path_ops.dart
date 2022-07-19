@@ -307,7 +307,6 @@ final ffi.DynamicLibrary _dylib = () {
   }
   throw UnsupportedError('Unknown platform: ${Platform.operatingSystem}');
 }();
-late final String _dylibPath;
 
 /// Whether or not PathOps should be used.
 bool get isPathOpsInitialized => _isPathOpsInitialized;
@@ -315,7 +314,6 @@ bool _isPathOpsInitialized = false;
 
 /// Initialize the libpathops dynamic library.
 void initializeLibPathOps(String path) {
-  _dylibPath = path;
   _isPathOpsInitialized = true;
 }
 

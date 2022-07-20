@@ -1,4 +1,7 @@
-import 'dart:core';
+// Copyright 2013 The Flutter Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style license that can be
+// found in the LICENSE file.
+
 import 'package:vector_graphics_compiler/src/svg/node.dart';
 import 'package:vector_graphics_compiler/src/svg/resolver.dart';
 import 'package:vector_graphics_compiler/src/svg/visitor.dart';

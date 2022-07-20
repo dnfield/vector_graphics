@@ -27,8 +27,6 @@ dev_dependencies:
     sdk: flutter
   vector_graphics:
     path: ../vector_graphics
-  path_ops:
-    path: /Users/chiamaka/engine/tools/path_ops/dart
 
 dependency_overrides:
   vector_graphics_codec:

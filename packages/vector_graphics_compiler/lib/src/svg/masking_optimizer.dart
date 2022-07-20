@@ -5,26 +5,14 @@ import 'package:vector_graphics_compiler/src/svg/node.dart';
 import 'package:vector_graphics_compiler/src/svg/resolver.dart';
 import 'package:vector_graphics_compiler/src/svg/visitor.dart';
 import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
-import 'package:path_ops/path_ops.dart' as path_ops;
-
-class _EmptyNode extends Node {
-  const _EmptyNode();
-
-  @override
-  S accept<S, V>(Visitor<S, V> visitor, V data) {
-    return visitor.visitEmptyNode(this, data);
-  }
-
-  @override
-  void visitChildren(NodeCallback visitor) {}
-}
+import 'package:vector_graphics_compiler/src/svg/path_ops.dart' as path_ops;
 
 class _Result {
   _Result(this.node);
 
   final Node node;
-  final List<Node> children = [];
-  Node parent = _EmptyNode();
+  final List<Node> children = <Node>[];
+  Node parent = Node.empty;
   bool deleteMaskNode = true;
 }
 
@@ -32,14 +20,10 @@ class _Result {
 path_ops.FillType toPathOpsFillTyle(PathFillType fill) {
   switch (fill) {
     case PathFillType.evenOdd:
-      {
-        return path_ops.FillType.evenOdd;
-      }
+      return path_ops.FillType.evenOdd;
 
     case PathFillType.nonZero:
-      {
-        return path_ops.FillType.nonZero;
-      }
+      return path_ops.FillType.nonZero;
   }
 }
 
@@ -47,14 +31,10 @@ path_ops.FillType toPathOpsFillTyle(PathFillType fill) {
 PathFillType toVectorGraphicsFillType(path_ops.FillType fill) {
   switch (fill) {
     case path_ops.FillType.evenOdd:
-      {
-        return PathFillType.evenOdd;
-      }
+      return PathFillType.evenOdd;
 
     case path_ops.FillType.nonZero:
-      {
-        return PathFillType.nonZero;
-      }
+      return PathFillType.nonZero;
   }
 }
 
@@ -65,33 +45,20 @@ path_ops.Path toPathOpsPath(Path path) {
   for (PathCommand command in path.commands) {
     switch (command.type) {
       case PathCommandType.line:
-        {
-          final LineToCommand lineToCommand = command as LineToCommand;
-          newPath.lineTo(lineToCommand.x, lineToCommand.y);
-        }
+        final LineToCommand lineToCommand = command as LineToCommand;
+        newPath.lineTo(lineToCommand.x, lineToCommand.y);
         break;
       case PathCommandType.cubic:
-        {
-          final CubicToCommand cubicToCommand = command as CubicToCommand;
-          newPath.cubicTo(
-              cubicToCommand.x1,
-              cubicToCommand.y1,
-              cubicToCommand.x2,
-              cubicToCommand.y2,
-              cubicToCommand.x3,
-              cubicToCommand.y3);
-        }
+        final CubicToCommand cubicToCommand = command as CubicToCommand;
+        newPath.cubicTo(cubicToCommand.x1, cubicToCommand.y1, cubicToCommand.x2,
+            cubicToCommand.y2, cubicToCommand.x3, cubicToCommand.y3);
         break;
       case PathCommandType.move:
-        {
-          final MoveToCommand moveToCommand = command as MoveToCommand;
-          newPath.moveTo(moveToCommand.x, moveToCommand.y);
-        }
+        final MoveToCommand moveToCommand = command as MoveToCommand;
+        newPath.moveTo(moveToCommand.x, moveToCommand.y);
         break;
       case PathCommandType.close:
-        {
-          newPath.close();
-        }
+        newPath.close();
         break;
     }
   }
@@ -101,33 +68,27 @@ path_ops.Path toPathOpsPath(Path path) {
 
 /// Converts path_ops Path to VectorGraphicsPath.
 Path toVectorGraphicsPath(path_ops.Path path) {
-  final List<PathCommand> newCommands = [];
+  final List<PathCommand> newCommands = <PathCommand>[];
 
   int index = 0;
   final Float32List points = path.points;
   for (path_ops.PathVerb verb in path.verbs.toList()) {
     switch (verb) {
       case path_ops.PathVerb.moveTo:
-        {
-          newCommands.add(MoveToCommand(points[index++], points[index++]));
-        }
+        newCommands.add(MoveToCommand(points[index++], points[index++]));
         break;
       case path_ops.PathVerb.lineTo:
-        {
-          newCommands.add(LineToCommand(points[index++], points[index++]));
-        }
+        newCommands.add(LineToCommand(points[index++], points[index++]));
         break;
       case path_ops.PathVerb.cubicTo:
-        {
-          newCommands.add(CubicToCommand(
-            points[index++],
-            points[index++],
-            points[index++],
-            points[index++],
-            points[index++],
-            points[index++],
-          ));
-        }
+        newCommands.add(CubicToCommand(
+          points[index++],
+          points[index++],
+          points[index++],
+          points[index++],
+          points[index++],
+          points[index++],
+        ));
         break;
       case path_ops.PathVerb.close:
         newCommands.add(const CloseCommand());
@@ -146,22 +107,21 @@ Path toVectorGraphicsPath(path_ops.Path path) {
 ResolvedPathNode? getSingleChild(Node node) {
   if (node is ResolvedPathNode) {
     return node;
-  } else if (node is ParentNode) {
-    if (node.children.length == 1) {
-      return getSingleChild(node.children.first);
-    } else {
-      return null;
-    }
-  } else {
-    return null;
+  } else if (node is ParentNode && node.children.length == 1) {
+    return getSingleChild(node.children.first);
   }
+  return null;
 }
 
 /// Simplifies masking operations into PathNodes.
+/// Note this will not optimize cases where 'stroke-width' is set,
+/// there are multiple path nodes in a mask or cases where
+/// the intersection of the mask and the path results in
+/// Path.commands being empty.
 class MaskingOptimizer extends Visitor<_Result, Node>
     with ErrorOnUnResolvedNode<_Result, Node> {
   /// List of masks to add.
-  final List<ResolvedPathNode> masksToApply = [];
+  final List<ResolvedPathNode> masksToApply = <ResolvedPathNode>[];
 
   /// Applies visitor to given node.
   Node apply(Node node) {
@@ -193,7 +153,7 @@ class MaskingOptimizer extends Visitor<_Result, Node>
     return _result;
   }
 
-  @override
+  /// Visits applies optimizer to all children of ResolvedMaskNode.
   _Result visitChildren(Node node, _Result data) {
     if (node is ResolvedMaskNode) {
       data = node.child.accept(this, data);
@@ -203,7 +163,7 @@ class MaskingOptimizer extends Visitor<_Result, Node>
 
   @override
   _Result visitParentNode(ParentNode parentNode, Node data) {
-    final List<Node> newChildren = [];
+    final List<Node> newChildren = <Node>[];
     bool deleteMaskNode = true;
 
     for (Node child in parentNode.children) {
@@ -247,7 +207,7 @@ class MaskingOptimizer extends Visitor<_Result, Node>
       final _Result childResult = maskNode.child.accept(this, maskNode);
       masksToApply.removeLast();
 
-      if (childResult.deleteMaskNode == true) {
+      if (childResult.deleteMaskNode) {
         _result = _Result(childResult.node);
       } else {
         final ResolvedMaskNode newMaskNode = ResolvedMaskNode(
@@ -285,11 +245,9 @@ class MaskingOptimizer extends Visitor<_Result, Node>
     bool hasStrokeWidth = false;
     bool deleteMaskNode = true;
 
-    if (pathNode.paint.stroke != null) {
-      if (pathNode.paint.stroke!.width != null) {
-        hasStrokeWidth = true;
-        _result.deleteMaskNode = false;
-      }
+    if (pathNode.paint.stroke?.width != null) {
+      hasStrokeWidth = true;
+      _result.deleteMaskNode = false;
     }
 
     if (masksToApply.isNotEmpty && !hasStrokeWidth) {
@@ -326,7 +284,7 @@ class MaskingOptimizer extends Visitor<_Result, Node>
 
   @override
   _Result visitSaveLayerNode(SaveLayerNode layerNode, Node data) {
-    final List<Node> newChildren = [];
+    final List<Node> newChildren = <Node>[];
     for (Node child in layerNode.children) {
       final _Result childResult = child.accept(this, layerNode);
       newChildren.add(childResult.node);
@@ -341,7 +299,7 @@ class MaskingOptimizer extends Visitor<_Result, Node>
 
   @override
   _Result visitViewportNode(ViewportNode viewportNode, void data) {
-    final List<Node> children = [];
+    final List<Node> children = <Node>[];
     for (Node child in viewportNode.children) {
       final _Result childNode = child.accept(this, viewportNode);
       children.add(childNode.node);

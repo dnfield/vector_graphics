@@ -247,7 +247,7 @@ class MaskingOptimizer extends Visitor<_Result, Node>
       final _Result childResult = maskNode.child.accept(this, maskNode);
       masksToApply.removeLast();
 
-      if (childResult.deleteMaskNode == true) {
+      if (childResult.deleteMaskNode) {
         _result = _Result(childResult.node);
       } else {
         final ResolvedMaskNode newMaskNode = ResolvedMaskNode(

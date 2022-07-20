@@ -3,7 +3,6 @@ import 'package:vector_graphics_compiler/src/svg/node.dart';
 import 'package:vector_graphics_compiler/src/svg/clipping_optimizer.dart';
 import 'package:vector_graphics_compiler/src/svg/parser.dart';
 import 'package:vector_graphics_compiler/src/svg/resolver.dart';
-import 'dart:core';
 import 'package:vector_graphics_compiler/src/geometry/matrix.dart';
 
 Future<Node> parseAndResolve(String source) async {

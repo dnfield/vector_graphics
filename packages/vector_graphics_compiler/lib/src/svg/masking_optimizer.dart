@@ -7,24 +7,12 @@ import 'package:vector_graphics_compiler/src/svg/visitor.dart';
 import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 import 'package:vector_graphics_compiler/src/svg/path_ops.dart' as path_ops;
 
-class _EmptyNode extends Node {
-  const _EmptyNode();
-
-  @override
-  S accept<S, V>(Visitor<S, V> visitor, V data) {
-    return visitor.visitEmptyNode(this, data);
-  }
-
-  @override
-  void visitChildren(NodeCallback visitor) {}
-}
-
 class _Result {
   _Result(this.node);
 
   final Node node;
   final List<Node> children = <Node>[];
-  Node parent = const _EmptyNode();
+  Node parent = Node.empty;
   bool deleteMaskNode = true;
 }
 
@@ -32,14 +20,10 @@ class _Result {
 path_ops.FillType toPathOpsFillTyle(PathFillType fill) {
   switch (fill) {
     case PathFillType.evenOdd:
-      {
-        return path_ops.FillType.evenOdd;
-      }
+      return path_ops.FillType.evenOdd;
 
     case PathFillType.nonZero:
-      {
-        return path_ops.FillType.nonZero;
-      }
+      return path_ops.FillType.nonZero;
   }
 }
 
@@ -47,14 +31,10 @@ path_ops.FillType toPathOpsFillTyle(PathFillType fill) {
 PathFillType toVectorGraphicsFillType(path_ops.FillType fill) {
   switch (fill) {
     case path_ops.FillType.evenOdd:
-      {
-        return PathFillType.evenOdd;
-      }
+      return PathFillType.evenOdd;
 
     case path_ops.FillType.nonZero:
-      {
-        return PathFillType.nonZero;
-      }
+      return PathFillType.nonZero;
   }
 }
 
@@ -65,33 +45,20 @@ path_ops.Path toPathOpsPath(Path path) {
   for (PathCommand command in path.commands) {
     switch (command.type) {
       case PathCommandType.line:
-        {
-          final LineToCommand lineToCommand = command as LineToCommand;
-          newPath.lineTo(lineToCommand.x, lineToCommand.y);
-        }
+        final LineToCommand lineToCommand = command as LineToCommand;
+        newPath.lineTo(lineToCommand.x, lineToCommand.y);
         break;
       case PathCommandType.cubic:
-        {
-          final CubicToCommand cubicToCommand = command as CubicToCommand;
-          newPath.cubicTo(
-              cubicToCommand.x1,
-              cubicToCommand.y1,
-              cubicToCommand.x2,
-              cubicToCommand.y2,
-              cubicToCommand.x3,
-              cubicToCommand.y3);
-        }
+        final CubicToCommand cubicToCommand = command as CubicToCommand;
+        newPath.cubicTo(cubicToCommand.x1, cubicToCommand.y1, cubicToCommand.x2,
+            cubicToCommand.y2, cubicToCommand.x3, cubicToCommand.y3);
         break;
       case PathCommandType.move:
-        {
-          final MoveToCommand moveToCommand = command as MoveToCommand;
-          newPath.moveTo(moveToCommand.x, moveToCommand.y);
-        }
+        final MoveToCommand moveToCommand = command as MoveToCommand;
+        newPath.moveTo(moveToCommand.x, moveToCommand.y);
         break;
       case PathCommandType.close:
-        {
-          newPath.close();
-        }
+        newPath.close();
         break;
     }
   }
@@ -108,26 +75,20 @@ Path toVectorGraphicsPath(path_ops.Path path) {
   for (path_ops.PathVerb verb in path.verbs.toList()) {
     switch (verb) {
       case path_ops.PathVerb.moveTo:
-        {
-          newCommands.add(MoveToCommand(points[index++], points[index++]));
-        }
+        newCommands.add(MoveToCommand(points[index++], points[index++]));
         break;
       case path_ops.PathVerb.lineTo:
-        {
-          newCommands.add(LineToCommand(points[index++], points[index++]));
-        }
+        newCommands.add(LineToCommand(points[index++], points[index++]));
         break;
       case path_ops.PathVerb.cubicTo:
-        {
-          newCommands.add(CubicToCommand(
-            points[index++],
-            points[index++],
-            points[index++],
-            points[index++],
-            points[index++],
-            points[index++],
-          ));
-        }
+        newCommands.add(CubicToCommand(
+          points[index++],
+          points[index++],
+          points[index++],
+          points[index++],
+          points[index++],
+          points[index++],
+        ));
         break;
       case path_ops.PathVerb.close:
         newCommands.add(const CloseCommand());
@@ -146,18 +107,17 @@ Path toVectorGraphicsPath(path_ops.Path path) {
 ResolvedPathNode? getSingleChild(Node node) {
   if (node is ResolvedPathNode) {
     return node;
-  } else if (node is ParentNode) {
-    if (node.children.length == 1) {
-      return getSingleChild(node.children.first);
-    } else {
-      return null;
-    }
-  } else {
-    return null;
+  } else if (node is ParentNode && node.children.length == 1) {
+    return getSingleChild(node.children.first);
   }
+  return null;
 }
 
 /// Simplifies masking operations into PathNodes.
+/// Note this will not optimize cases where 'stroke-width' is set,
+/// there are multiple path nodes in a mask or cases where
+/// the intersection of the mask and the path results in
+/// Path.commands being empty.
 class MaskingOptimizer extends Visitor<_Result, Node>
     with ErrorOnUnResolvedNode<_Result, Node> {
   /// List of masks to add.
@@ -285,11 +245,9 @@ class MaskingOptimizer extends Visitor<_Result, Node>
     bool hasStrokeWidth = false;
     bool deleteMaskNode = true;
 
-    if (pathNode.paint.stroke != null) {
-      if (pathNode.paint.stroke!.width != null) {
-        hasStrokeWidth = true;
-        _result.deleteMaskNode = false;
-      }
+    if (pathNode.paint.stroke?.width != null) {
+      hasStrokeWidth = true;
+      _result.deleteMaskNode = false;
     }
 
     if (masksToApply.isNotEmpty && !hasStrokeWidth) {

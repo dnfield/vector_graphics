@@ -1,4 +1,3 @@
-import 'dart:core';
 import 'dart:typed_data';
 
 import 'package:vector_graphics_compiler/src/svg/node.dart';

@@ -4,27 +4,15 @@ import 'package:vector_graphics_compiler/src/svg/resolver.dart';
 import 'package:vector_graphics_compiler/src/svg/visitor.dart';
 import 'package:vector_graphics_compiler/src/svg/masking_optimizer.dart';
 import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
-import 'package:path_ops/path_ops.dart' as path_ops;
-
-class _EmptyNode extends Node {
-  const _EmptyNode();
-
-  @override
-  S accept<S, V>(Visitor<S, V> visitor, V data) {
-    return visitor.visitEmptyNode(this, data);
-  }
-
-  @override
-  void visitChildren(NodeCallback visitor) {}
-}
+import 'package:vector_graphics_compiler/src/svg/path_ops.dart' as path_ops;
 
 class _Result {
   _Result(this.node);
 
   final Node node;
   int childCount = 0;
-  List<Node> children = [];
-  Node parent = _EmptyNode();
+  List<Node> children = <Node>[];
+  Node parent = Node.empty;
   bool deleteClipNode = true;
 }
 
@@ -32,7 +20,7 @@ class _Result {
 class ClippingOptimizer extends Visitor<_Result, Node>
     with ErrorOnUnResolvedNode<_Result, Node> {
   ///List of clips to apply.
-  List<Path> clipsToApply = [];
+  List<Path> clipsToApply = <Path>[];
 
   /// Applies visitor to given node.
   Node apply(Node node) {
@@ -64,7 +52,7 @@ class ClippingOptimizer extends Visitor<_Result, Node>
     return _result;
   }
 
-  @override
+  /// Visits applies optimizer to all children of ResolvedClipNode.
   _Result visitChildren(Node node, _Result data) {
     if (node is ResolvedClipNode) {
       data = node.child.accept(this, data);
@@ -74,7 +62,7 @@ class ClippingOptimizer extends Visitor<_Result, Node>
 
   @override
   _Result visitParentNode(ParentNode parentNode, Node data) {
-    final List<Node> newChildren = [];
+    final List<Node> newChildren = <Node>[];
     bool deleteClipNode = true;
 
     for (Node child in parentNode.children) {
@@ -91,14 +79,12 @@ class ClippingOptimizer extends Visitor<_Result, Node>
     final _Result _result = _Result(newParentNode);
 
     _result.deleteClipNode = deleteClipNode;
-
     return _result;
   }
 
   @override
   _Result visitMaskNode(MaskNode maskNode, Node data) {
     final _Result _result = _Result(maskNode);
-
     return _result;
   }
 
@@ -158,11 +144,9 @@ class ClippingOptimizer extends Visitor<_Result, Node>
     bool hasStrokeWidth = false;
     bool deleteClipNode = true;
 
-    if (pathNode.paint.stroke != null) {
-      if (pathNode.paint.stroke!.width != null) {
-        hasStrokeWidth = true;
-        _result.deleteClipNode = false;
-      }
+    if (pathNode.paint.stroke?.width != null) {
+      hasStrokeWidth = true;
+      _result.deleteClipNode = false;
     }
 
     if (clipsToApply.isNotEmpty && !hasStrokeWidth) {
@@ -199,7 +183,7 @@ class ClippingOptimizer extends Visitor<_Result, Node>
 
   @override
   _Result visitSaveLayerNode(SaveLayerNode layerNode, Node data) {
-    final List<Node> newChildren = [];
+    final List<Node> newChildren = <Node>[];
     for (Node child in layerNode.children) {
       final _Result childResult = child.accept(this, layerNode);
       newChildren.add(childResult.node);
@@ -215,7 +199,7 @@ class ClippingOptimizer extends Visitor<_Result, Node>
 
   @override
   _Result visitViewportNode(ViewportNode viewportNode, void data) {
-    final List<Node> children = [];
+    final List<Node> children = <Node>[];
     for (Node child in viewportNode.children) {
       final _Result childNode = child.accept(this, viewportNode);
       children.add(childNode.node);

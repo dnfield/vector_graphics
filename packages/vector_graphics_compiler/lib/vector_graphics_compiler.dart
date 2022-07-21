@@ -34,7 +34,7 @@ Future<VectorInstructions> parse(
   String key = '',
   bool warningsAsErrors = false,
   SvgTheme theme = const SvgTheme(),
-  bool enableMaskingOptimizer = true,
+  bool? enableMaskingOptimizer = true,
 }) async {
   final SvgParser parser = SvgParser(xml, theme, key, warningsAsErrors);
   parser.enableMaskingOptimizer = enableMaskingOptimizer;
@@ -97,7 +97,7 @@ Future<Uint8List> encodeSvg(String xml, String debugName,
     {bool? enableMaskingOptimizer}) async {
   const VectorGraphicsCodec codec = VectorGraphicsCodec();
   final VectorInstructions instructions = await parse(xml,
-      key: debugName, enableMaskingOptimizer: enableMaskingOptimizer!);
+      key: debugName, enableMaskingOptimizer: enableMaskingOptimizer);
   final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
 
   codec.writeSize(buffer, instructions.width, instructions.height);

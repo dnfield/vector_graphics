@@ -543,7 +543,7 @@ class SvgParser {
   final Queue<_SvgGroupTuple> _parentDrawables = ListQueue<_SvgGroupTuple>(10);
 
   /// Toggles whether MaskinOptimizer is enabled or disabled.
-  bool enableMaskingOptimizer = true;
+  bool? enableMaskingOptimizer = true;
   ViewportNode? _root;
   SvgAttributes _currentAttributes = SvgAttributes.empty;
   XmlStartElementEvent? _currentStartElement;
@@ -651,8 +651,12 @@ class SvgParser {
 
     newRoot = opacityPeepholeOptimizer.apply(newRoot);
 
-    if (enableMaskingOptimizer && path_ops.isPathOpsInitialized) {
-      newRoot = maskingOptimizer.apply(newRoot);
+    if (enableMaskingOptimizer != null) {
+      if (path_ops.isPathOpsInitialized) {
+        newRoot = maskingOptimizer.apply(newRoot);
+      } else {
+        throw Exception('PathOps library was not initialized.');
+      }
     }
 
     /// Convert to vector instructions

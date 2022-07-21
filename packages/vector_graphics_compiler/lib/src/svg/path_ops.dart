@@ -296,21 +296,6 @@ class Path implements PathProxy {
 
 final ffi.DynamicLibrary _dylib = ffi.DynamicLibrary.open(_dylibPath);
 late final String _dylibPath;
-/* 
-// TODO(dnfield): Figure out where to put this.
-// https://github.com/flutter/flutter/issues/99563
-final ffi.DynamicLibrary _dylib = () {
-  if (Platform.isWindows) {
-    return ffi.DynamicLibrary.open('path_ops.dll');
-  } else if (Platform.isIOS || Platform.isMacOS) {
-    return ffi.DynamicLibrary.open('libpath_ops.dylib');
-  } else if (Platform.isAndroid || Platform.isLinux) {
-    return ffi.DynamicLibrary.open('libpath_ops.so');
-  }
-  throw UnsupportedError('Unknown platform: ${Platform.operatingSystem}');
-}();
-
-*/
 
 /// Whether or not PathOps should be used.
 bool get isPathOpsInitialized => _isPathOpsInitialized;

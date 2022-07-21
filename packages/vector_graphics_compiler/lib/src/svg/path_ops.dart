@@ -7,7 +7,6 @@
 // ignore_for_file: camel_case_types, non_constant_identifier_names
 
 import 'dart:ffi' as ffi;
-import 'dart:io';
 import 'dart:typed_data';
 
 /// Determines the winding rule that decides how the interior of a Path is
@@ -295,18 +294,8 @@ class Path implements PathProxy {
   }
 }
 
-// TODO(dnfield): Figure out where to put this.
-// https://github.com/flutter/flutter/issues/99563
-final ffi.DynamicLibrary _dylib = () {
-  if (Platform.isWindows) {
-    return ffi.DynamicLibrary.open('path_ops.dll');
-  } else if (Platform.isIOS || Platform.isMacOS) {
-    return ffi.DynamicLibrary.open('libpath_ops.dylib');
-  } else if (Platform.isAndroid || Platform.isLinux) {
-    return ffi.DynamicLibrary.open('libpath_ops.so');
-  }
-  throw UnsupportedError('Unknown platform: ${Platform.operatingSystem}');
-}();
+final ffi.DynamicLibrary _dylib = ffi.DynamicLibrary.open(_dylibPath);
+late final String _dylibPath;
 
 /// Whether or not PathOps should be used.
 bool get isPathOpsInitialized => _isPathOpsInitialized;
@@ -314,6 +303,7 @@ bool _isPathOpsInitialized = false;
 
 /// Initialize the libpathops dynamic library.
 void initializeLibPathOps(String path) {
+  _dylibPath = path;
   _isPathOpsInitialized = true;
 }
 

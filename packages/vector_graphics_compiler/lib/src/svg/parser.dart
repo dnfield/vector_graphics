@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:meta/meta.dart';
 import 'package:vector_graphics_compiler/src/svg/tessellator.dart';
 import 'package:vector_graphics_compiler/src/svg/masking_optimizer.dart';
+import 'package:vector_graphics_compiler/src/svg/path_ops.dart' as path_ops;
 import 'package:xml/xml_events.dart';
 
 import '../geometry/basic_types.dart';
@@ -650,7 +651,7 @@ class SvgParser {
 
     newRoot = opacityPeepholeOptimizer.apply(newRoot);
 
-    if (enableMaskingOptimizer) {
+    if (enableMaskingOptimizer && path_ops.isPathOpsInitialized) {
       newRoot = maskingOptimizer.apply(newRoot);
     }
 

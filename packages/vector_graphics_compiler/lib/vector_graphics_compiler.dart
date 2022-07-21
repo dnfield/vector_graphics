@@ -35,9 +35,11 @@ Future<VectorInstructions> parse(
   bool warningsAsErrors = false,
   SvgTheme theme = const SvgTheme(),
   bool enableMaskingOptimizer = true,
+  bool enableClippingOptimizer = true,
 }) async {
   final SvgParser parser = SvgParser(xml, theme, key, warningsAsErrors);
   parser.enableMaskingOptimizer = enableMaskingOptimizer;
+  parser.enableClippingOptimizer = enableClippingOptimizer;
   return parser.parse();
 }
 
@@ -97,7 +99,8 @@ Future<Uint8List> encodeSvg(ArgConfig argConfig) async {
   const VectorGraphicsCodec codec = VectorGraphicsCodec();
   final VectorInstructions instructions = await parse(argConfig.xml,
       key: argConfig.arg,
-      enableMaskingOptimizer: argConfig.maskingOptimizerEnabled);
+      enableMaskingOptimizer: argConfig.maskingOptimizerEnabled,
+      enableClippingOptimizer: argConfig.clippingOptimizerEnabled);
   final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
 
   codec.writeSize(buffer, instructions.width, instructions.height);
@@ -272,4 +275,7 @@ class ArgConfig {
 
   /// Toggles whether or not the maskingOptimizer will be enabled.
   bool maskingOptimizerEnabled = true;
+
+  /// Toggles whether or not the clippingOptimizer will be enabled.
+  bool clippingOptimizerEnabled = true;
 }

@@ -31,6 +31,11 @@ final ArgParser argParser = ArgParser()
     help: 'Allows for masking optimizer to be enabled or disabled',
     defaultsTo: true,
   )
+  ..addFlag(
+    'optimize-clips',
+    help: 'Allows for clipping optimizer to be enabled or disabled',
+    defaultsTo: true,
+  )
   ..addOption('input',
       abbr: 'i',
       help: 'The path to a file containing a single SVG',
@@ -63,7 +68,7 @@ Future<void> main(List<String> args) async {
     }
   }
 
-  if (results['optimize-masks'] == true) {
+  if (results['optimize-masks'] == true || results['optimize-clips'] == true) {
     if (results.wasParsed('libpathops')) {
       initializeLibPathOps(results['libpathops'] as String);
     } else {
@@ -80,6 +85,9 @@ Future<void> main(List<String> args) async {
   final ArgConfig argConfig = ArgConfig(xml, args[0]);
   if (results['optimize-masks'] == false) {
     argConfig.maskingOptimizerEnabled = false;
+  }
+  if (results['optimize-clips'] == false) {
+    argConfig.clippingOptimizerEnabled = false;
   }
 
   final Uint8List bytes = await encodeSvg(argConfig);

@@ -1,6 +1,7 @@
 import 'dart:collection';
 
 import 'package:meta/meta.dart';
+import 'package:vector_graphics_compiler/src/svg/masking_optimizer_test.dart';
 import 'package:vector_graphics_compiler/src/svg/tessellator.dart';
 import 'package:vector_graphics_compiler/src/svg/masking_optimizer.dart';
 import 'package:vector_graphics_compiler/src/svg/path_ops.dart' as path_ops;
@@ -542,7 +543,7 @@ class SvgParser {
   final _Resolver _definitions = _Resolver();
   final Queue<_SvgGroupTuple> _parentDrawables = ListQueue<_SvgGroupTuple>(10);
 
-  /// Toggles whether MaskinOptimizer is enabled or disabled.
+  /// Toggles whether [MaskingOptimizer] is enabled or disabled.
   bool? enableMaskingOptimizer = true;
   ViewportNode? _root;
   SvgAttributes _currentAttributes = SvgAttributes.empty;
@@ -651,13 +652,15 @@ class SvgParser {
 
     newRoot = opacityPeepholeOptimizer.apply(newRoot);
 
-    if (enableMaskingOptimizer != null) {
+    if (enableMaskingOptimizer == true) {
       if (path_ops.isPathOpsInitialized) {
         newRoot = maskingOptimizer.apply(newRoot);
       } else {
         throw Exception('PathOps library was not initialized.');
       }
     }
+
+    print(queryChildren<ResolvedPathNode>(newRoot).length);
 
     /// Convert to vector instructions
     final CommandBuilderVisitor commandVisitor = CommandBuilderVisitor();

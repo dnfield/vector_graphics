@@ -93,8 +93,10 @@ void _encodeShader(
 
 /// String input, String filename
 /// Encode an SVG [input] string into a vector_graphics binary format.
-Future<Uint8List> encodeSvg(String xml, String debugName,
-    {bool? enableMaskingOptimizer}) async {
+Future<Uint8List> encodeSvg(
+    {required String xml,
+    required String debugName,
+    bool? enableMaskingOptimizer}) async {
   const VectorGraphicsCodec codec = VectorGraphicsCodec();
   final VectorInstructions instructions = await parse(xml,
       key: debugName, enableMaskingOptimizer: enableMaskingOptimizer);

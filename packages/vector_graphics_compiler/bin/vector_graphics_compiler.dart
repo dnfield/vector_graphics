@@ -84,7 +84,9 @@ Future<void> main(List<String> args) async {
     maskingOptimizerEnabled = false;
   }
 
-  final Uint8List bytes = await encodeSvg(xml, args[0],
+  final Uint8List bytes = await encodeSvg(
+      xml: xml,
+      debugName: args[0],
       enableMaskingOptimizer: maskingOptimizerEnabled);
 
   outputFile.writeAsBytesSync(bytes);

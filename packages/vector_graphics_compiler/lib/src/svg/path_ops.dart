@@ -294,7 +294,7 @@ class Path implements PathProxy {
   }
 }
 
-final ffi.DynamicLibrary _dylib = ffi.DynamicLibrary.open(_dylibPath);
+late final ffi.DynamicLibrary _dylib = ffi.DynamicLibrary.open(_dylibPath);
 late final String _dylibPath;
 
 /// Whether or not PathOps should be used.

@@ -660,8 +660,6 @@ class SvgParser {
       }
     }
 
-    print(queryChildren<ResolvedPathNode>(newRoot).length);
-
     /// Convert to vector instructions
     final CommandBuilderVisitor commandVisitor = CommandBuilderVisitor();
     newRoot.accept(commandVisitor, null);

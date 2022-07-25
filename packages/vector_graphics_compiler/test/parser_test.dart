@@ -444,7 +444,8 @@ void main() {
   });
 
   test('Handles masks with blends and gradients correctly', () async {
-    final VectorInstructions instructions = await parse(blendAndMask);
+    final VectorInstructions instructions =
+        await parse(blendAndMask, enableMaskingOptimizer: false);
     expect(
       instructions.paths,
       <Path>[
@@ -452,6 +453,10 @@ void main() {
         PathBuilder().addOval(const Rect.fromCircle(50, 50, 40)).toPath(),
       ],
     );
+
+    final VectorInstructions instructionsWithOptimizer =
+        await parse(blendAndMask);
+    expect(instructionsWithOptimizer.paths, blendsAndMasksForMaskingOptimizer);
 
     const LinearGradient gradient1 = LinearGradient(
       id: 'url(#linearGradient-3)',

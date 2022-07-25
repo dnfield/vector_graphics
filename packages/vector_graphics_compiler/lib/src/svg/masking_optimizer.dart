@@ -135,7 +135,6 @@ class MaskingOptimizer extends Visitor<_Result, Node>
   /// Applies mask to a path node, and returns resulting path node.
   ResolvedPathNode applyMask(
       ResolvedPathNode pathNode, ResolvedPathNode maskPathNode) {
-    print("REACHED APPLY MASK FUNCTION");
     final path_ops.Path maskPathOpsPath = toPathOpsPath(maskPathNode.path);
     final path_ops.Path pathPathOpsPath = toPathOpsPath(pathNode.path);
     final path_ops.Path intersection =

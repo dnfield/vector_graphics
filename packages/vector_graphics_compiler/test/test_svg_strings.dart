@@ -1112,3 +1112,27 @@ List<Path> groupMaskForMaskingOptimizer = <Path>[
     CloseCommand()
   ])
 ];
+
+/// Excpected groupMask result when optimizer is applied
+List<Path> blendsAndMasksForMaskingOptimizer = <Path>[
+  Path(commands: const <PathCommand>[
+    MoveToCommand(50.0, 0.0),
+    CubicToCommand(77.5957512247, 0.0, 100.0, 22.4042487753, 100.0, 50.0),
+    CubicToCommand(100.0, 77.5957512247, 77.5957512247, 100.0, 50.0, 100.0),
+    CubicToCommand(22.4042487753, 100.0, 0.0, 77.5957512247, 0.0, 50.0),
+    CubicToCommand(0.0, 22.4042487753, 22.4042487753, 0.0, 50.0, 0.0),
+    CloseCommand()
+  ]),
+  Path(commands: const <PathCommand>[
+    MoveToCommand(90.0, 50.0),
+    CubicToCommand(
+        90.0, 27.923398971557617, 72.07659912109375, 10.0, 50.0, 10.0),
+    CubicToCommand(
+        27.923398971557617, 10.0, 10.0, 27.923398971557617, 10.0, 50.0),
+    CubicToCommand(
+        10.0, 72.07659912109375, 27.923398971557617, 90.0, 50.0, 90.0),
+    CubicToCommand(
+        72.07659912109375, 90.0, 90.0, 72.07659912109375, 90.0, 50.0),
+    CloseCommand()
+  ]),
+];

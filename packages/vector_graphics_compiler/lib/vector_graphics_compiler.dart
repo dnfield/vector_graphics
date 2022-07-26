@@ -34,10 +34,8 @@ Future<VectorInstructions> parse(
   String key = '',
   bool warningsAsErrors = false,
   SvgTheme theme = const SvgTheme(),
-
   bool? enableMaskingOptimizer = true,
-   bool enableClippingOptimizer = true,
-
+  bool? enableClippingOptimizer = true,
 }) async {
   final SvgParser parser = SvgParser(xml, theme, key, warningsAsErrors);
   parser.enableMaskingOptimizer = enableMaskingOptimizer;
@@ -100,17 +98,14 @@ void _encodeShader(
 Future<Uint8List> encodeSvg(
     {required String xml,
     required String debugName,
-    bool? enableMaskingOptimizer}) async {
+    bool? enableMaskingOptimizer,
+    bool? enableClippingOptimizer}) async {
   const VectorGraphicsCodec codec = VectorGraphicsCodec();
-<<<<<<< HEAD
-  final VectorInstructions instructions = await parse(argConfig.xml,
-      key: argConfig.arg,
-      enableMaskingOptimizer: argConfig.maskingOptimizerEnabled,
-      enableClippingOptimizer: argConfig.clippingOptimizerEnabled);
-=======
   final VectorInstructions instructions = await parse(xml,
-      key: debugName, enableMaskingOptimizer: enableMaskingOptimizer);
->>>>>>> 7aa7e863de88ca7b0d63f95ce6a8900edc927fa2
+      key: debugName,
+      enableMaskingOptimizer: enableMaskingOptimizer,
+      enableClippingOptimizer: enableClippingOptimizer);
+
   final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
 
   codec.writeSize(buffer, instructions.width, instructions.height);
@@ -271,24 +266,3 @@ Future<Uint8List> encodeSvg(
   }
   return buffer.done().buffer.asUint8List();
 }
-<<<<<<< HEAD
-
-/// Arguement configuration object for encodeSvg function.
-class ArgConfig {
-  /// Initializes the class ArgConfig.
-  ArgConfig(this.xml, this.arg);
-
-  /// The xml string from the file.
-  final String xml;
-
-  /// A command line arguement.
-  final String arg;
-
-  /// Toggles whether or not the maskingOptimizer will be enabled.
-  bool maskingOptimizerEnabled = true;
-
-  /// Toggles whether or not the clippingOptimizer will be enabled.
-  bool clippingOptimizerEnabled = true;
-}
-=======
->>>>>>> 7aa7e863de88ca7b0d63f95ce6a8900edc927fa2

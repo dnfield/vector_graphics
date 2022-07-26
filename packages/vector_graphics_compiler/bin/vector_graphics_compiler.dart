@@ -84,18 +84,20 @@ Future<void> main(List<String> args) async {
       File(results['output'] as String? ?? '$inputFilePath.vg');
 
   bool maskingOptimizerEnabled = true;
+  bool clippingOptimizerEnabled = true;
 
   if (results['optimize-masks'] == false) {
     maskingOptimizerEnabled = false;
   }
   if (results['optimize-clips'] == false) {
-    argConfig.clippingOptimizerEnabled = false;
+    clippingOptimizerEnabled = false;
   }
 
   final Uint8List bytes = await encodeSvg(
       xml: xml,
       debugName: args[0],
-      enableMaskingOptimizer: maskingOptimizerEnabled);
+      enableMaskingOptimizer: maskingOptimizerEnabled,
+      enableClippingOptimizer: clippingOptimizerEnabled);
 
   outputFile.writeAsBytesSync(bytes);
 }

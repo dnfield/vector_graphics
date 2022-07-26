@@ -998,7 +998,7 @@ const String missingRefs = '''
 </svg>
 ''';
 
-/// Excpected groupMask result when optimizer is applied
+/// Excpected groupMask result when [MaskingOptimizer] is applied
 List<Path> groupMaskForMaskingOptimizer = <Path>[
   Path(fillType: PathFillType.evenOdd, commands: const <PathCommand>[
     MoveToCommand(12.562000000000001, 20.438),
@@ -1113,7 +1113,7 @@ List<Path> groupMaskForMaskingOptimizer = <Path>[
   ])
 ];
 
-/// Excpected groupMask result when optimizer is applied
+/// Excpected groupMask result when [MaskingOptimizer] is applied
 List<Path> blendsAndMasksForMaskingOptimizer = <Path>[
   Path(commands: const <PathCommand>[
     MoveToCommand(50.0, 0.0),
@@ -1133,6 +1133,33 @@ List<Path> blendsAndMasksForMaskingOptimizer = <Path>[
         10.0, 72.07659912109375, 27.923398971557617, 90.0, 50.0, 90.0),
     CubicToCommand(
         72.07659912109375, 90.0, 90.0, 72.07659912109375, 90.0, 50.0),
+    CloseCommand()
+  ]),
+];
+
+/// Expected basicClips result when [Clipping Optimizer] is applied
+
+List<Path> basicClipsForClippingOptimzer = <Path>[
+  Path(commands: const <PathCommand>[
+    MoveToCommand(50.0, 30.0),
+    CubicToCommand(
+        50.0, 18.961700439453125, 41.038299560546875, 10.0, 30.0, 10.0),
+    CubicToCommand(
+        18.961700439453125, 10.0, 10.0, 18.961700439453125, 10.0, 30.0),
+    CubicToCommand(
+        10.0, 41.038299560546875, 18.961700439453125, 50.0, 30.0, 50.0),
+    CubicToCommand(
+        41.038299560546875, 50.0, 50.0, 41.038299560546875, 50.0, 30.0),
+    CloseCommand(),
+    MoveToCommand(90.0, 70.0),
+    CubicToCommand(
+        90.0, 58.961700439453125, 81.03829956054688, 50.0, 70.0, 50.0),
+    CubicToCommand(
+        58.961700439453125, 50.0, 50.0, 58.961700439453125, 50.0, 70.0),
+    CubicToCommand(
+        50.0, 81.03829956054688, 58.961700439453125, 90.0, 70.0, 90.0),
+    CubicToCommand(
+        81.03829956054688, 90.0, 90.0, 81.03829956054688, 90.0, 70.0),
     CloseCommand()
   ]),
 ];

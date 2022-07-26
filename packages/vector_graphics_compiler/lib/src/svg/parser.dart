@@ -1,7 +1,6 @@
 import 'dart:collection';
 
 import 'package:meta/meta.dart';
-import 'package:vector_graphics_compiler/src/svg/masking_optimizer_test.dart';
 import 'package:vector_graphics_compiler/src/svg/tessellator.dart';
 import 'package:vector_graphics_compiler/src/svg/masking_optimizer.dart';
 import 'package:vector_graphics_compiler/src/svg/path_ops.dart' as path_ops;

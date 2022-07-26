@@ -48,7 +48,7 @@ class NetworkSvgLoader extends BytesLoader {
       final http.Response request = await http.get(Uri.parse(svgUrl));
       final TimelineTask task = TimelineTask()..start('encodeSvg');
       final Uint8List compiledBytes =
-          await encodeSvg(ArgConfig(request.body, svgUrl));
+          await encodeSvg(xml: request.body, debugName: svgUrl);
       task.finish();
       // sendAndExit will make sure this isn't copied.
       return compiledBytes.buffer.asByteData();

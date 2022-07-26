@@ -543,11 +543,12 @@ class SvgParser {
   final _Resolver _definitions = _Resolver();
   final Queue<_SvgGroupTuple> _parentDrawables = ListQueue<_SvgGroupTuple>(10);
 
-  /// Toggles whether MaskinOptimizer is enabled or disabled.
-  bool enableMaskingOptimizer = true;
+  /// Toggles whether [MaskingOptimizer] is enabled or disabled.
+  bool? enableMaskingOptimizer = true;
 
-  /// Toggles whether ClippingOptimizer is enabled or disabled.
-  bool enableClippingOptimizer = true;
+  /// Toggles whether [ClippingOptimizer] is enabled or disabled.
+  bool? enableClippingOptimizer = true;
+
   ViewportNode? _root;
   SvgAttributes _currentAttributes = SvgAttributes.empty;
   XmlStartElementEvent? _currentStartElement;
@@ -656,12 +657,20 @@ class SvgParser {
 
     newRoot = opacityPeepholeOptimizer.apply(newRoot);
 
-    if (enableMaskingOptimizer && path_ops.isPathOpsInitialized) {
-      newRoot = maskingOptimizer.apply(newRoot);
+    if (enableMaskingOptimizer == true) {
+      if (path_ops.isPathOpsInitialized) {
+        newRoot = maskingOptimizer.apply(newRoot);
+      } else {
+        throw Exception('PathOps library was not initialized.');
+      }
     }
 
-    if (enableClippingOptimizer && path_ops.isPathOpsInitialized) {
-      newRoot = clippingOptimizer.apply(newRoot);
+    if (enableClippingOptimizer == true) {
+      if (path_ops.isPathOpsInitialized) {
+        newRoot = clippingOptimizer.apply(newRoot);
+      } else {
+        throw Exception('PathOps library was not initialized.');
+      }
     }
 
     /// Convert to vector instructions

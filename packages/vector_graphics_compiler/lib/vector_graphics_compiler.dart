@@ -34,8 +34,10 @@ Future<VectorInstructions> parse(
   String key = '',
   bool warningsAsErrors = false,
   SvgTheme theme = const SvgTheme(),
-  bool enableMaskingOptimizer = true,
-  bool enableClippingOptimizer = true,
+
+  bool? enableMaskingOptimizer = true,
+   bool enableClippingOptimizer = true,
+
 }) async {
   final SvgParser parser = SvgParser(xml, theme, key, warningsAsErrors);
   parser.enableMaskingOptimizer = enableMaskingOptimizer;
@@ -95,12 +97,20 @@ void _encodeShader(
 
 /// String input, String filename
 /// Encode an SVG [input] string into a vector_graphics binary format.
-Future<Uint8List> encodeSvg(ArgConfig argConfig) async {
+Future<Uint8List> encodeSvg(
+    {required String xml,
+    required String debugName,
+    bool? enableMaskingOptimizer}) async {
   const VectorGraphicsCodec codec = VectorGraphicsCodec();
+<<<<<<< HEAD
   final VectorInstructions instructions = await parse(argConfig.xml,
       key: argConfig.arg,
       enableMaskingOptimizer: argConfig.maskingOptimizerEnabled,
       enableClippingOptimizer: argConfig.clippingOptimizerEnabled);
+=======
+  final VectorInstructions instructions = await parse(xml,
+      key: debugName, enableMaskingOptimizer: enableMaskingOptimizer);
+>>>>>>> 7aa7e863de88ca7b0d63f95ce6a8900edc927fa2
   final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
 
   codec.writeSize(buffer, instructions.width, instructions.height);
@@ -261,6 +271,7 @@ Future<Uint8List> encodeSvg(ArgConfig argConfig) async {
   }
   return buffer.done().buffer.asUint8List();
 }
+<<<<<<< HEAD
 
 /// Arguement configuration object for encodeSvg function.
 class ArgConfig {
@@ -279,3 +290,5 @@ class ArgConfig {
   /// Toggles whether or not the clippingOptimizer will be enabled.
   bool clippingOptimizerEnabled = true;
 }
+=======
+>>>>>>> 7aa7e863de88ca7b0d63f95ce6a8900edc927fa2

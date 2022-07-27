@@ -20,6 +20,10 @@ class _Result {
 }
 
 /// Applies and removes trivial cases of clipping.
+/// This will not optimize cases where 'stroke-width' is set,
+/// there are multiple path nodes in ResolvedClipNode.clips
+/// or cases where the intersection of the clip and the path
+/// results in Path.commands being empty.
 class ClippingOptimizer extends Visitor<_Result, Node>
     with ErrorOnUnResolvedNode<_Result, Node> {
   ///List of clips to apply.

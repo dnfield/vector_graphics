@@ -544,10 +544,10 @@ class SvgParser {
   final Queue<_SvgGroupTuple> _parentDrawables = ListQueue<_SvgGroupTuple>(10);
 
   /// Toggles whether [MaskingOptimizer] is enabled or disabled.
-  bool? enableMaskingOptimizer = true;
+  bool enableMaskingOptimizer = true;
 
   /// Toggles whether [ClippingOptimizer] is enabled or disabled.
-  bool? enableClippingOptimizer = true;
+  bool enableClippingOptimizer = true;
 
   ViewportNode? _root;
   SvgAttributes _currentAttributes = SvgAttributes.empty;

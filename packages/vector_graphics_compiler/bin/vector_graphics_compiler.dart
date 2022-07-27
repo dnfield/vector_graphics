@@ -48,6 +48,18 @@ final ArgParser argParser = ArgParser()
         'If not provided, defaults to <input-file>.vg',
   );
 
+void loadPathOpsIfNeeded(ArgResults results) {
+  if (results['optimize-masks'] == true || results['optimize-clips'] == true) {
+    if (results.wasParsed('libpathops')) {
+      initializeLibPathOps(results['libpathops'] as String);
+    } else {
+      if (!initializePathOpsFromFlutterCache()) {
+        exit(1);
+      }
+    }
+  }
+}
+
 Future<void> main(List<String> args) async {
   final ArgResults results;
   try {
@@ -68,15 +80,7 @@ Future<void> main(List<String> args) async {
     }
   }
 
-  if (results['optimize-masks'] == true || results['optimize-clips'] == true) {
-    if (results.wasParsed('libpathops')) {
-      initializeLibPathOps(results['libpathops'] as String);
-    } else {
-      if (!initializePathOpsFromFlutterCache()) {
-        exit(1);
-      }
-    }
-  }
+  loadPathOpsIfNeeded(results);
 
   final String inputFilePath = results['input'] as String;
   final String xml = File(inputFilePath).readAsStringSync();

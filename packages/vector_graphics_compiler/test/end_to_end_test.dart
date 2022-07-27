@@ -363,6 +363,16 @@ class TestListener extends VectorGraphicsCodecListener {
   void onDrawText(int textId, int paintId) {
     commands.add(OnDrawText(textId, paintId));
   }
+
+  @override
+  void onDrawImage(int imageId, double x, double y, int width, int height) {
+    commands.add(OnDrawImage(imageId, x, y, width, height));
+  }
+
+  @override
+  void onImage(int imageId, int format, int width, int height, Uint8List data) {
+    commands.add(OnImage(imageId, format, width, height, data));
+  }
 }
 
 class OnMask {
@@ -776,6 +786,58 @@ class OnDrawText {
 
   @override
   String toString() => 'OnDrawText($textId, $paintId)';
+}
+
+class OnImage {
+  const OnImage(this.id, this.format, this.width, this.height, this.data);
+
+  final int id;
+  final int format;
+  final int width;
+  final int height;
+  final List<int> data;
+
+  @override
+  int get hashCode => Object.hash(id, format, width, height, data);
+
+  @override
+  bool operator ==(Object other) =>
+      other is OnImage &&
+      other.id == id &&
+      other.format == format &&
+      other.width == width &&
+      other.height == height &&
+      _listEquals(other.data, data);
+
+  @override
+  String toString() =>
+      'OnImage($id, $format, $width, $height, data:${data.length} bytes)';
+}
+
+class OnDrawImage {
+  const OnDrawImage(this.id, this.x, this.y, this.width, this.height);
+
+  final int id;
+  final double x;
+  final double y;
+  final int width;
+  final int height;
+
+  @override
+  int get hashCode => Object.hash(id, x, y, width, height);
+
+  @override
+  bool operator ==(Object other) {
+    return other is OnDrawImage &&
+        other.id == id &&
+        other.x == x &&
+        other.y == y &&
+        other.width == width &&
+        other.height == height;
+  }
+
+  @override
+  String toString() => 'OnDrawImage($id, $x, $y, $width, $height)';
 }
 
 bool _listEquals<E>(List<E>? left, List<E>? right) {

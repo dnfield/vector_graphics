@@ -633,6 +633,31 @@ void main() {
       OnDrawText(textId, paintId),
     ]);
   });
+
+  test('Encodes image data', () {
+    final buffer = VectorGraphicsBuffer();
+    final TestListener listener = TestListener();
+
+    final id = codec.writeImage(
+        buffer, 20, 30, 0, Uint8List.fromList(<int>[0, 1, 3, 4, 5]));
+    codec.writeDrawImage(buffer, id, 1, 2, 100, 100);
+    final ByteData data = buffer.done();
+    final DecodeResponse response = codec.decode(data, listener);
+
+    expect(response.complete, false);
+    expect(listener.commands, [
+      OnImage(id, 0, 20, 30, [0, 1, 3, 4, 5]),
+    ]);
+
+    final DecodeResponse nextResponse =
+        codec.decode(data, listener, response: response);
+
+    expect(nextResponse.complete, true);
+    expect(listener.commands, [
+      OnImage(id, 0, 20, 30, [0, 1, 3, 4, 5]),
+      OnDrawImage(id, 1, 2, 100, 100),
+    ]);
+  });
 }
 
 class TestListener extends VectorGraphicsCodecListener {
@@ -809,6 +834,22 @@ class TestListener extends VectorGraphicsCodecListener {
   @override
   void onDrawText(int textId, int paintId) {
     commands.add(OnDrawText(textId, paintId));
+  }
+
+  @override
+  void onImage(int imageId, int format, int width, int height, Uint8List data) {
+    commands.add(OnImage(
+      imageId,
+      format,
+      width,
+      height,
+      data,
+    ));
+  }
+
+  @override
+  void onDrawImage(int imageId, double x, double y, int width, int height) {
+    commands.add(OnDrawImage(imageId, x, y, width, height));
   }
 }
 
@@ -1223,6 +1264,58 @@ class OnDrawText {
 
   @override
   String toString() => 'OnDrawText($textId, $paintId)';
+}
+
+class OnImage {
+  const OnImage(this.id, this.format, this.width, this.height, this.data);
+
+  final int id;
+  final int format;
+  final int width;
+  final int height;
+  final List<int> data;
+
+  @override
+  int get hashCode => Object.hash(id, format, width, height, data);
+
+  @override
+  bool operator ==(Object other) =>
+      other is OnImage &&
+      other.id == id &&
+      other.format == format &&
+      other.width == width &&
+      other.height == height &&
+      _listEquals(other.data, data);
+
+  @override
+  String toString() =>
+      'OnImage($id, $format, $width, $height, data:${data.length} bytes)';
+}
+
+class OnDrawImage {
+  const OnDrawImage(this.id, this.x, this.y, this.width, this.height);
+
+  final int id;
+  final double x;
+  final double y;
+  final int width;
+  final int height;
+
+  @override
+  int get hashCode => Object.hash(id, x, y, width, height);
+
+  @override
+  bool operator ==(Object other) {
+    return other is OnDrawImage &&
+        other.id == id &&
+        other.x == x &&
+        other.y == y &&
+        other.width == width &&
+        other.height == height;
+  }
+
+  @override
+  String toString() => 'OnDrawImage($id, $x, $y, $width, $height)';
 }
 
 bool _listEquals<E>(List<E>? left, List<E>? right) {

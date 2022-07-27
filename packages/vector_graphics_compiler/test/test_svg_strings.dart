@@ -1163,4 +1163,3 @@ List<Path> basicClipsForClippingOptimzer = <Path>[
     CloseCommand()
   ]),
 ];
-

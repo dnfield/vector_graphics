@@ -118,6 +118,7 @@ class Tessellator extends Visitor<Node, void>
       }
     }
     if (stroke != null) {
+      print("GOT HERE");
       children.add(ResolvedPathNode(
           paint: Paint(
             blendMode: pathNode.paint.blendMode,

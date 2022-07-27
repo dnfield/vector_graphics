@@ -5,10 +5,9 @@
 import 'package:vector_graphics_compiler/src/svg/parser.dart';
 import 'package:vector_graphics_compiler/src/svg/resolver.dart';
 import 'package:vector_graphics_compiler/src/svg/visitor.dart';
-
-import '../geometry/basic_types.dart';
-import '../paint.dart';
-import 'node.dart';
+import 'package:vector_graphics_compiler/src/geometry/basic_types.dart';
+import 'package:vector_graphics_compiler/src/paint.dart';
+import 'package:vector_graphics_compiler/src/svg/node.dart';
 
 class _Result {
   _Result(this.canForwardOpacity, this.node, this.bounds);

@@ -1,7 +1,7 @@
 import 'dart:collection';
 
 import 'package:meta/meta.dart';
-import 'package:vector_graphics_compiler/src/svg/tessellator.dart';
+import 'tessellator.dart';
 
 import 'package:xml/xml_events.dart';
 

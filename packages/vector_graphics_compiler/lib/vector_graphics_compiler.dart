@@ -34,8 +34,12 @@ Future<VectorInstructions> parse(
   String key = '',
   bool warningsAsErrors = false,
   SvgTheme theme = const SvgTheme(),
+  bool enableMaskingOptimizer = true,
+  bool enableClippingOptimizer = true,
 }) async {
   final SvgParser parser = SvgParser(xml, theme, key, warningsAsErrors);
+  parser.enableMaskingOptimizer = enableMaskingOptimizer;
+  parser.enableClippingOptimizer = enableClippingOptimizer;
   return parser.parse();
 }
 
@@ -89,10 +93,19 @@ void _encodeShader(
   shaderIds[shader] = shaderId;
 }
 
+/// String input, String filename
 /// Encode an SVG [input] string into a vector_graphics binary format.
-Future<Uint8List> encodeSvg(String input, String filename) async {
+Future<Uint8List> encodeSvg(
+    {required String xml,
+    required String debugName,
+    bool enableMaskingOptimizer = true,
+    bool enableClippingOptimizer = true}) async {
   const VectorGraphicsCodec codec = VectorGraphicsCodec();
-  final VectorInstructions instructions = await parse(input, key: filename);
+  final VectorInstructions instructions = await parse(xml,
+      key: debugName,
+      enableMaskingOptimizer: enableMaskingOptimizer,
+      enableClippingOptimizer: enableClippingOptimizer);
+
   final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
 
   codec.writeSize(buffer, instructions.width, instructions.height);

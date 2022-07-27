@@ -1,8 +1,10 @@
 import 'dart:collection';
 
 import 'package:meta/meta.dart';
-import 'tessellator.dart';
-
+import 'package:vector_graphics_compiler/src/svg/tessellator.dart';
+import 'package:vector_graphics_compiler/src/svg/masking_optimizer.dart';
+import 'package:vector_graphics_compiler/src/svg/clipping_optimizer.dart';
+import 'package:vector_graphics_compiler/src/svg/path_ops.dart' as path_ops;
 import 'package:xml/xml_events.dart';
 
 import '../geometry/basic_types.dart';
@@ -540,6 +542,13 @@ class SvgParser {
   final bool _warningsAsErrors;
   final _Resolver _definitions = _Resolver();
   final Queue<_SvgGroupTuple> _parentDrawables = ListQueue<_SvgGroupTuple>(10);
+
+  /// Toggles whether [MaskingOptimizer] is enabled or disabled.
+  bool enableMaskingOptimizer = true;
+
+  /// Toggles whether [ClippingOptimizer] is enabled or disabled.
+  bool enableClippingOptimizer = true;
+
   ViewportNode? _root;
   SvgAttributes _currentAttributes = SvgAttributes.empty;
   XmlStartElementEvent? _currentStartElement;
@@ -637,8 +646,9 @@ class SvgParser {
     final ResolvingVisitor resolvingVisitor = ResolvingVisitor();
     final OpacityPeepholeOptimizer opacityPeepholeOptimizer =
         OpacityPeepholeOptimizer();
-
     final Tessellator tessellator = Tessellator();
+    final MaskingOptimizer maskingOptimizer = MaskingOptimizer();
+    final ClippingOptimizer clippingOptimizer = ClippingOptimizer();
 
     Node newRoot = _root!.accept(resolvingVisitor, AffineMatrix.identity);
     if (isTesselatorInitialized) {
@@ -646,6 +656,22 @@ class SvgParser {
     }
 
     newRoot = opacityPeepholeOptimizer.apply(newRoot);
+
+    if (enableMaskingOptimizer == true) {
+      if (path_ops.isPathOpsInitialized) {
+        newRoot = maskingOptimizer.apply(newRoot);
+      } else {
+        throw Exception('PathOps library was not initialized.');
+      }
+    }
+
+    if (enableClippingOptimizer == true) {
+      if (path_ops.isPathOpsInitialized) {
+        newRoot = clippingOptimizer.apply(newRoot);
+      } else {
+        throw Exception('PathOps library was not initialized.');
+      }
+    }
 
     /// Convert to vector instructions
     final CommandBuilderVisitor commandVisitor = CommandBuilderVisitor();

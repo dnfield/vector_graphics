@@ -27,9 +27,14 @@ final ArgParser argParser = ArgParser()
         'raster times at the cost of slightly larger file sizes.',
   )
   ..addFlag(
-    'path-ops',
-    help: 'Allows for path_ops library to be used when'
-        'calculating path intersections.',
+    'optimize-masks',
+    help: 'Allows for masking optimizer to be enabled or disabled',
+    defaultsTo: true,
+  )
+  ..addFlag(
+    'optimize-clips',
+    help: 'Allows for clipping optimizer to be enabled or disabled',
+    defaultsTo: true,
   )
   ..addOption('input',
       abbr: 'i',
@@ -43,6 +48,18 @@ final ArgParser argParser = ArgParser()
         'If not provided, defaults to <input-file>.vg',
   );
 
+void loadPathOpsIfNeeded(ArgResults results) {
+  if (results['optimize-masks'] == true || results['optimize-clips'] == true) {
+    if (results.wasParsed('libpathops')) {
+      initializeLibPathOps(results['libpathops'] as String);
+    } else {
+      if (!initializePathOpsFromFlutterCache()) {
+        exit(1);
+      }
+    }
+  }
+}
+
 Future<void> main(List<String> args) async {
   final ArgResults results;
   try {
@@ -52,6 +69,7 @@ Future<void> main(List<String> args) async {
     print(argParser.usage);
     exit(1);
   }
+
   if (results['tessellate'] == true) {
     if (results.wasParsed('libtessellator')) {
       initializeLibTesselator(results['libtessellator'] as String);
@@ -62,21 +80,29 @@ Future<void> main(List<String> args) async {
     }
   }
 
-  if (results['pathops'] == true) {
-    if (results.wasParsed('libpathops')) {
-      initializeLibPathOps(results['libpathops'] as String);
-    } else {
-      if (!initializePathOpsFromFlutterCache()) {
-        exit(1);
-      }
-    }
-  }
+  loadPathOpsIfNeeded(results);
 
   final String inputFilePath = results['input'] as String;
   final String xml = File(inputFilePath).readAsStringSync();
   final File outputFile =
       File(results['output'] as String? ?? '$inputFilePath.vg');
-  final Uint8List bytes = await encodeSvg(xml, args[0]);
+
+  bool maskingOptimizerEnabled = true;
+  bool clippingOptimizerEnabled = true;
+
+  if (results['optimize-masks'] == false) {
+    maskingOptimizerEnabled = false;
+  }
+
+  if (results['optimize-clips'] == false) {
+    clippingOptimizerEnabled = false;
+  }
+
+  final Uint8List bytes = await encodeSvg(
+      xml: xml,
+      debugName: args[0],
+      enableMaskingOptimizer: maskingOptimizerEnabled,
+      enableClippingOptimizer: clippingOptimizerEnabled);
 
   outputFile.writeAsBytesSync(bytes);
 }

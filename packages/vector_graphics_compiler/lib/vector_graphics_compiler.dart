@@ -105,7 +105,7 @@ Future<Uint8List> encodeSvg(
       key: debugName,
       enableMaskingOptimizer: enableMaskingOptimizer,
       enableClippingOptimizer: enableClippingOptimizer);
-
+      
   final VectorGraphicsBuffer buffer = VectorGraphicsBuffer();
 
   codec.writeSize(buffer, instructions.width, instructions.height);

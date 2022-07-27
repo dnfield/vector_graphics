@@ -69,6 +69,7 @@ Future<void> main(List<String> args) async {
   }
 
   if (results['optimize-masks'] == true || results['optimize-clips'] == true) {
+
     if (results.wasParsed('libpathops')) {
       initializeLibPathOps(results['libpathops'] as String);
     } else {
@@ -86,9 +87,11 @@ Future<void> main(List<String> args) async {
   bool maskingOptimizerEnabled = true;
   bool clippingOptimizerEnabled = true;
 
+
   if (results['optimize-masks'] == false) {
     maskingOptimizerEnabled = false;
   }
+
   if (results['optimize-clips'] == false) {
     clippingOptimizerEnabled = false;
   }
@@ -98,6 +101,7 @@ Future<void> main(List<String> args) async {
       debugName: args[0],
       enableMaskingOptimizer: maskingOptimizerEnabled,
       enableClippingOptimizer: clippingOptimizerEnabled);
+
 
   outputFile.writeAsBytesSync(bytes);
 }

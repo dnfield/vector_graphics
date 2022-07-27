@@ -548,7 +548,7 @@ class SvgParser {
 
   /// Toggles whether [ClippingOptimizer] is enabled or disabled.
   bool? enableClippingOptimizer = true;
-
+  
   ViewportNode? _root;
   SvgAttributes _currentAttributes = SvgAttributes.empty;
   XmlStartElementEvent? _currentStartElement;

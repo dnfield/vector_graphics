@@ -23,7 +23,7 @@ class _Result {
 class ClippingOptimizer extends Visitor<_Result, Node>
     with ErrorOnUnResolvedNode<_Result, Node> {
   ///List of clips to apply.
-  List<Path> clipsToApply = <Path>[];
+  final List<Path> clipsToApply = <Path>[];
 
   /// Applies visitor to given node.
   Node apply(Node node) {

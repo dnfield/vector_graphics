@@ -166,10 +166,8 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
 
     if (pathNodeCount >= 2) {
       for (Node child in parentNode.children) {
-        if (child is ResolvedPathNode) {
-          if (lastPathNode == null ||
-              lastPathNodeIndex == null ||
-              lastPathNode.paint.stroke?.width != null) {
+        if (child is ResolvedPathNode && child.paint.stroke?.width == null) {
+          if (lastPathNode == null || lastPathNodeIndex == null) {
             lastPathNode = child;
             lastPathNodeIndex = index;
           } else {

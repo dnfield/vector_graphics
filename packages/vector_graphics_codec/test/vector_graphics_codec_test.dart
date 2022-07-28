@@ -639,7 +639,7 @@ void main() {
     final TestListener listener = TestListener();
 
     final id =
-        codec.writeImage(buffer, 20, Uint8List.fromList(<int>[0, 1, 3, 4, 5]));
+        codec.writeImage(buffer, 0, Uint8List.fromList(<int>[0, 1, 3, 4, 5]));
     codec.writeDrawImage(buffer, id, 1, 2, 100, 100);
     final ByteData data = buffer.done();
     final DecodeResponse response = codec.decode(data, listener);
@@ -664,7 +664,7 @@ void main() {
     final TestListener listener = TestListener();
 
     final imageId =
-        codec.writeImage(buffer, 20, Uint8List.fromList(<int>[0, 1, 3, 4, 5]));
+        codec.writeImage(buffer, 0, Uint8List.fromList(<int>[0, 1, 3, 4, 5]));
     final int shaderId = codec.writeLinearGradient(
       buffer,
       fromX: 0,

@@ -127,7 +127,8 @@ class _OpacityForwarder extends Visitor<Node, _ForwardResult>
   }
 
   @override
-  Node visitResolvedImageNode(ResolvedImageNode resolvedImageNode, _ForwardResult data) {
+  Node visitResolvedImageNode(
+      ResolvedImageNode resolvedImageNode, _ForwardResult data) {
     throw UnimplementedError();
   }
 }
@@ -304,7 +305,8 @@ class OpacityPeepholeOptimizer extends Visitor<_Result, void>
   }
 
   @override
-  _Result visitResolvedImageNode(ResolvedImageNode resolvedImageNode, void data) {
+  _Result visitResolvedImageNode(
+      ResolvedImageNode resolvedImageNode, void data) {
     // TODO: implement visitResolvedImageNode
     throw UnimplementedError();
   }

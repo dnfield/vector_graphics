@@ -322,7 +322,8 @@ class MaskingOptimizer extends Visitor<_Result, Node>
   }
 
   @override
-  _Result visitResolvedImageNode(ResolvedImageNode resolvedImageNode, Node data) {
+  _Result visitResolvedImageNode(
+      ResolvedImageNode resolvedImageNode, Node data) {
     return _Result(resolvedImageNode);
   }
 }

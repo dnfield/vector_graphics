@@ -638,15 +638,15 @@ void main() {
     final buffer = VectorGraphicsBuffer();
     final TestListener listener = TestListener();
 
-    final id = codec.writeImage(
-        buffer, 20, 30, 0, Uint8List.fromList(<int>[0, 1, 3, 4, 5]));
+    final id =
+        codec.writeImage(buffer, 20, Uint8List.fromList(<int>[0, 1, 3, 4, 5]));
     codec.writeDrawImage(buffer, id, 1, 2, 100, 100);
     final ByteData data = buffer.done();
     final DecodeResponse response = codec.decode(data, listener);
 
     expect(response.complete, false);
     expect(listener.commands, [
-      OnImage(id, 0, 20, 30, [0, 1, 3, 4, 5]),
+      OnImage(id, 0, [0, 1, 3, 4, 5]),
     ]);
 
     final DecodeResponse nextResponse =
@@ -654,7 +654,7 @@ void main() {
 
     expect(nextResponse.complete, true);
     expect(listener.commands, [
-      OnImage(id, 0, 20, 30, [0, 1, 3, 4, 5]),
+      OnImage(id, 0, [0, 1, 3, 4, 5]),
       OnDrawImage(id, 1, 2, 100, 100),
     ]);
   });
@@ -663,8 +663,8 @@ void main() {
     final buffer = VectorGraphicsBuffer();
     final TestListener listener = TestListener();
 
-    final imageId = codec.writeImage(
-        buffer, 20, 30, 0, Uint8List.fromList(<int>[0, 1, 3, 4, 5]));
+    final imageId =
+        codec.writeImage(buffer, 20, Uint8List.fromList(<int>[0, 1, 3, 4, 5]));
     final int shaderId = codec.writeLinearGradient(
       buffer,
       fromX: 0,
@@ -701,8 +701,6 @@ void main() {
       OnImage(
         imageId,
         0,
-        20,
-        30,
         <int>[0, 1, 3, 4, 5],
       ),
       OnLinearGradient(
@@ -751,8 +749,6 @@ void main() {
       OnImage(
         imageId,
         0,
-        20,
-        30,
         <int>[0, 1, 3, 4, 5],
       ),
       OnLinearGradient(
@@ -976,12 +972,10 @@ class TestListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onImage(int imageId, int format, int width, int height, Uint8List data) {
+  void onImage(int imageId, int format, Uint8List data) {
     commands.add(OnImage(
       imageId,
       format,
-      width,
-      height,
       data,
     ));
   }
@@ -1406,29 +1400,24 @@ class OnDrawText {
 }
 
 class OnImage {
-  const OnImage(this.id, this.format, this.width, this.height, this.data);
+  const OnImage(this.id, this.format, this.data);
 
   final int id;
   final int format;
-  final int width;
-  final int height;
   final List<int> data;
 
   @override
-  int get hashCode => Object.hash(id, format, width, height, data);
+  int get hashCode => Object.hash(id, format, data);
 
   @override
   bool operator ==(Object other) =>
       other is OnImage &&
       other.id == id &&
       other.format == format &&
-      other.width == width &&
-      other.height == height &&
       _listEquals(other.data, data);
 
   @override
-  String toString() =>
-      'OnImage($id, $format, $width, $height, data:${data.length} bytes)';
+  String toString() => 'OnImage($id, $format, data:${data.length} bytes)';
 }
 
 class OnDrawImage {

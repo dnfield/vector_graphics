@@ -370,8 +370,8 @@ class TestListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onImage(int imageId, int format, int width, int height, Uint8List data) {
-    commands.add(OnImage(imageId, format, width, height, data));
+  void onImage(int imageId, int format, Uint8List data) {
+    commands.add(OnImage(imageId, format, data));
   }
 }
 
@@ -789,29 +789,24 @@ class OnDrawText {
 }
 
 class OnImage {
-  const OnImage(this.id, this.format, this.width, this.height, this.data);
+  const OnImage(this.id, this.format, this.data);
 
   final int id;
   final int format;
-  final int width;
-  final int height;
   final List<int> data;
 
   @override
-  int get hashCode => Object.hash(id, format, width, height, data);
+  int get hashCode => Object.hash(id, format, data);
 
   @override
   bool operator ==(Object other) =>
       other is OnImage &&
       other.id == id &&
       other.format == format &&
-      other.width == width &&
-      other.height == height &&
       _listEquals(other.data, data);
 
   @override
-  String toString() =>
-      'OnImage($id, $format, $width, $height, data:${data.length} bytes)';
+  String toString() => 'OnImage($id, $format, data:${data.length} bytes)';
 }
 
 class OnDrawImage {

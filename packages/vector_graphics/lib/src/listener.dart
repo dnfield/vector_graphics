@@ -387,20 +387,12 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onImage(int imageId, int format, int width, int height, Uint8List data) {
-    // TODO(jonahwilliams): support other formats.
-    final bool isPng = format == 1;
-
+  void onImage(int imageId, int format, Uint8List data) {
+    assert(format == 0); // Only PNG is supported.
     _pendingImages.add(ui.ImmutableBuffer.fromUint8List(data)
         .then((ui.ImmutableBuffer buffer) async {
-      final ui.ImageDescriptor descriptor = isPng
-          ? await ui.ImageDescriptor.encoded(buffer)
-          : ui.ImageDescriptor.raw(
-              buffer,
-              width: width,
-              height: height,
-              pixelFormat: ui.PixelFormat.rgba8888,
-            );
+      final ui.ImageDescriptor descriptor =
+          await ui.ImageDescriptor.encoded(buffer);
       final ui.Codec codec = await descriptor.instantiateCodec();
       final ui.FrameInfo info = await codec.getNextFrame();
       final ui.Image image = info.image;

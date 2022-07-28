@@ -16,14 +16,9 @@ abstract class ControlPointTypes {
 }
 
 /// enumeration of the types of image data accepted by [VectorGraphicsCodec.writeImage].
+///
+/// Currently only PNG encoding is supported.
 abstract class ImageFormatTypes {
-  const ImageFormatTypes._();
-
-  /// Raw straight RGBA format.
-  ///
-  /// Unencoded bytes, in RGBA row-primary form with straight alpha, 8 bits per channel.
-  static const int rgba = 0;
-
   /// PNG format.
   ///
   /// A loss-less compression format for images. This format is well suited for
@@ -39,7 +34,7 @@ abstract class ImageFormatTypes {
   ///
   ///  * <https://en.wikipedia.org/wiki/Portable_Network_Graphics>, the Wikipedia page on PNG.
   ///  * <https://tools.ietf.org/rfc/rfc2083.txt>, the PNG standard.
-  static const int png = 1;
+  static const int png = 0;
 }
 
 class DecodeResponse {
@@ -619,21 +614,16 @@ class VectorGraphicsCodec {
   /// Write an image to the [buffer], returning the identifier
   /// assigned to it.
   ///
-  /// The [width] and [height] argument should be the width and
-  /// height of the image and must be non-negative and greater than 0.
-  ///
   /// The [data] argument should be the image data encoded according
-  /// to the [format] argument.
+  /// to the [format] argument. Currently only PNG is supported.
   int writeImage(
     VectorGraphicsBuffer buffer,
-    int width,
-    int height,
     int format,
     Uint8List data,
   ) {
     buffer._checkPhase(_CurrentSection.images);
     assert(buffer._nextImageId < kMaxId);
-    assert(width > 0 && height > 0);
+    assert(format == 0);
 
     final int id = buffer._nextImageId;
     buffer._nextImageId += 1;
@@ -641,8 +631,6 @@ class VectorGraphicsCodec {
     buffer._putUint8(_imageConfigTag);
     buffer._putUint16(id);
     buffer._putUint8(format);
-    buffer._putUint32(width);
-    buffer._putUint32(height);
     buffer._putUint32(data.length);
     buffer._putUint8List(data);
     return id;
@@ -790,11 +778,9 @@ class VectorGraphicsCodec {
       _ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
     final int id = buffer.getUint16();
     final int format = buffer.getUint8();
-    final int width = buffer.getUint32();
-    final int height = buffer.getUint32();
     final int dataLength = buffer.getUint32();
     final Uint8List data = buffer.getUint8List(dataLength);
-    listener?.onImage(id, format, width, height, data);
+    listener?.onImage(id, format, data);
   }
 
   void _readDrawImage(
@@ -933,8 +919,6 @@ abstract class VectorGraphicsCodecListener {
   void onImage(
     int imageId,
     int format,
-    int width,
-    int height,
     Uint8List data,
   );
 

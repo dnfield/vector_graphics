@@ -54,17 +54,13 @@ Future<PictureInfo> decodeVectorGraphics(
   );
   DecodeResponse response = _codec.decode(data, listener);
   if (response.complete) {
-    final PictureInfo picture = listener.toPicture();
-    listener.dispose();
-    return picture;
+    return listener.toPicture();
   }
   await listener.waitForImageDecode();
   response = _codec.decode(data, listener, response: response);
   assert(response.complete);
 
-  final PictureInfo picture = listener.toPicture();
-  listener.dispose();
-  return picture;
+  return listener.toPicture();
 }
 
 /// A listener implementation for the vector graphics codec that converts the
@@ -128,7 +124,14 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   PictureInfo toPicture() {
     assert(!_done);
     _done = true;
-    return PictureInfo._(_recorder.endRecording(), _size);
+    try {
+      return PictureInfo._(_recorder.endRecording(), _size);
+    } finally {
+      for (final ui.Image image in _images.values) {
+        image.dispose();
+      }
+      _images.clear();
+    }
   }
 
   /// Wait for all pending images to load.
@@ -417,14 +420,6 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
       rect: ui.Rect.fromLTWH(x, y, width.toDouble(), height.toDouble()),
       image: image,
     );
-  }
-
-  /// Release all resources used to create the decoded vector graphic picture.
-  void dispose() {
-    assert(_done);
-    for (final ui.Image image in _images.values) {
-      image.dispose();
-    }
   }
 }
 

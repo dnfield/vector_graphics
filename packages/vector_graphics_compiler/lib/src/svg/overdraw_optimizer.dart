@@ -277,6 +277,13 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
   }
 
   @override
+  _Result visitResolvedImageNode(
+      ResolvedImageNode resolvedImageNode, Node data) {
+    final _Result _result = _Result(resolvedImageNode);
+    return _result;
+  }
+
+  @override
   _Result visitViewportNode(ViewportNode viewportNode, void data) {
     final List<Node> children = <Node>[];
     for (Node child in viewportNode.children) {

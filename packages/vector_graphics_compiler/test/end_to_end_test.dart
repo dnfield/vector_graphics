@@ -37,10 +37,15 @@ void main() {
       fail('error in setup');
     }
   });
+
   testWidgets('Can endcode and decode simple SVGs with no errors',
       (WidgetTester tester) async {
     for (final String svg in allSvgTestStrings) {
-      final Uint8List bytes = await encodeSvg(xml: svg, debugName: 'test.svg');
+      final Uint8List bytes = await encodeSvg(
+        xml: svg,
+        debugName: 'test.svg',
+        warningsAsErrors: true,
+      );
 
       await tester.pumpWidget(Center(
           child: VectorGraphic(
@@ -49,6 +54,20 @@ void main() {
 
       expect(tester.takeException(), isNull);
     }
+  });
+
+  testWidgets('Errors on unsupported image mime type',
+      (WidgetTester tester) async {
+    const String svgInlineImage = r'''
+<svg width="248" height="100" viewBox="0 0 248 100">
+<image id="image0" width="50" height="50" xlink:href="data:image/foobar;base64,iVBORw0I5IAAM1SvoAAAAASUVORK5CYII=">
+</svg>
+''';
+
+    expect(
+        () => encodeSvg(
+            xml: svgInlineImage, debugName: 'test.svg', warningsAsErrors: true),
+        throwsA(isA<UnimplementedError>()));
   });
 
   test('encodeSvg encodes stroke shaders', () async {
@@ -367,6 +386,17 @@ class TestListener extends VectorGraphicsCodecListener {
   @override
   void onDrawText(int textId, int paintId) {
     commands.add(OnDrawText(textId, paintId));
+  }
+
+  @override
+  void onDrawImage(
+      int imageId, double x, double y, double width, double height) {
+    commands.add(OnDrawImage(imageId, x, y, width, height));
+  }
+
+  @override
+  void onImage(int imageId, int format, Uint8List data) {
+    commands.add(OnImage(imageId, format, data));
   }
 }
 
@@ -781,6 +811,53 @@ class OnDrawText {
 
   @override
   String toString() => 'OnDrawText($textId, $paintId)';
+}
+
+class OnImage {
+  const OnImage(this.id, this.format, this.data);
+
+  final int id;
+  final int format;
+  final List<int> data;
+
+  @override
+  int get hashCode => Object.hash(id, format, data);
+
+  @override
+  bool operator ==(Object other) =>
+      other is OnImage &&
+      other.id == id &&
+      other.format == format &&
+      _listEquals(other.data, data);
+
+  @override
+  String toString() => 'OnImage($id, $format, data:${data.length} bytes)';
+}
+
+class OnDrawImage {
+  const OnDrawImage(this.id, this.x, this.y, this.width, this.height);
+
+  final int id;
+  final double x;
+  final double y;
+  final double width;
+  final double height;
+
+  @override
+  int get hashCode => Object.hash(id, x, y, width, height);
+
+  @override
+  bool operator ==(Object other) {
+    return other is OnDrawImage &&
+        other.id == id &&
+        other.x == x &&
+        other.y == y &&
+        other.width == width &&
+        other.height == height;
+  }
+
+  @override
+  String toString() => 'OnDrawImage($id, $x, $y, $width, $height)';
 }
 
 bool _listEquals<E>(List<E>? left, List<E>? right) {

@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:typed_data';
+
 import '../geometry/basic_types.dart';
 import '../geometry/matrix.dart';
 import '../geometry/path.dart';
@@ -199,6 +201,28 @@ class ResolvingVisitor extends Visitor<Node, AffineMatrix> {
     assert(false);
     return verticesNode;
   }
+
+  @override
+  Node visitImageNode(ImageNode imageNode, AffineMatrix data) {
+    final SvgAttributes attributes = imageNode.attributes;
+    final double left = double.parse(attributes.raw['x'] ?? '0');
+    final double top = double.parse(attributes.raw['y'] ?? '0');
+    final double width = double.parse(attributes.raw['width']!);
+    final double height = double.parse(attributes.raw['height']!);
+    final Rect rect =
+        data.transformRect(Rect.fromLTWH(left, top, width, height));
+    return ResolvedImageNode(
+      data: imageNode.data,
+      rect: rect,
+    );
+  }
+
+  @override
+  Node visitResolvedImageNode(
+      ResolvedImageNode resolvedImageNode, AffineMatrix data) {
+    assert(false);
+    return resolvedImageNode;
+  }
 }
 
 /// A block of text that has its position and final transfrom fully known.
@@ -339,4 +363,27 @@ class ResolvedMaskNode extends Node {
   void visitChildren(NodeCallback visitor) {
     visitor(child);
   }
+}
+
+/// An image node that has a fully resolved position and data.
+class ResolvedImageNode extends Node {
+  /// Create a new [ResolvedImageNode].
+  const ResolvedImageNode({
+    required this.data,
+    required this.rect,
+  });
+
+  /// The image [data] encoded as a PNG.
+  final Uint8List data;
+
+  /// The region to draw the image to.
+  final Rect rect;
+
+  @override
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitResolvedImageNode(this, data);
+  }
+
+  @override
+  void visitChildren(NodeCallback visitor) {}
 }

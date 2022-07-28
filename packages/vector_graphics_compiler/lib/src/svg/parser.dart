@@ -347,7 +347,19 @@ class _Elements {
     }
 
     if (xlinkHref.startsWith('data:')) {
+      const String supportedMimeType = 'image/png;base64';
       final int commaLocation = xlinkHref.indexOf(',') + 1;
+      final String mimeType = xlinkHref
+          .substring(5, commaLocation - 1)
+          .replaceAll(_whitespacePattern, '');
+      if (mimeType != supportedMimeType) {
+        if (warningsAsErrors) {
+          throw UnimplementedError(
+              'Image data format not supported: $mimeType');
+        }
+        return null;
+      }
+
       final Uint8List data = base64.decode(xlinkHref
           .substring(commaLocation)
           .replaceAll(_whitespacePattern, ''));

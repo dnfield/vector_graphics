@@ -2,8 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:vector_graphics_compiler/src/geometry/image.dart';
-
+import 'geometry/image.dart';
 import 'geometry/path.dart';
 import 'geometry/vertices.dart';
 import 'paint.dart';

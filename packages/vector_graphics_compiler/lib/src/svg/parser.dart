@@ -337,13 +337,13 @@ class _Elements {
 
   static final RegExp _whitespacePattern = RegExp(r'\s');
 
-  static Future<void> image(
+  static Future<void>? image(
     SvgParser parserState,
     bool warningsAsErrors,
-  ) async {
+  ) {
     final String? xlinkHref = parserState._currentAttributes.href;
     if (xlinkHref == null) {
-      return;
+      return null;
     }
 
     if (xlinkHref.startsWith('data:')) {
@@ -356,10 +356,12 @@ class _Elements {
         clipResolver: parserState._definitions.getClipPath,
         maskResolver: parserState._definitions.getDrawable,
       );
+      return null;
     }
     if (warningsAsErrors) {
       throw UnimplementedError('Image data format not supported: $xlinkHref');
     }
+    return null;
   }
 
   static Future<void> text(

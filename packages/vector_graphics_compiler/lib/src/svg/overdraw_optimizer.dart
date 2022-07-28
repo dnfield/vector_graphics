@@ -152,9 +152,13 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
     int pathNodeCount = 0;
     final List<List<Node>> newChildList = <List<Node>>[];
     List<Node> newChildren = <Node>[];
+    bool hasStrokeWidth = false;
 
     for (Node child in parentNode.children) {
       if (child is ResolvedPathNode) {
+        if (child.paint.stroke?.width != null) {
+          hasStrokeWidth = true;
+        }
         pathNodeCount++;
       }
       newChildList.add(<Node>[child]);
@@ -164,7 +168,7 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
     ResolvedPathNode? lastPathNode;
     int? lastPathNodeIndex;
 
-    if (pathNodeCount >= 2) {
+    if (pathNodeCount >= 2 && !hasStrokeWidth) {
       for (Node child in parentNode.children) {
         if (child is ResolvedPathNode) {
           if (lastPathNode == null || lastPathNodeIndex == null) {

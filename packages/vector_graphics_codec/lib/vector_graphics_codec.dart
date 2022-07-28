@@ -636,6 +636,11 @@ class VectorGraphicsCodec {
     return id;
   }
 
+  /// Write a command to draw [imageId] in the provided rectangle.
+  ///
+  /// [width] and [height] must be greater than `0`.
+  ///
+  /// [opacity] must be between `0` and `1`.
   void writeDrawImage(
     VectorGraphicsBuffer buffer,
     int imageId,
@@ -643,10 +648,12 @@ class VectorGraphicsCodec {
     double y,
     double width,
     double height,
+    double opacity,
   ) {
     buffer._checkPhase(_CurrentSection.commands);
     buffer._addCommandsTag();
     assert(width > 0 && height > 0);
+    assert(opacity >= 0 && opacity <= 1);
 
     buffer._putUint8(_drawImageTag);
     buffer._putUint16(imageId);
@@ -790,8 +797,9 @@ class VectorGraphicsCodec {
     final double y = buffer.getFloat32();
     final double width = buffer.getFloat32();
     final double height = buffer.getFloat32();
+    final double opacity = buffer.getFloat32();
 
-    listener?.onDrawImage(id, x, y, width, height);
+    listener?.onDrawImage(id, x, y, width, height, opacity);
   }
 }
 
@@ -929,6 +937,7 @@ abstract class VectorGraphicsCodecListener {
     double y,
     double width,
     double height,
+    double opacity,
   );
 }
 

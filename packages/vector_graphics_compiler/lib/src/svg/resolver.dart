@@ -209,11 +209,13 @@ class ResolvingVisitor extends Visitor<Node, AffineMatrix> {
     final double top = double.parse(attributes.raw['y'] ?? '0');
     final double width = double.parse(attributes.raw['width']!);
     final double height = double.parse(attributes.raw['height']!);
+
     final Rect rect =
         data.transformRect(Rect.fromLTWH(left, top, width, height));
     return ResolvedImageNode(
       data: imageNode.data,
       rect: rect,
+      opacity: attributes.opacity ?? 1.0,
     );
   }
 
@@ -371,6 +373,7 @@ class ResolvedImageNode extends Node {
   const ResolvedImageNode({
     required this.data,
     required this.rect,
+    required this.opacity,
   });
 
   /// The image [data] encoded as a PNG.
@@ -378,6 +381,9 @@ class ResolvedImageNode extends Node {
 
   /// The region to draw the image to.
   final Rect rect;
+
+  /// The opacity of the resulting image.
+  final double opacity;
 
   @override
   S accept<S, V>(Visitor<S, V> visitor, V data) {

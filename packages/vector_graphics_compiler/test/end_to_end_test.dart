@@ -389,9 +389,9 @@ class TestListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onDrawImage(
-      int imageId, double x, double y, double width, double height) {
-    commands.add(OnDrawImage(imageId, x, y, width, height));
+  void onDrawImage(int imageId, double x, double y, double width, double height,
+      double opacity) {
+    commands.add(OnDrawImage(imageId, x, y, width, height, opacity));
   }
 
   @override
@@ -835,16 +835,18 @@ class OnImage {
 }
 
 class OnDrawImage {
-  const OnDrawImage(this.id, this.x, this.y, this.width, this.height);
+  const OnDrawImage(
+      this.id, this.x, this.y, this.width, this.height, this.opacity);
 
   final int id;
   final double x;
   final double y;
   final double width;
   final double height;
+  final double opacity;
 
   @override
-  int get hashCode => Object.hash(id, x, y, width, height);
+  int get hashCode => Object.hash(id, x, y, width, height, opacity);
 
   @override
   bool operator ==(Object other) {
@@ -853,7 +855,8 @@ class OnDrawImage {
         other.x == x &&
         other.y == y &&
         other.width == width &&
-        other.height == height;
+        other.height == height &&
+        other.opacity == opacity;
   }
 
   @override

@@ -282,6 +282,7 @@ Future<Uint8List> encodeSvg({
           drawImageData.rect.top,
           drawImageData.rect.width,
           drawImageData.rect.height,
+          drawImageData.opacity,
         );
     }
   }

@@ -129,7 +129,11 @@ class _OpacityForwarder extends Visitor<Node, _ForwardResult>
   @override
   Node visitResolvedImageNode(
       ResolvedImageNode resolvedImageNode, _ForwardResult data) {
-    throw UnsupportedError('Cannot forward opacity through an image node');
+    return ResolvedImageNode(
+      data: resolvedImageNode.data,
+      rect: resolvedImageNode.rect,
+      opacity: resolvedImageNode.opacity * data.opacity,
+    );
   }
 }
 
@@ -307,6 +311,6 @@ class OpacityPeepholeOptimizer extends Visitor<_Result, void>
   @override
   _Result visitResolvedImageNode(
       ResolvedImageNode resolvedImageNode, void data) {
-    return _Result(false, resolvedImageNode, <Rect>[]);
+    return _Result(true, resolvedImageNode, <Rect>[resolvedImageNode.rect]);
   }
 }

@@ -30,6 +30,7 @@ class DrawImageData {
   const DrawImageData(
     this.id,
     this.rect,
+    this.opacity,
   );
 
   /// The corresponding encoding image to draw.
@@ -37,4 +38,7 @@ class DrawImageData {
 
   /// The x position of the image in pixels.
   final Rect rect;
+
+  /// The opacity of the image, if any.
+  final double opacity;
 }

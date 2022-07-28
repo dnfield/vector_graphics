@@ -640,7 +640,7 @@ void main() {
 
     final id =
         codec.writeImage(buffer, 0, Uint8List.fromList(<int>[0, 1, 3, 4, 5]));
-    codec.writeDrawImage(buffer, id, 1, 2, 100, 100);
+    codec.writeDrawImage(buffer, id, 1, 2, 100, 100, 1.0);
     final ByteData data = buffer.done();
     final DecodeResponse response = codec.decode(data, listener);
 
@@ -655,7 +655,32 @@ void main() {
     expect(nextResponse.complete, true);
     expect(listener.commands, [
       OnImage(id, 0, [0, 1, 3, 4, 5]),
-      OnDrawImage(id, 1, 2, 100, 100),
+      OnDrawImage(id, 1, 2, 100, 100, 1.0),
+    ]);
+  });
+
+  test('Encodes image data with opacity', () {
+    final buffer = VectorGraphicsBuffer();
+    final TestListener listener = TestListener();
+
+    final id =
+        codec.writeImage(buffer, 0, Uint8List.fromList(<int>[0, 1, 3, 4, 5]));
+    codec.writeDrawImage(buffer, id, 1, 2, 100, 100, 0.5);
+    final ByteData data = buffer.done();
+    final DecodeResponse response = codec.decode(data, listener);
+
+    expect(response.complete, false);
+    expect(listener.commands, [
+      OnImage(id, 0, [0, 1, 3, 4, 5]),
+    ]);
+
+    final DecodeResponse nextResponse =
+        codec.decode(data, listener, response: response);
+
+    expect(nextResponse.complete, true);
+    expect(listener.commands, [
+      OnImage(id, 0, [0, 1, 3, 4, 5]),
+      OnDrawImage(id, 1, 2, 100, 100, 0.5),
     ]);
   });
 
@@ -690,7 +715,7 @@ void main() {
     );
     codec.writeDrawPath(buffer, pathId, fillId);
     codec.writeDrawPath(buffer, pathId, strokeId);
-    codec.writeDrawImage(buffer, imageId, 1, 2, 100, 100);
+    codec.writeDrawImage(buffer, imageId, 1, 2, 100, 100, 1.0);
 
     final ByteData data = buffer.done();
 
@@ -790,7 +815,7 @@ void main() {
       const OnPathFinished(),
       OnDrawPath(pathId, fillId),
       OnDrawPath(pathId, strokeId),
-      OnDrawImage(imageId, 1, 2, 100, 100),
+      OnDrawImage(imageId, 1, 2, 100, 100, 1.0),
     ]);
   });
 }
@@ -981,9 +1006,9 @@ class TestListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onDrawImage(
-      int imageId, double x, double y, double width, double height) {
-    commands.add(OnDrawImage(imageId, x, y, width, height));
+  void onDrawImage(int imageId, double x, double y, double width, double height,
+      double opacity) {
+    commands.add(OnDrawImage(imageId, x, y, width, height, opacity));
   }
 }
 
@@ -1422,16 +1447,18 @@ class OnImage {
 }
 
 class OnDrawImage {
-  const OnDrawImage(this.id, this.x, this.y, this.width, this.height);
+  const OnDrawImage(
+      this.id, this.x, this.y, this.width, this.height, this.opacity);
 
   final int id;
   final double x;
   final double y;
   final double width;
   final double height;
+  final double opacity;
 
   @override
-  int get hashCode => Object.hash(id, x, y, width, height);
+  int get hashCode => Object.hash(id, x, y, width, height, opacity);
 
   @override
   bool operator ==(Object other) {
@@ -1440,11 +1467,12 @@ class OnDrawImage {
         other.x == x &&
         other.y == y &&
         other.width == width &&
-        other.height == height;
+        other.height == height &&
+        other.opacity == opacity;
   }
 
   @override
-  String toString() => 'OnDrawImage($id, $x, $y, $width, $height)';
+  String toString() => 'OnDrawImage($id, $x, $y, $width, $height, $opacity)';
 }
 
 bool _listEquals<E>(List<E>? left, List<E>? right) {

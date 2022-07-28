@@ -18,11 +18,19 @@ class _Result {
   bool deleteMaskNode = true;
 }
 
-/// Simplifies masking operations into PathNodes.
-/// Note this will not optimize cases where 'stroke-width' is set,
-/// there are multiple path nodes in a mask or cases where
-/// the intersection of the mask and the path results in
-/// Path.commands being empty.
+/// Holds value of index and a matching node list.
+class Tuple<T1, T2> {
+  /// Constructor for Tuple class.
+  Tuple(this.index, this.nodeList);
+
+  /// Original index of node(s)
+  final T1 index;
+
+  /// List of nodes.
+  final T2 nodeList;
+}
+
+/// Removes unnecessary overlappping.
 class OverdrawOptimizer extends Visitor<_Result, Node>
     with ErrorOnUnResolvedNode<_Result, Node> {
   /// Applies visitor to given node.
@@ -54,60 +62,144 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
     return newPathNode;
   }
 
+  /// Resolves overlapping between top and bottom path on
+  /// nodes where opacity is not 1 or null.
+  List<ResolvedPathNode> resolveOpacityOverlap(
+      ResolvedPathNode bottomPathNode, ResolvedPathNode topPathNode) {
+    final Color? bottomColor = bottomPathNode.paint.fill?.color;
+    final Color? topColor = topPathNode.paint.fill?.color;
+    if (bottomColor != null && topColor != null) {
+      final double a0 = topColor.a / 255;
+      final double a1 = bottomColor.a / 255;
+      final int r0 = topColor.r;
+      final int b0 = topColor.b;
+      final int g0 = topColor.g;
+      final int r1 = bottomColor.r;
+      final int b1 = bottomColor.b;
+      final int g1 = bottomColor.g;
+
+      final double a = (1 - a0) * a1 + a0;
+      final double r = ((1 - a0) * a1 * r1 + a0 * r0) / a;
+      final double g = ((1 - a0) * a1 * g1 + a0 * g0) / a;
+      final double b = ((1 - a0) * a1 * b1 + a0 * b0) / a;
+
+      final Color overlapColor =
+          Color.fromARGB((a * 255).round(), r.round(), g.round(), b.round());
+
+      final path_ops.Path topPathOpsPath = toPathOpsPath(topPathNode.path);
+      final path_ops.Path bottomPathOpsPath =
+          toPathOpsPath(bottomPathNode.path);
+      final path_ops.Path intersection =
+          bottomPathOpsPath.applyOp(topPathOpsPath, path_ops.PathOp.intersect);
+      final path_ops.Path newBottomPath =
+          bottomPathOpsPath.applyOp(intersection, path_ops.PathOp.difference);
+      final path_ops.Path newTopPath =
+          topPathOpsPath.applyOp(intersection, path_ops.PathOp.difference);
+
+      final Path newBottomVGPath = toVectorGraphicsPath(newBottomPath);
+      final Path newTopVGPath = toVectorGraphicsPath(newTopPath);
+      final Path newOverlapVGPath = toVectorGraphicsPath(intersection);
+
+      final ResolvedPathNode newBottomPathNode = ResolvedPathNode(
+          paint: bottomPathNode.paint,
+          bounds: bottomPathNode.bounds,
+          path: newBottomVGPath);
+      final ResolvedPathNode newTopPathNode = ResolvedPathNode(
+          paint: topPathNode.paint,
+          bounds: bottomPathNode.bounds,
+          path: newTopVGPath);
+      final ResolvedPathNode newOverlapPathNode = ResolvedPathNode(
+          paint: Paint(
+              blendMode: bottomPathNode.paint.blendMode,
+              stroke: bottomPathNode.paint.stroke,
+              fill: Fill(
+                  color: overlapColor,
+                  shader: bottomPathNode.paint.fill?.shader)),
+          bounds: bottomPathNode.bounds,
+          path: newOverlapVGPath);
+
+      bottomPathOpsPath.dispose();
+      topPathOpsPath.dispose();
+      intersection.dispose();
+      newBottomPath.dispose();
+
+      return <ResolvedPathNode>[
+        newBottomPathNode,
+        newTopPathNode,
+        newOverlapPathNode
+      ];
+    } else {
+      return <ResolvedPathNode>[bottomPathNode];
+    }
+  }
+
   @override
   _Result visitEmptyNode(Node node, void data) {
     final _Result _result = _Result(node);
     return _result;
   }
 
-  /// Visits applies optimizer to all children of ResolvedMaskNode.
+  /// Visits applies optimizer to all children of ParentNode.
   _Result visitChildren(Node node, _Result data) {
-    if (node is ResolvedMaskNode) {
-      data = node.child.accept(this, data);
+    if (node is ParentNode) {
+      data = node.accept(this, data);
     }
     return data;
   }
 
-  /// DETLETE LATER:
-  /// YOU MUST MAINTAIN THE ORDER OF THE NODES
   @override
   _Result visitParentNode(ParentNode parentNode, Node data) {
-    final List<int> pathNodeIndices = <int>[];
-    final List<ResolvedPathNode> pathNodesList = <ResolvedPathNode>[];
+    int pathNodeCount = 0;
+    List<List<Node>> newChildList = <List<Node>>[];
     List<Node> newChildren = <Node>[];
 
-    int index = 0;
     for (Node child in parentNode.children) {
       if (child is ResolvedPathNode) {
-        pathNodeIndices.add(index++);
-        pathNodesList.add(child);
+        pathNodeCount++;
       }
+      newChildList.add(<Node>[child]);
     }
 
-    print("PATHNODE LIST LENGTH IS " + pathNodesList.length.toString());
-    print("OPACITY IS " + parentNode.attributes.opacity.toString());
+    int index = 0;
+    ResolvedPathNode? lastPathNode;
+    int? lastPathNodeIndex;
 
-    if (pathNodesList.length >= 2 &&
-        (parentNode.attributes.opacity == 1 ||
-            parentNode.attributes.opacity == null)) {
-      for (int i = 0; i < pathNodesList.length - 1; i++) {
-        pathNodesList[i] =
-            removeOverlap(pathNodesList[i], pathNodesList[i + 1]);
-        print("NEW PATHNODES LIST IS");
-        print(pathNodesList);
-      }
-      index = 0;
+    if (pathNodeCount >= 2) {
       for (Node child in parentNode.children) {
         if (child is ResolvedPathNode) {
-          newChildren.add(pathNodesList[pathNodeIndices[index++]]);
-        } else {
-          newChildren.add(child.accept(this, parentNode).node);
+          if (lastPathNode == null || lastPathNodeIndex == null) {
+            lastPathNode = child;
+            lastPathNodeIndex = index;
+          } else {
+            if (child.paint.fill?.color.a == 255) {
+              newChildList[lastPathNodeIndex] = <Node>[
+                removeOverlap(lastPathNode, child)
+              ];
+            } else {
+              newChildList[lastPathNodeIndex] = resolveOpacityOverlap(
+                  (newChildList[lastPathNodeIndex].first as ResolvedPathNode),
+                  child);
+              newChildList[index] = <Node>[];
+              lastPathNode = null;
+              lastPathNodeIndex = null;
+            }
+          }
+        }
+        index++;
+      }
+      index = 0;
+      for (List<Node> child in newChildList) {
+        if (child.isNotEmpty) {
+          if (child.first is ResolvedPathNode) {
+            newChildren.addAll(child);
+          } else {
+            newChildren.add(child.first.accept(this, parentNode).node);
+          }
         }
       }
     } else {
       newChildren = parentNode.children.toList();
     }
-
     final _Result _result = _Result(ParentNode(parentNode.attributes,
         children: newChildren, precalculatedTransform: parentNode.transform));
 

@@ -125,6 +125,11 @@ class _OpacityForwarder extends Visitor<Node, _ForwardResult>
       bounds: verticesNode.bounds,
     );
   }
+
+  @override
+  Node visitResolvedImageNode(ResolvedImageNode resolvedImageNode, _ForwardResult data) {
+    throw UnimplementedError();
+  }
 }
 
 /// This visitor will process the tree and apply opacity forward.
@@ -296,5 +301,11 @@ class OpacityPeepholeOptimizer extends Visitor<_Result, void>
       verticesNode,
       <Rect>[verticesNode.bounds],
     );
+  }
+
+  @override
+  _Result visitResolvedImageNode(ResolvedImageNode resolvedImageNode, void data) {
+    // TODO: implement visitResolvedImageNode
+    throw UnimplementedError();
   }
 }

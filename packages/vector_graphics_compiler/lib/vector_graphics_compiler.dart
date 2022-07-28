@@ -5,6 +5,7 @@
 import 'dart:typed_data';
 
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
+import 'package:vector_graphics_compiler/src/geometry/image.dart';
 import 'package:vector_graphics_compiler/src/geometry/matrix.dart';
 
 import 'src/geometry/vertices.dart';
@@ -113,6 +114,10 @@ Future<Uint8List> encodeSvg(
   final Map<int, int> fillIds = <int, int>{};
   final Map<int, int> strokeIds = <int, int>{};
   final Map<Gradient, int> shaderIds = <Gradient, int>{};
+
+  for (final ImageData data in instructions.images) {
+    codec.writeImage(buffer, 0, data.data);
+  }
 
   for (final Paint paint in instructions.paints) {
     _encodeShader(paint.fill?.shader, shaderIds, codec, buffer);
@@ -262,6 +267,17 @@ Future<Uint8List> encodeSvg(
           );
         }
         break;
+      case DrawCommandType.image:
+        final DrawImageData drawImageData =
+            instructions.drawImages[command.objectId!];
+        codec.writeDrawImage(
+          buffer,
+          drawImageData.id,
+          drawImageData.x,
+          drawImageData.y,
+          drawImageData.width,
+          drawImageData.height,
+        );
     }
   }
   return buffer.done().buffer.asUint8List();

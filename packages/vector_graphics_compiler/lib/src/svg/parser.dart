@@ -1,4 +1,6 @@
 import 'dart:collection';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
 import 'package:vector_graphics_compiler/src/svg/tessellator.dart';
@@ -333,9 +335,31 @@ class _Elements {
     return null;
   }
 
+  static final RegExp _whitespacePattern = RegExp(r'\s');
+
   static Future<void> image(
-      SvgParser parserState, bool warningsAsErrors) async {
-    throw UnsupportedError('The <image> tag is not supported by this library.');
+    SvgParser parserState,
+    bool warningsAsErrors,
+  ) async {
+    final String? xlinkHref = parserState._currentAttributes.href;
+    if (xlinkHref == null) {
+      return;
+    }
+
+    if (xlinkHref.startsWith('data:')) {
+      final int commaLocation = xlinkHref.indexOf(',') + 1;
+      final Uint8List data = base64.decode(xlinkHref
+          .substring(commaLocation)
+          .replaceAll(_whitespacePattern, ''));
+      parserState.currentGroup!.addChild(
+        ImageNode(data, parserState._currentAttributes),
+        clipResolver: parserState._definitions.getClipPath,
+        maskResolver: parserState._definitions.getDrawable,
+      );
+    }
+    if (warningsAsErrors) {
+      throw UnimplementedError('Image data format not supported: $xlinkHref');
+    }
   }
 
   static Future<void> text(

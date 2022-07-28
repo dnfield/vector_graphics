@@ -150,7 +150,7 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
   @override
   _Result visitParentNode(ParentNode parentNode, Node data) {
     int pathNodeCount = 0;
-    List<List<Node>> newChildList = <List<Node>>[];
+    final List<List<Node>> newChildList = <List<Node>>[];
     List<Node> newChildren = <Node>[];
 
     for (Node child in parentNode.children) {

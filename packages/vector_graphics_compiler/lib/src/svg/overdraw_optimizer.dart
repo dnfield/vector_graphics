@@ -122,9 +122,8 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
         newTopPathNode,
         newOverlapPathNode
       ];
-    } else {
-      return <ResolvedPathNode>[bottomPathNode, topPathNode];
     }
+    return <ResolvedPathNode>[bottomPathNode, topPathNode];
   }
 
   @override

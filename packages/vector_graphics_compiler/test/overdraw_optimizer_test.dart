@@ -84,9 +84,6 @@ void main() {
     final Node node = await parseAndResolve(opacityOverlap);
     final VectorInstructions instructions = await parse(opacityOverlap);
 
-    final List<ResolvedPathNode> pathNodesOld =
-        queryChildren<ResolvedPathNode>(node);
-
     final OverdrawOptimizer visitor = OverdrawOptimizer();
     final Node newNode = visitor.apply(node);
 
@@ -150,9 +147,6 @@ void main() {
     final Node node = await parseAndResolve(solidOverTrasnparent);
     final VectorInstructions instructions = await parse(solidOverTrasnparent);
 
-    final List<ResolvedPathNode> pathNodesOld =
-        queryChildren<ResolvedPathNode>(node);
-
     final OverdrawOptimizer visitor = OverdrawOptimizer();
     final Node newNode = visitor.apply(node);
 
@@ -198,9 +192,6 @@ void main() {
   test('Semi-transparent shape overlapping solid shape', () async {
     final Node node = await parseAndResolve(transparentOverSolid);
     final VectorInstructions instructions = await parse(transparentOverSolid);
-
-    final List<ResolvedPathNode> pathNodesOld =
-        queryChildren<ResolvedPathNode>(node);
 
     final OverdrawOptimizer visitor = OverdrawOptimizer();
     final Node newNode = visitor.apply(node);
@@ -264,9 +255,6 @@ void main() {
   test('Multiple opaque and semi-trasnparent shapes', () async {
     final Node node = await parseAndResolve(complexOpacityTest);
     final VectorInstructions instructions = await parse(complexOpacityTest);
-
-    final List<ResolvedPathNode> pathNodesOld =
-        queryChildren<ResolvedPathNode>(node);
 
     final OverdrawOptimizer visitor = OverdrawOptimizer();
     final Node newNode = visitor.apply(node);

@@ -35,10 +35,12 @@ Future<VectorInstructions> parse(
   SvgTheme theme = const SvgTheme(),
   bool enableMaskingOptimizer = true,
   bool enableClippingOptimizer = true,
+  bool enableOverdrawOptimizer = true,
 }) async {
   final SvgParser parser = SvgParser(xml, theme, key, warningsAsErrors);
   parser.enableMaskingOptimizer = enableMaskingOptimizer;
   parser.enableClippingOptimizer = enableClippingOptimizer;
+  parser.enableOverdrawOptimizer = enableOverdrawOptimizer;
   return parser.parse();
 }
 
@@ -99,6 +101,7 @@ Future<Uint8List> encodeSvg({
   required String debugName,
   bool enableMaskingOptimizer = true,
   bool enableClippingOptimizer = true,
+  bool enableOverdrawOptimizer = true,
   bool warningsAsErrors = false,
 }) async {
   const VectorGraphicsCodec codec = VectorGraphicsCodec();
@@ -107,6 +110,7 @@ Future<Uint8List> encodeSvg({
     key: debugName,
     enableMaskingOptimizer: enableMaskingOptimizer,
     enableClippingOptimizer: enableClippingOptimizer,
+    enableOverdrawOptimizer: enableOverdrawOptimizer,
     warningsAsErrors: warningsAsErrors,
   );
 

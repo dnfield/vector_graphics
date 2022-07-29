@@ -588,6 +588,9 @@ class SvgParser {
   /// Toggles whether [ClippingOptimizer] is enabled or disabled.
   bool enableClippingOptimizer = true;
 
+  /// Toggles whether [OverdrawOptimizer] is enabled or disabled.
+  bool enableOverdrawOptimizer = true;
+
   ViewportNode? _root;
   SvgAttributes _currentAttributes = SvgAttributes.empty;
   XmlStartElementEvent? _currentStartElement;
@@ -692,10 +695,12 @@ class SvgParser {
 
     Node newRoot = _root!.accept(resolvingVisitor, AffineMatrix.identity);
 
-    if (path_ops.isPathOpsInitialized) {
-      newRoot = overdrawOptimizer.apply(newRoot);
-    } else {
-      throw Exception('PathOps library was not initialized.');
+    if (enableOverdrawOptimizer == true) {
+      if (path_ops.isPathOpsInitialized) {
+        newRoot = overdrawOptimizer.apply(newRoot);
+      } else {
+        throw Exception('PathOps library was not initialized.');
+      }
     }
     if (isTesselatorInitialized) {
       newRoot = newRoot.accept(tessellator, null);

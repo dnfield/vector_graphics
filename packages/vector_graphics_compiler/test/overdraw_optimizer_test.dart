@@ -51,44 +51,29 @@ void main() {
     expect(pathNodesOld.length, pathNodesNew.length);
 
     expect(instructions.paints, const <Paint>[
-      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xffadd8e6))),
       Paint(
-          blendMode: BlendMode.multiply,
-          fill: Fill(
-              color: Color(0x98ffffff),
-              shader: LinearGradient(
-                  id: 'url(#linearGradient-3)',
-                  from: Point(46.9782516, 60.9121966),
-                  to: Point(60.42279469999999, 90.6839734),
-                  colors: <Color>[Color(0xffffffff), Color(0xff0000ff)],
-                  offsets: <double>[0.0, 1.0],
-                  tileMode: TileMode.clamp,
-                  unitMode: GradientUnitMode.transformed)))
+          blendMode: BlendMode.srcOver,
+          stroke: Stroke(color: Color(0xff000000), width: 0.0),
+          fill: Fill(color: Color(0xffff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xff0000ff)))
     ]);
 
     expect(instructions.paths, <Path>[
       Path(
         commands: const <PathCommand>[
-          MoveToCommand(50.0, 0.0),
-          CubicToCommand(77.5957512247, 0.0, 100.0, 22.4042487753, 100.0, 50.0),
-          CubicToCommand(
-              100.0, 77.5957512247, 77.5957512247, 100.0, 50.0, 100.0),
-          CubicToCommand(22.4042487753, 100.0, 0.0, 77.5957512247, 0.0, 50.0),
-          CubicToCommand(0.0, 22.4042487753, 22.4042487753, 0.0, 50.0, 0.0),
+          MoveToCommand(99.0, 221.5),
+          LineToCommand(692.0, 221.5),
+          LineToCommand(692.0, 316.5),
+          LineToCommand(99.0, 316.5),
           CloseCommand()
         ],
       ),
       Path(
         commands: const <PathCommand>[
-          MoveToCommand(90.0, 50.0),
-          CubicToCommand(
-              90.0, 27.923398971557617, 72.07659912109375, 10.0, 50.0, 10.0),
-          CubicToCommand(
-              27.923398971557617, 10.0, 10.0, 27.923398971557617, 10.0, 50.0),
-          CubicToCommand(
-              10.0, 72.07659912109375, 27.923398971557617, 90.0, 50.0, 90.0),
-          CubicToCommand(
-              72.07659912109375, 90.0, 90.0, 72.07659912109375, 90.0, 50.0),
+          MoveToCommand(367.0, 41.50001),
+          LineToCommand(448.0, 41.50001),
+          LineToCommand(448.0, 527.49999),
+          LineToCommand(367.0, 527.49999),
           CloseCommand()
         ],
       )
@@ -111,44 +96,50 @@ void main() {
     expect(pathNodesNew.length, 3);
 
     expect(instructions.paints, const <Paint>[
-      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xffadd8e6))),
-      Paint(
-          blendMode: BlendMode.multiply,
-          fill: Fill(
-              color: Color(0x98ffffff),
-              shader: LinearGradient(
-                  id: 'url(#linearGradient-3)',
-                  from: Point(46.9782516, 60.9121966),
-                  to: Point(60.42279469999999, 90.6839734),
-                  colors: <Color>[Color(0xffffffff), Color(0xff0000ff)],
-                  offsets: <double>[0.0, 1.0],
-                  tileMode: TileMode.clamp,
-                  unitMode: GradientUnitMode.transformed)))
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x7fff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x4c0000ff))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xa58a0075)))
     ]);
 
     expect(instructions.paths, <Path>[
       Path(
         commands: const <PathCommand>[
-          MoveToCommand(50.0, 0.0),
-          CubicToCommand(77.5957512247, 0.0, 100.0, 22.4042487753, 100.0, 50.0),
-          CubicToCommand(
-              100.0, 77.5957512247, 77.5957512247, 100.0, 50.0, 100.0),
-          CubicToCommand(22.4042487753, 100.0, 0.0, 77.5957512247, 0.0, 50.0),
-          CubicToCommand(0.0, 22.4042487753, 22.4042487753, 0.0, 50.0, 0.0),
+          MoveToCommand(343.0, 240.5),
+          LineToCommand(88.0, 240.5),
+          LineToCommand(88.0, 366.5),
+          LineToCommand(343.0, 366.5),
+          LineToCommand(343.0, 240.5),
+          CloseCommand(),
+          MoveToCommand(484.0, 240.5),
+          LineToCommand(484.0, 366.5),
+          LineToCommand(711.0, 366.5),
+          LineToCommand(711.0, 240.5),
+          LineToCommand(484.0, 240.5),
           CloseCommand()
         ],
       ),
       Path(
         commands: const <PathCommand>[
-          MoveToCommand(90.0, 50.0),
-          CubicToCommand(
-              90.0, 27.923398971557617, 72.07659912109375, 10.0, 50.0, 10.0),
-          CubicToCommand(
-              27.923398971557617, 10.0, 10.0, 27.923398971557617, 10.0, 50.0),
-          CubicToCommand(
-              10.0, 72.07659912109375, 27.923398971557617, 90.0, 50.0, 90.0),
-          CubicToCommand(
-              72.07659912109375, 90.0, 90.0, 72.07659912109375, 90.0, 50.0),
+          MoveToCommand(484.0, 63.5),
+          LineToCommand(343.0, 63.5),
+          LineToCommand(343.0, 240.5),
+          LineToCommand(484.0, 240.5),
+          LineToCommand(484.0, 63.5),
+          CloseCommand(),
+          MoveToCommand(484.0, 366.5),
+          LineToCommand(343.0, 366.5),
+          LineToCommand(343.0, 565.5),
+          LineToCommand(484.0, 565.5),
+          LineToCommand(484.0, 366.5),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(343.0, 240.5),
+          LineToCommand(484.0, 240.5),
+          LineToCommand(484.0, 366.5),
+          LineToCommand(343.0, 366.5),
           CloseCommand()
         ],
       )
@@ -157,48 +148,406 @@ void main() {
 
   test('Solid shape overlapping semi-transparent shape', () async {
     final Node node = await parseAndResolve(solidOverTrasnparent);
+    final VectorInstructions instructions = await parse(solidOverTrasnparent);
+
+    final List<ResolvedPathNode> pathNodesOld =
+        queryChildren<ResolvedPathNode>(node);
+
     final OverdrawOptimizer visitor = OverdrawOptimizer();
     final Node newNode = visitor.apply(node);
 
-    final List<ResolvedClipNode> clipNodesNew =
-        queryChildren<ResolvedClipNode>(newNode);
+    final List<ResolvedPathNode> pathNodesNew =
+        queryChildren<ResolvedPathNode>(newNode);
 
-    expect(clipNodesNew.length, 1);
+    expect(pathNodesNew.length, 2);
+
+    expect(instructions.paints, const <Paint>[
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x7fff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xff0000ff)))
+    ]);
+
+    expect(instructions.paths, <Path>[
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(343.0, 240.5),
+          LineToCommand(88.0, 240.5),
+          LineToCommand(88.0, 366.5),
+          LineToCommand(343.0, 366.5),
+          LineToCommand(343.0, 240.5),
+          CloseCommand(),
+          MoveToCommand(484.0, 240.5),
+          LineToCommand(484.0, 366.5),
+          LineToCommand(711.0, 366.5),
+          LineToCommand(711.0, 240.5),
+          LineToCommand(484.0, 240.5),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(343.0, 63.5),
+          LineToCommand(484.0, 63.5),
+          LineToCommand(484.0, 565.50001),
+          LineToCommand(343.0, 565.50001),
+          CloseCommand()
+        ],
+      )
+    ]);
   });
 
   test('Semi-transparent shape overlapping solid shape', () async {
     final Node node = await parseAndResolve(transparentOverSolid);
+    final VectorInstructions instructions = await parse(transparentOverSolid);
 
     final List<ResolvedPathNode> pathNodesOld =
         queryChildren<ResolvedPathNode>(node);
-    final List<ParentNode> parentNodesOld = queryChildren<ParentNode>(node);
 
     final OverdrawOptimizer visitor = OverdrawOptimizer();
     final Node newNode = visitor.apply(node);
 
     final List<ResolvedPathNode> pathNodesNew =
         queryChildren<ResolvedPathNode>(newNode);
-    final List<ParentNode> parentNodesNew = queryChildren<ParentNode>(newNode);
 
-    expect(pathNodesOld.length, pathNodesNew.length);
-    expect(parentNodesOld.length, parentNodesNew.length);
+    expect(pathNodesNew.length, 3);
+
+    expect(instructions.paints, const <Paint>[
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xffff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x7f0000ff))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xff80007f)))
+    ]);
+
+    expect(instructions.paths, <Path>[
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(343.0, 240.5),
+          LineToCommand(88.0, 240.5),
+          LineToCommand(88.0, 366.5),
+          LineToCommand(343.0, 366.5),
+          LineToCommand(343.0, 240.5),
+          CloseCommand(),
+          MoveToCommand(484.0, 240.5),
+          LineToCommand(484.0, 366.5),
+          LineToCommand(711.0, 366.5),
+          LineToCommand(711.0, 240.5),
+          LineToCommand(484.0, 240.5),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(484.0, 63.5),
+          LineToCommand(343.0, 63.5),
+          LineToCommand(343.0, 240.5),
+          LineToCommand(484.0, 240.5),
+          LineToCommand(484.0, 63.5),
+          CloseCommand(),
+          MoveToCommand(484.0, 366.5),
+          LineToCommand(343.0, 366.5),
+          LineToCommand(343.0, 565.5),
+          LineToCommand(484.0, 565.5),
+          LineToCommand(484.0, 366.5),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(343.0, 240.5),
+          LineToCommand(484.0, 240.5),
+          LineToCommand(484.0, 366.5),
+          LineToCommand(343.0, 366.5),
+          CloseCommand()
+        ],
+      )
+    ]);
   });
 
   test('Multiple opaque and semi-trasnparent shapes', () async {
     final Node node = await parseAndResolve(complexOpacityTest);
+    final VectorInstructions instructions = await parse(complexOpacityTest);
 
     final List<ResolvedPathNode> pathNodesOld =
         queryChildren<ResolvedPathNode>(node);
-    final List<ParentNode> parentNodesOld = queryChildren<ParentNode>(node);
 
     final OverdrawOptimizer visitor = OverdrawOptimizer();
     final Node newNode = visitor.apply(node);
 
     final List<ResolvedPathNode> pathNodesNew =
         queryChildren<ResolvedPathNode>(newNode);
-    final List<ParentNode> parentNodesNew = queryChildren<ParentNode>(newNode);
 
-    expect(pathNodesOld.length, pathNodesNew.length);
-    expect(parentNodesOld.length, parentNodesNew.length);
+    expect(pathNodesNew.length, 23);
+
+    expect(instructions.paints, const <Paint>[
+      Paint(
+          blendMode: BlendMode.srcOver,
+          stroke: Stroke(color: Color(0xff0000ff))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xff0000ff))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xccff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xffcc0033))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xffff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x99ff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x66ff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xc2ff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x33ff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xbfff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xff008000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xbf008000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x7fff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xdf913700))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x7f008000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x3fff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x9fff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x3f008000)))
+    ]);
+
+    expect(instructions.paths, <Path>[
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(1.0, 1.0),
+          LineToCommand(1199.0, 1.0),
+          LineToCommand(1199.0, 349.0),
+          LineToCommand(1.0, 349.0),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(100.0, 100.0),
+          LineToCommand(150.0, 100.0),
+          CubicToCommand(150.0, 127.59574890136719, 172.4042510986328, 150.0,
+              200.0, 150.0),
+          CubicToCommand(227.5957489013672, 150.0, 250.0, 127.59574890136719,
+              250.0, 100.0),
+          LineToCommand(350.0, 100.0),
+          CubicToCommand(350.0, 127.59574890136719, 372.40423583984375, 150.0,
+              400.0, 150.0),
+          CubicToCommand(427.59576416015625, 150.0, 450.0, 127.59574890136719,
+              450.0, 100.0),
+          LineToCommand(1100.0, 100.0),
+          LineToCommand(1100.0, 250.0),
+          LineToCommand(100.0, 250.0),
+          LineToCommand(100.0, 100.0),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(450.0, 100.0),
+          CubicToCommand(
+              450.0, 72.40425109863281, 427.59576416015625, 50.0, 400.0, 50.0),
+          CubicToCommand(
+              372.40423583984375, 50.0, 350.0, 72.40425109863281, 350.0, 100.0),
+          LineToCommand(450.0, 100.0),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(450.0, 100.0),
+          LineToCommand(350.0, 100.0),
+          CubicToCommand(350.0, 127.59574890136719, 372.40423583984375, 150.0,
+              400.0, 150.0),
+          CubicToCommand(427.59576416015625, 150.0, 450.0, 127.59574890136719,
+              450.0, 100.0),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(200.0, 50.0),
+          CubicToCommand(
+              227.5957512247, 50.0, 250.0, 72.4042487753, 250.0, 100.0),
+          CubicToCommand(
+              250.0, 127.5957512247, 227.5957512247, 150.0, 200.0, 150.0),
+          CubicToCommand(
+              172.4042487753, 150.0, 150.0, 127.5957512247, 150.0, 100.0),
+          CubicToCommand(
+              150.0, 72.4042487753, 172.4042487753, 50.0, 200.0, 50.0),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(600.0, 50.0),
+          CubicToCommand(
+              627.5957641601562, 50.0, 650.0, 72.40425109863281, 650.0, 100.0),
+          CubicToCommand(650.0, 127.59574890136719, 627.5957641601562, 150.0,
+              600.0, 150.0),
+          CubicToCommand(572.4042358398438, 150.0, 550.0, 127.59574890136719,
+              550.0, 100.0),
+          CubicToCommand(
+              550.0, 72.40425109863281, 572.4042358398438, 50.0, 600.0, 50.0),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(800.0, 50.0),
+          CubicToCommand(
+              827.5957641601562, 50.0, 850.0, 72.40425109863281, 850.0, 100.0),
+          CubicToCommand(850.0, 127.59574890136719, 827.5957641601562, 150.0,
+              800.0, 150.0),
+          CubicToCommand(772.4042358398438, 150.0, 750.0, 127.59574890136719,
+              750.0, 100.0),
+          CubicToCommand(
+              750.0, 72.40425109863281, 772.4042358398438, 50.0, 800.0, 50.0),
+          CloseCommand()
+        ],
+      ),
+      Path(),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(1000.0, 50.0),
+          CubicToCommand(
+              1027.595703125, 50.0, 1050.0, 72.40425109863281, 1050.0, 100.0),
+          CubicToCommand(
+              1050.0, 127.59574890136719, 1027.595703125, 150.0, 1000.0, 150.0),
+          CubicToCommand(972.4042358398438, 150.0, 950.0, 127.59574890136719,
+              950.0, 100.0),
+          CubicToCommand(
+              950.0, 72.40425109863281, 972.4042358398438, 50.0, 1000.0, 50.0),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(382.5, 200.0),
+          CubicToCommand(410.09576416015625, 200.0, 432.5, 222.4042510986328,
+              432.5, 250.0),
+          CubicToCommand(432.5, 277.59576416015625, 410.09576416015625, 300.0,
+              382.5, 300.0),
+          CubicToCommand(354.90423583984375, 300.0, 332.5, 277.59576416015625,
+              332.5, 250.0),
+          CubicToCommand(332.5, 222.4042510986328, 354.90423583984375, 200.0,
+              382.5, 200.0),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(182.5, 200.0),
+          CubicToCommand(
+              210.0957512247, 200.0, 232.5, 222.4042487753, 232.5, 250.0),
+          CubicToCommand(
+              232.5, 277.5957512247, 210.0957512247, 300.0, 182.5, 300.0),
+          CubicToCommand(
+              154.9042487753, 300.0, 132.5, 277.5957512247, 132.5, 250.0),
+          CubicToCommand(
+              132.5, 222.4042487753, 154.9042487753, 200.0, 182.5, 200.0),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(217.5, 200.0),
+          CubicToCommand(
+              245.0957512247, 200.0, 267.5, 222.4042487753, 267.5, 250.0),
+          CubicToCommand(
+              267.5, 277.5957512247, 245.0957512247, 300.0, 217.5, 300.0),
+          CubicToCommand(
+              189.9042487753, 300.0, 167.5, 277.5957512247, 167.5, 250.0),
+          CubicToCommand(
+              167.5, 222.4042487753, 189.9042487753, 200.0, 217.5, 200.0),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(417.5, 200.0),
+          CubicToCommand(445.09576416015625, 200.0, 467.5, 222.4042510986328,
+              467.5, 250.0),
+          CubicToCommand(467.5, 277.59576416015625, 445.09576416015625, 300.0,
+              417.5, 300.0),
+          CubicToCommand(389.90423583984375, 300.0, 367.5, 277.59576416015625,
+              367.5, 250.0),
+          CubicToCommand(367.5, 222.4042510986328, 389.90423583984375, 200.0,
+              417.5, 200.0),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(582.5, 200.0),
+          CubicToCommand(
+              610.0957641601562, 200.0, 632.5, 222.4042510986328, 632.5, 250.0),
+          CubicToCommand(632.5, 277.59576416015625, 610.0957641601562, 300.0,
+              582.5, 300.0),
+          CubicToCommand(554.9042358398438, 300.0, 532.5, 277.59576416015625,
+              532.5, 250.0),
+          CubicToCommand(
+              532.5, 222.4042510986328, 554.9042358398438, 200.0, 582.5, 200.0),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(617.5, 200.0),
+          CubicToCommand(
+              645.0957641601562, 200.0, 667.5, 222.4042510986328, 667.5, 250.0),
+          CubicToCommand(667.5, 277.59576416015625, 645.0957641601562, 300.0,
+              617.5, 300.0),
+          CubicToCommand(589.9042358398438, 300.0, 567.5, 277.59576416015625,
+              567.5, 250.0),
+          CubicToCommand(
+              567.5, 222.4042510986328, 589.9042358398438, 200.0, 617.5, 200.0),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(817.5, 200.0),
+          CubicToCommand(
+              845.0957641601562, 200.0, 867.5, 222.4042510986328, 867.5, 250.0),
+          CubicToCommand(867.5, 277.59576416015625, 845.0957641601562, 300.0,
+              817.5, 300.0),
+          CubicToCommand(789.9042358398438, 300.0, 767.5, 277.59576416015625,
+              767.5, 250.0),
+          CubicToCommand(
+              767.5, 222.4042510986328, 789.9042358398438, 200.0, 817.5, 200.0),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(782.5, 200.0),
+          CubicToCommand(
+              810.0957641601562, 200.0, 832.5, 222.4042510986328, 832.5, 250.0),
+          CubicToCommand(832.5, 277.59576416015625, 810.0957641601562, 300.0,
+              782.5, 300.0),
+          CubicToCommand(754.9042358398438, 300.0, 732.5, 277.59576416015625,
+              732.5, 250.0),
+          CubicToCommand(
+              732.5, 222.4042510986328, 754.9042358398438, 200.0, 782.5, 200.0),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(982.5, 200.0),
+          CubicToCommand(1010.0957641601562, 200.0, 1032.5, 222.4042510986328,
+              1032.5, 250.0),
+          CubicToCommand(1032.5, 277.59576416015625, 1010.0957641601562, 300.0,
+              982.5, 300.0),
+          CubicToCommand(954.9042358398438, 300.0, 932.5, 277.59576416015625,
+              932.5, 250.0),
+          CubicToCommand(
+              932.5, 222.4042510986328, 954.9042358398438, 200.0, 982.5, 200.0),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(1017.5, 200.0),
+          CubicToCommand(
+              1045.0957512247, 200.0, 1067.5, 222.4042487753, 1067.5, 250.0),
+          CubicToCommand(
+              1067.5, 277.5957512247, 1045.0957512247, 300.0, 1017.5, 300.0),
+          CubicToCommand(
+              989.9042487753, 300.0, 967.5, 277.5957512247, 967.5, 250.0),
+          CubicToCommand(
+              967.5, 222.4042487753, 989.9042487753, 200.0, 1017.5, 200.0),
+          CloseCommand()
+        ],
+      )
+    ]);
   });
 }

@@ -209,9 +209,7 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
 
   @override
   _Result visitMaskNode(MaskNode maskNode, Node data) {
-    final _Result _result = _Result(maskNode);
-
-    return _result;
+    return _Result(maskNode);
   }
 
   @override

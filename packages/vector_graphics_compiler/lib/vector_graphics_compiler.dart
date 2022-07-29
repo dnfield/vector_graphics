@@ -6,15 +6,13 @@ import 'dart:typed_data';
 
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 import 'src/geometry/matrix.dart';
-import 'package:vector_graphics_compiler/src/geometry/image.dart';
-
+import 'src/geometry/image.dart';
 import 'src/geometry/vertices.dart';
 import 'src/geometry/path.dart';
 import 'src/paint.dart';
 import 'src/svg/theme.dart';
 import 'src/svg/parser.dart';
 import 'src/vector_instructions.dart';
-
 export 'src/geometry/basic_types.dart';
 export 'src/geometry/matrix.dart';
 export 'src/geometry/path.dart';

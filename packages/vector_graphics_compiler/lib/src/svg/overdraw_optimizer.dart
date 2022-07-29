@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'parser.dart';
 import 'node.dart';
 import 'resolver.dart';
 import 'visitor.dart';
@@ -15,19 +16,6 @@ class _Result {
   final Node node;
   final List<Node> children = <Node>[];
   Node parent = Node.empty;
-  bool deleteMaskNode = true;
-}
-
-/// Holds value of index and a matching node list.
-class Tuple<T1, T2> {
-  /// Constructor for Tuple class.
-  Tuple(this.index, this.nodeList);
-
-  /// Original index of node(s)
-  final T1 index;
-
-  /// List of nodes.
-  final T2 nodeList;
 }
 
 /// Removes unnecessary overlappping.
@@ -62,6 +50,28 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
     return newPathNode;
   }
 
+  /// Calculates the resulting [Color] when two semi-transparent
+  /// colors are stacked on top of eachother.
+  Color calculateOverlapColor(Color bottomColor, Color topColor) {
+    final double a0 = topColor.a / 255;
+    final double a1 = bottomColor.a / 255;
+    final int r0 = topColor.r;
+    final int b0 = topColor.b;
+    final int g0 = topColor.g;
+    final int r1 = bottomColor.r;
+    final int b1 = bottomColor.b;
+    final int g1 = bottomColor.g;
+
+    final double a = (1 - a0) * a1 + a0;
+    final double r = ((1 - a0) * a1 * r1 + a0 * r0) / a;
+    final double g = ((1 - a0) * a1 * g1 + a0 * g0) / a;
+    final double b = ((1 - a0) * a1 * b1 + a0 * b0) / a;
+
+    final Color overlapColor =
+        Color.fromARGB((a * 255).round(), r.round(), g.round(), b.round());
+    return overlapColor;
+  }
+
   /// Resolves overlapping between top and bottom path on
   /// nodes where opacity is not 1 or null.
   List<ResolvedPathNode> resolveOpacityOverlap(
@@ -69,23 +79,7 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
     final Color? bottomColor = bottomPathNode.paint.fill?.color;
     final Color? topColor = topPathNode.paint.fill?.color;
     if (bottomColor != null && topColor != null) {
-      final double a0 = topColor.a / 255;
-      final double a1 = bottomColor.a / 255;
-      final int r0 = topColor.r;
-      final int b0 = topColor.b;
-      final int g0 = topColor.g;
-      final int r1 = bottomColor.r;
-      final int b1 = bottomColor.b;
-      final int g1 = bottomColor.g;
-
-      final double a = (1 - a0) * a1 + a0;
-      final double r = ((1 - a0) * a1 * r1 + a0 * r0) / a;
-      final double g = ((1 - a0) * a1 * g1 + a0 * g0) / a;
-      final double b = ((1 - a0) * a1 * b1 + a0 * b0) / a;
-
-      final Color overlapColor =
-          Color.fromARGB((a * 255).round(), r.round(), g.round(), b.round());
-
+      final Color overlapColor = calculateOverlapColor(bottomColor, topColor);
       final path_ops.Path topPathOpsPath = toPathOpsPath(topPathNode.path);
       final path_ops.Path bottomPathOpsPath =
           toPathOpsPath(bottomPathNode.path);
@@ -129,7 +123,7 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
         newOverlapPathNode
       ];
     } else {
-      return <ResolvedPathNode>[bottomPathNode];
+      return <ResolvedPathNode>[bottomPathNode, topPathNode];
     }
   }
 
@@ -164,9 +158,11 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
     ResolvedPathNode? lastPathNode;
     int? lastPathNodeIndex;
 
-    if (pathNodeCount >= 2) {
+    if (pathNodeCount >= 2 && parentNode.attributes.opacity == null) {
       for (Node child in parentNode.children) {
-        if (child is ResolvedPathNode && child.paint.stroke?.width == null) {
+        if (child is ResolvedPathNode &&
+            child.paint.stroke?.width == null &&
+            child.paint.stroke?.color == null) {
           if (lastPathNode == null || lastPathNodeIndex == null) {
             lastPathNode = child;
             lastPathNodeIndex = index;
@@ -196,6 +192,10 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
             newChildren.add(child.first.accept(this, parentNode).node);
           }
         }
+      }
+    } else if (pathNodeCount < 2) {
+      for (Node child in parentNode.children) {
+        newChildren.add(child.accept(this, parentNode).node);
       }
     } else {
       newChildren = parentNode.children.toList();
@@ -286,10 +286,12 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
   @override
   _Result visitViewportNode(ViewportNode viewportNode, void data) {
     final List<Node> children = <Node>[];
-    for (Node child in viewportNode.children) {
-      final _Result childNode = child.accept(this, viewportNode);
-      children.add(childNode.node);
-    }
+
+    final ParentNode parentNode = ParentNode(SvgAttributes.empty,
+        children: viewportNode.children.toList());
+
+    final _Result childResult = parentNode.accept(this, viewportNode);
+    children.addAll((childResult.node as ParentNode).children);
 
     final ViewportNode node = ViewportNode(
       viewportNode.attributes,

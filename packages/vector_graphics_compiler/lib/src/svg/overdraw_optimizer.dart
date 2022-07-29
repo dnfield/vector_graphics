@@ -157,45 +157,47 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
     int index = 0;
     ResolvedPathNode? lastPathNode;
     int? lastPathNodeIndex;
-
-    if (pathNodeCount >= 2 && parentNode.attributes.opacity == null) {
-      for (Node child in parentNode.children) {
-        if (child is ResolvedPathNode &&
-            child.paint.stroke?.width == null &&
-            child.paint.stroke?.color == null) {
-          if (lastPathNode == null || lastPathNodeIndex == null) {
-            lastPathNode = child;
-            lastPathNodeIndex = index;
-          } else {
-            if (child.paint.fill?.color.a == 255) {
-              newChildList[lastPathNodeIndex] = <Node>[
-                removeOverlap(lastPathNode, child)
-              ];
+    if (parentNode.attributes.opacity == null) {
+      if (pathNodeCount >= 2) {
+        for (Node child in parentNode.children) {
+          if (child is ResolvedPathNode &&
+              child.paint.stroke?.width == null &&
+              child.paint.stroke?.color == null &&
+              child.paint.fill?.shader == null) {
+            if (lastPathNode == null || lastPathNodeIndex == null) {
+              lastPathNode = child;
+              lastPathNodeIndex = index;
             } else {
-              newChildList[lastPathNodeIndex] = resolveOpacityOverlap(
-                  (newChildList[lastPathNodeIndex].first as ResolvedPathNode),
-                  child);
-              newChildList[index] = <Node>[];
-              lastPathNode = null;
-              lastPathNodeIndex = null;
+              if (child.paint.fill?.color.a == 255) {
+                newChildList[lastPathNodeIndex] = <Node>[
+                  removeOverlap(lastPathNode, child)
+                ];
+              } else {
+                newChildList[lastPathNodeIndex] = resolveOpacityOverlap(
+                    (newChildList[lastPathNodeIndex].first as ResolvedPathNode),
+                    child);
+                newChildList[index] = <Node>[];
+                lastPathNode = null;
+                lastPathNodeIndex = null;
+              }
+            }
+          }
+          index++;
+        }
+        index = 0;
+        for (List<Node> child in newChildList) {
+          if (child.isNotEmpty) {
+            if (child.first is ResolvedPathNode) {
+              newChildren.addAll(child);
+            } else {
+              newChildren.add(child.first.accept(this, parentNode).node);
             }
           }
         }
-        index++;
-      }
-      index = 0;
-      for (List<Node> child in newChildList) {
-        if (child.isNotEmpty) {
-          if (child.first is ResolvedPathNode) {
-            newChildren.addAll(child);
-          } else {
-            newChildren.add(child.first.accept(this, parentNode).node);
-          }
+      } else {
+        for (Node child in parentNode.children) {
+          newChildren.add(child.accept(this, parentNode).node);
         }
-      }
-    } else if (pathNodeCount < 2) {
-      for (Node child in parentNode.children) {
-        newChildren.add(child.accept(this, parentNode).node);
       }
     } else {
       newChildren = parentNode.children.toList();

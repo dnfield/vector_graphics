@@ -126,6 +126,14 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
     return <ResolvedPathNode>[bottomPathNode, topPathNode];
   }
 
+  /// Determines if node is optimizable.
+  bool isOptimizable(Node node) {
+    return (node is ResolvedPathNode &&
+        node.paint.stroke?.width == null &&
+        node.paint.stroke?.color == null &&
+        node.paint.fill?.shader == null);
+  }
+
   @override
   _Result visitEmptyNode(Node node, void data) {
     final _Result _result = _Result(node);
@@ -144,7 +152,7 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
   _Result visitParentNode(ParentNode parentNode, Node data) {
     int pathNodeCount = 0;
     final List<List<Node>> newChildList = <List<Node>>[];
-    List<Node> newChildren = <Node>[];
+    final List<Node> newChildren = <Node>[];
 
     for (Node child in parentNode.children) {
       if (child is ResolvedPathNode) {
@@ -156,22 +164,39 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
     int index = 0;
     ResolvedPathNode? lastPathNode;
     int? lastPathNodeIndex;
+
+    /// If the opcacity is set the the children path nodes
+    /// cannot be optimized.
     if (parentNode.attributes.opacity == null) {
+      /// If there are not at least 2 path nodes an optimization cannot be
+      /// performed since 2 nodes are required for an 'overlap' to occur.
       if (pathNodeCount >= 2) {
         for (Node child in parentNode.children) {
-          if (child is ResolvedPathNode &&
-              child.paint.stroke?.width == null &&
-              child.paint.stroke?.color == null &&
-              child.paint.fill?.shader == null) {
+          if (isOptimizable(child)) {
+            child = child as ResolvedPathNode;
+
+            /// If the there is no previous path node to calculate
+            /// the overlap with, the current optimizable child will
+            /// be assigned.
             if (lastPathNode == null || lastPathNodeIndex == null) {
               lastPathNode = child;
               lastPathNodeIndex = index;
             } else {
+              /// If it is the case that the current node which is
+              /// the "top" path, is opaque, the removeOverlap function
+              /// will be used.
               if (child.paint.fill?.color.a == 255) {
                 newChildList[lastPathNodeIndex] = <Node>[
                   removeOverlap(lastPathNode, child)
                 ];
+                lastPathNode = child;
+                lastPathNodeIndex = index;
               } else {
+                /// If it is the case that the current node, which is
+                /// the "top" path, is semi-transparent, the
+                /// resolveOpacityOverlap function will be use.
+                /// Note: The "top" and "intersection" path nodes that
+                /// are returned will not be further optimized.
                 newChildList[lastPathNodeIndex] = resolveOpacityOverlap(
                     (newChildList[lastPathNodeIndex].first as ResolvedPathNode),
                     child);
@@ -184,6 +209,8 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
           index++;
         }
         index = 0;
+
+        /// Here the 2-dimensional list is flattened.
         for (List<Node> child in newChildList) {
           if (child.isNotEmpty) {
             if (child.first is ResolvedPathNode) {
@@ -195,8 +222,8 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
         }
       } else {
         /// If there's less than 2 path nodes, the parent node's direct children
-        /// cannot be optimized, but it may have grand children that can,
-        /// so we call accept on the children.
+        /// cannot be optimized, but it may have grand children that can be,
+        /// so accept will be called on the children.
         for (Node child in parentNode.children) {
           newChildren.add(child.accept(this, parentNode).node);
         }

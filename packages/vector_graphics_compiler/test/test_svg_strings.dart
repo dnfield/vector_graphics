@@ -1071,7 +1071,6 @@ const String complexOpacityTest =
   <circle cx="982.5" cy="250" r="50" fill="red" opacity=".25"  />
   <circle cx="1017.5" cy="250" r="50" fill="green" opacity=".25"  />
 </svg>
-
 ''';
 
 /// Excpected groupMask result when [MaskingOptimizer] is applied

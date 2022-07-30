@@ -269,15 +269,15 @@ void main() {
           blendMode: BlendMode.srcOver,
           stroke: Stroke(color: Color(0xff0000ff))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xff0000ff))),
-      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xccff0000))),
-      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xffcc0033))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xffff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xccff0000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x99ff0000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x66ff0000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xc2ff0000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x33ff0000))),
-      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xbfff0000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xff008000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xbfff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xffbf2000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xbf008000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x7fff0000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xdf913700))),
@@ -299,43 +299,16 @@ void main() {
       ),
       Path(
         commands: const <PathCommand>[
-          MoveToCommand(100.0, 100.0),
-          LineToCommand(150.0, 100.0),
-          CubicToCommand(150.0, 127.59574890136719, 172.4042510986328, 150.0,
-              200.0, 150.0),
-          CubicToCommand(227.5957489013672, 150.0, 250.0, 127.59574890136719,
-              250.0, 100.0),
-          LineToCommand(350.0, 100.0),
-          CubicToCommand(350.0, 127.59574890136719, 372.40423583984375, 150.0,
-              400.0, 150.0),
-          CubicToCommand(427.59576416015625, 150.0, 450.0, 127.59574890136719,
-              450.0, 100.0),
-          LineToCommand(1100.0, 100.0),
-          LineToCommand(1100.0, 250.0),
-          LineToCommand(100.0, 250.0),
+          MoveToCommand(150.0, 100.0),
           LineToCommand(100.0, 100.0),
-          CloseCommand()
-        ],
-      ),
-      Path(
-        commands: const <PathCommand>[
-          MoveToCommand(450.0, 100.0),
-          CubicToCommand(
-              450.0, 72.40425109863281, 427.59576416015625, 50.0, 400.0, 50.0),
-          CubicToCommand(
-              372.40423583984375, 50.0, 350.0, 72.40425109863281, 350.0, 100.0),
-          LineToCommand(450.0, 100.0),
-          CloseCommand()
-        ],
-      ),
-      Path(
-        commands: const <PathCommand>[
-          MoveToCommand(450.0, 100.0),
-          LineToCommand(350.0, 100.0),
-          CubicToCommand(350.0, 127.59574890136719, 372.40423583984375, 150.0,
-              400.0, 150.0),
-          CubicToCommand(427.59576416015625, 150.0, 450.0, 127.59574890136719,
-              450.0, 100.0),
+          LineToCommand(100.0, 250.0),
+          LineToCommand(1100.0, 250.0),
+          LineToCommand(1100.0, 100.0),
+          LineToCommand(250.0, 100.0),
+          CubicToCommand(250.0, 127.59574890136719, 227.5957489013672, 150.0,
+              200.0, 150.0),
+          CubicToCommand(172.4042510986328, 150.0, 150.0, 127.59574890136719,
+              150.0, 100.0),
           CloseCommand()
         ],
       ),
@@ -343,16 +316,31 @@ void main() {
         commands: const <PathCommand>[
           MoveToCommand(200.0, 50.0),
           CubicToCommand(
-              227.5957512247, 50.0, 250.0, 72.4042487753, 250.0, 100.0),
+              227.5957489013672, 50.0, 250.0, 72.40425109863281, 250.0, 100.0),
+          CubicToCommand(250.0, 127.59574890136719, 227.5957489013672, 150.0,
+              200.0, 150.0),
+          CubicToCommand(172.4042510986328, 150.0, 150.0, 127.59574890136719,
+              150.0, 100.0),
           CubicToCommand(
-              250.0, 127.5957512247, 227.5957512247, 150.0, 200.0, 150.0),
-          CubicToCommand(
-              172.4042487753, 150.0, 150.0, 127.5957512247, 150.0, 100.0),
-          CubicToCommand(
-              150.0, 72.4042487753, 172.4042487753, 50.0, 200.0, 50.0),
+              150.0, 72.40425109863281, 172.4042510986328, 50.0, 200.0, 50.0),
           CloseCommand()
         ],
       ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(400.0, 50.0),
+          CubicToCommand(
+              427.59576416015625, 50.0, 450.0, 72.40425109863281, 450.0, 100.0),
+          CubicToCommand(450.0, 127.59574890136719, 427.59576416015625, 150.0,
+              400.0, 150.0),
+          CubicToCommand(372.40423583984375, 150.0, 350.0, 127.59574890136719,
+              350.0, 100.0),
+          CubicToCommand(
+              350.0, 72.40425109863281, 372.40423583984375, 50.0, 400.0, 50.0),
+          CloseCommand()
+        ],
+      ),
+      Path(),
       Path(
         commands: const <PathCommand>[
           MoveToCommand(600.0, 50.0),
@@ -381,7 +369,6 @@ void main() {
           CloseCommand()
         ],
       ),
-      Path(),
       Path(
         commands: const <PathCommand>[
           MoveToCommand(1000.0, 50.0),
@@ -398,6 +385,38 @@ void main() {
       ),
       Path(
         commands: const <PathCommand>[
+          MoveToCommand(200.0000457763672, 203.1529998779297),
+          CubicToCommand(194.55233764648438, 201.1146697998047,
+              188.6553192138672, 200.0, 182.5, 200.0),
+          CubicToCommand(
+              154.9042510986328, 200.0, 132.5, 222.4042510986328, 132.5, 250.0),
+          CubicToCommand(132.5, 277.59576416015625, 154.9042510986328, 300.0,
+              182.5, 300.0),
+          CubicToCommand(188.65528869628906, 300.0, 194.55230712890625,
+              298.88531494140625, 200.0, 296.8470153808594),
+          CubicToCommand(181.02427673339844, 289.7470703125, 167.5,
+              271.4404602050781, 167.5, 250.0),
+          CubicToCommand(167.5, 228.55953979492188, 181.02427673339844,
+              210.2529296875, 200.0000457763672, 203.1529998779297),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(217.5, 200.0),
+          CubicToCommand(
+              245.0957489013672, 200.0, 267.5, 222.4042510986328, 267.5, 250.0),
+          CubicToCommand(267.5, 277.59576416015625, 245.0957489013672, 300.0,
+              217.5, 300.0),
+          CubicToCommand(189.9042510986328, 300.0, 167.5, 277.59576416015625,
+              167.5, 250.0),
+          CubicToCommand(
+              167.5, 222.4042510986328, 189.9042510986328, 200.0, 217.5, 200.0),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
           MoveToCommand(382.5, 200.0),
           CubicToCommand(410.09576416015625, 200.0, 432.5, 222.4042510986328,
               432.5, 250.0),
@@ -407,34 +426,6 @@ void main() {
               332.5, 250.0),
           CubicToCommand(332.5, 222.4042510986328, 354.90423583984375, 200.0,
               382.5, 200.0),
-          CloseCommand()
-        ],
-      ),
-      Path(
-        commands: const <PathCommand>[
-          MoveToCommand(182.5, 200.0),
-          CubicToCommand(
-              210.0957512247, 200.0, 232.5, 222.4042487753, 232.5, 250.0),
-          CubicToCommand(
-              232.5, 277.5957512247, 210.0957512247, 300.0, 182.5, 300.0),
-          CubicToCommand(
-              154.9042487753, 300.0, 132.5, 277.5957512247, 132.5, 250.0),
-          CubicToCommand(
-              132.5, 222.4042487753, 154.9042487753, 200.0, 182.5, 200.0),
-          CloseCommand()
-        ],
-      ),
-      Path(
-        commands: const <PathCommand>[
-          MoveToCommand(217.5, 200.0),
-          CubicToCommand(
-              245.0957512247, 200.0, 267.5, 222.4042487753, 267.5, 250.0),
-          CubicToCommand(
-              267.5, 277.5957512247, 245.0957512247, 300.0, 217.5, 300.0),
-          CubicToCommand(
-              189.9042487753, 300.0, 167.5, 277.5957512247, 167.5, 250.0),
-          CubicToCommand(
-              167.5, 222.4042487753, 189.9042487753, 200.0, 217.5, 200.0),
           CloseCommand()
         ],
       ),

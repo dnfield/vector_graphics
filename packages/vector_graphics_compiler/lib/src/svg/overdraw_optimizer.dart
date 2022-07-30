@@ -194,12 +194,16 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
           }
         }
       } else {
+        /// If there's less than 2 path nodes, the parent node's direct children
+        /// cannot be optimized, but it may have grand children that can,
+        /// so we call accept on the children.
         for (Node child in parentNode.children) {
           newChildren.add(child.accept(this, parentNode).node);
         }
       }
     } else {
-      newChildren = parentNode.children.toList();
+      /// If group opacity is set, the parent nodes children cannot be optimized.
+      return _Result(parentNode);
     }
     final _Result _result = _Result(ParentNode(parentNode.attributes,
         children: newChildren, precalculatedTransform: parentNode.transform));
@@ -214,8 +218,7 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
 
   @override
   _Result visitPathNode(PathNode pathNode, Node data) {
-    final _Result _result = _Result(pathNode);
-    return _result;
+    return _Result(pathNode);
   }
 
   @override
@@ -243,21 +246,18 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
 
   @override
   _Result visitResolvedPath(ResolvedPathNode pathNode, Node data) {
-    final _Result _result = _Result(pathNode);
-    return _result;
+    return _Result(pathNode);
   }
 
   @override
   _Result visitResolvedText(ResolvedTextNode textNode, Node data) {
-    final _Result _result = _Result(textNode);
-    return _result;
+    return _Result(textNode);
   }
 
   @override
   _Result visitResolvedVerticesNode(
       ResolvedVerticesNode verticesNode, Node data) {
-    final _Result _result = _Result(verticesNode);
-    return _result;
+    return _Result(verticesNode);
   }
 
   @override
@@ -278,8 +278,7 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
   @override
   _Result visitResolvedImageNode(
       ResolvedImageNode resolvedImageNode, Node data) {
-    final _Result _result = _Result(resolvedImageNode);
-    return _result;
+    return _Result(resolvedImageNode);
   }
 
   @override

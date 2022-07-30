@@ -1039,7 +1039,6 @@ const String transparentOverSolid =
   <rect  id="svg_1" height="126" width="623" y="240.5" x="88" fill="#ff0000"/>
   <rect  opacity="0.5" id="svg_10" height="502.00001" width="141" y="63.5" x="343" fill="#0000ff"/>
  </g>
-
 </svg>''';
 
 const String solidOverTrasnparent =
@@ -1048,48 +1047,29 @@ const String solidOverTrasnparent =
   <rect opacity="0.5" id="svg_1" height="126" width="623" y="240.5" x="88" fill="#ff0000"/>
   <rect id="svg_10" height="502.00001" width="141" y="63.5" x="343" fill="#0000ff"/>
  </g>
-
 </svg>''';
 
 const String complexOpacityTest =
     '''<svg width="12cm" height="3.5cm" viewBox="0 0 1200 350"
      xmlns="http://www.w3.org/2000/svg" version="1.1">
-
-
   <rect x="1" y="1" width="1198" height="348"
         fill="none" stroke="blue" />
-
   <rect x="100" y="100" width="1000" height="150" fill="#0000ff"  />
-
-
   <circle cx="200" cy="100" r="50" fill="red" opacity="1"  />
   <circle cx="400" cy="100" r="50" fill="red" opacity=".8"  />
   <circle cx="600" cy="100" r="50" fill="red" opacity=".6"  />
   <circle cx="800" cy="100" r="50" fill="red" opacity=".4"  />
   <circle cx="1000" cy="100" r="50" fill="red" opacity=".2"  />
-
-
-
-    <circle cx="182.5" cy="250" r="50" fill="red"  />
-    <circle cx="217.5" cy="250" r="50" fill="green" />
-
-
-
-    <circle cx="382.5" cy="250" r="50" fill="red" opacity=".75"  />
-    <circle cx="417.5" cy="250" r="50" fill="green" opacity=".75"  />
-
-    <circle cx="582.5" cy="250" r="50" fill="red" opacity=".5"  />
-    <circle cx="617.5" cy="250" r="50" fill="green" opacity=".5"  />
-
-
-    <circle cx="817.5" cy="250" r="50" fill="green" opacity=".5"  />
-    <circle cx="782.5" cy="250" r="50" fill="red" opacity=".5"  />
-
-    <circle cx="982.5" cy="250" r="50" fill="red" opacity=".25"  />
-    <circle cx="1017.5" cy="250" r="50" fill="green" opacity=".25"  />
-  
-
-
+  <circle cx="182.5" cy="250" r="50" fill="red"  />
+  <circle cx="217.5" cy="250" r="50" fill="green" />
+  <circle cx="382.5" cy="250" r="50" fill="red" opacity=".75"  />
+  <circle cx="417.5" cy="250" r="50" fill="green" opacity=".75"  />
+  <circle cx="582.5" cy="250" r="50" fill="red" opacity=".5"  />
+  <circle cx="617.5" cy="250" r="50" fill="green" opacity=".5"  />
+  <circle cx="817.5" cy="250" r="50" fill="green" opacity=".5"  />
+  <circle cx="782.5" cy="250" r="50" fill="red" opacity=".5"  />
+  <circle cx="982.5" cy="250" r="50" fill="red" opacity=".25"  />
+  <circle cx="1017.5" cy="250" r="50" fill="green" opacity=".25"  />
 </svg>
 
 ''';

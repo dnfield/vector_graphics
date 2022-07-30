@@ -165,10 +165,10 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
     ResolvedPathNode? lastPathNode;
     int? lastPathNodeIndex;
 
-    /// If the opcacity is set the the children path nodes
+    /// If the group opcacity is set the the children path nodes
     /// cannot be optimized.
     if (parentNode.attributes.opacity == null) {
-      /// If there are not at least 2 path nodes an optimization cannot be
+      /// If there are not at least 2 path nodes, an optimization cannot be
       /// performed since 2 nodes are required for an 'overlap' to occur.
       if (pathNodeCount >= 2) {
         for (Node child in parentNode.children) {
@@ -177,12 +177,12 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
 
             /// If the there is no previous path node to calculate
             /// the overlap with, the current optimizable child will
-            /// be assigned.
+            /// be assigned as the lastPathNode.
             if (lastPathNode == null || lastPathNodeIndex == null) {
               lastPathNode = child;
               lastPathNodeIndex = index;
             } else {
-              /// If it is the case that the current node which is
+              /// If it is the case that the current node, which is
               /// the "top" path, is opaque, the removeOverlap function
               /// will be used.
               if (child.paint.fill?.color.a == 255) {
@@ -194,7 +194,7 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
               } else {
                 /// If it is the case that the current node, which is
                 /// the "top" path, is semi-transparent, the
-                /// resolveOpacityOverlap function will be use.
+                /// resolveOpacityOverlap function will be used.
                 /// Note: The "top" and "intersection" path nodes that
                 /// are returned will not be further optimized.
                 newChildList[lastPathNodeIndex] = resolveOpacityOverlap(
@@ -210,7 +210,7 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
         }
         index = 0;
 
-        /// Here the 2-dimensional list is flattened.
+        /// Here the 2-dimensional list of new children is flattened.
         for (List<Node> child in newChildList) {
           if (child.isNotEmpty) {
             if (child.first is ResolvedPathNode) {
@@ -222,7 +222,7 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
         }
       } else {
         /// If there's less than 2 path nodes, the parent node's direct children
-        /// cannot be optimized, but it may have grand children that can be,
+        /// cannot be optimized, but it may have grand children that can be optimized,
         /// so accept will be called on the children.
         for (Node child in parentNode.children) {
           newChildren.add(child.accept(this, parentNode).node);

@@ -258,6 +258,9 @@ Future<Uint8List> encodeSvg({
       case DrawCommandType.mask:
         codec.writeMask(buffer);
         break;
+      case DrawCommandType.pattern:
+        codec.writePattern(buffer);
+        break;
       case DrawCommandType.text:
         if (fillIds.containsKey(command.paintId)) {
           codec.writeDrawText(

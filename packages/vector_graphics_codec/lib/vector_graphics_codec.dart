@@ -77,6 +77,7 @@ class VectorGraphicsCodec {
   static const int _imageConfigTag = 46;
   static const int _drawImageTag = 47;
   static const int _beginCommandsTag = 48;
+  static const int _patternTag = 49;
 
   static const int _version = 1;
   static const int _magicNumber = 0x00882d62;
@@ -580,6 +581,12 @@ class VectorGraphicsCodec {
     buffer._checkPhase(_CurrentSection.commands);
     buffer._addCommandsTag();
     buffer._putUint8(_maskTag);
+  }
+
+  void writePattern(VectorGraphicsBuffer buffer) {
+    buffer._checkPhase(_CurrentSection.commands);
+    buffer._addCommandsTag();
+    buffer._putUint8(_patternTag);
   }
 
   /// Write a new path to the [buffer], returing the identifier

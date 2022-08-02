@@ -19,6 +19,7 @@ export 'src/geometry/path.dart';
 export 'src/geometry/vertices.dart';
 export 'src/paint.dart';
 export 'src/svg/theme.dart';
+export 'src/svg/resolver.dart';
 export 'src/vector_instructions.dart';
 export 'src/svg/tessellator.dart' show initializeLibTesselator;
 export 'src/svg/path_ops.dart' show initializeLibPathOps;

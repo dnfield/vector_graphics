@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:ui';
+
 import '../draw_command_builder.dart';
 import '../geometry/path.dart';
 import '../paint.dart';
@@ -198,7 +200,10 @@ class CommandBuilderVisitor extends Visitor<void, void>
   }
 
   @override
-  void visitResolvedPatternNode(ResolvedPatternNode patternode, void data) {
-    _builder.addPattern(patternNode, null);
+  void visitResolvedPatternNode(ResolvedPatternNode patternNode, void data) {
+    patternNode.child.accept(this, data);
+    _builder.addPattern();
+    patternNode.pattern.accept(this, data);
+    _builder.restore();
   }
 }

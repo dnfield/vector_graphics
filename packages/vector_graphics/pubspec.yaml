@@ -21,6 +21,8 @@ dev_dependencies:
 dependency_overrides:
   vector_graphics_codec:
     path: ../vector_graphics_codec
+  vector_graphics_compiler:
+    path: ../vector_graphics_compiler
 
 platforms:
   android:

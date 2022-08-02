@@ -7,6 +7,7 @@ import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
+import 'package:vector_graphics_compiler/src/svg/resolver.dart';
 
 const VectorGraphicsCodec _codec = VectorGraphicsCodec();
 
@@ -259,6 +260,11 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   void onClipPath(int pathId) {
     _canvas.save();
     _canvas.clipPath(_paths[pathId]);
+  }
+
+  @override
+  void onPattern(Node pattern) {
+    _canvas.dr
   }
 
   @override

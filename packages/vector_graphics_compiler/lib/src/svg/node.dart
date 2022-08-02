@@ -7,7 +7,6 @@ import 'dart:typed_data';
 import '../geometry/basic_types.dart';
 import '../geometry/matrix.dart';
 import '../geometry/path.dart';
-import '../geometry/pattern.dart';
 import '../paint.dart';
 import 'parser.dart' show SvgAttributes;
 import 'visitor.dart';
@@ -510,37 +509,54 @@ class ImageNode extends AttributedNode {
 }
 
 /// A leaf node in the tree that reprents an patterned-node.
-class PatternNode extends AttributedNode {
-  /// Creates a new pattern node.
-  PatternNode(
-    this.x,
-    this.y,
-    this.id,
-    this.width,
-    this.height,
-    this.child,
-    this.elements,
-    super.attributes,
-  );
-
-  /// The x coordinate shift of the pattern tile.
-  final double x;
-
-  /// The y coordinate shift of the pattern tile.
-  final double y;
+class PatternNode extends Node {
+  /// Creates a new pattern node that aaples [pattern] to [child].
+  PatternNode({
+    required this.child,
+    required this.patternId,
+    required this.resolver,
+    required this.transform,
+  });
 
   /// The id of the pattern.
-  final String id;
+  final String patternId;
 
   /// The child to apply a pattern to.
   final Node child;
 
-  /// List of all elements in pattern.
-  final List<PatternElement> elements;
+  /// The decendant child's transform
+  final AffineMatrix transform;
+
+  /// Called by visitors to resolve [patternId] to an [AttributedNode].
+  final Resolver<AttributedNode?> resolver;
+
+  /// The x coordinate shift of the pattern tile.
+  double? x;
+
+  /// The y coordinate shift of the pattern tile.
+  double? y;
 
   /// The width of the pattern as a percentage.
-  final double width;
+  double? width;
 
   /// The height of the pattern as a percentage.
-  final double height;
+  double? height;
+
+  @override
+  AffineMatrix concatTransform(AffineMatrix currentTransform) {
+    if (transform == AffineMatrix.identity) {
+      return currentTransform;
+    }
+    return currentTransform.multiplied(transform);
+  }
+
+  @override
+  void visitChildren(NodeCallback visitor) {
+    visitor(child);
+  }
+
+  @override
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitPatternNode(this, data);
+  }
 }

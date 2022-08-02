@@ -58,6 +58,11 @@ class DrawCommandBuilder {
     _commands.add(const DrawCommand(DrawCommandType.mask));
   }
 
+  /// Adds a pattern to the command stack.
+  void addPattern() {
+    _commands.add();
+  }
+
   /// Add a path to the current draw command stack
   void addPath(Path path, Paint paint, String? debugString) {
     final int pathId = _getOrGenerateId(path, _paths);

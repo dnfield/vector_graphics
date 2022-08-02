@@ -130,6 +130,9 @@ enum DrawCommandType {
 
   /// Specifies that this command draws an image.
   image,
+
+  /// Specifies that this command draws a pattern.
+  pattern,
 }
 
 /// A drawing command combining the index of a [Path] or an [IndexedVertices]

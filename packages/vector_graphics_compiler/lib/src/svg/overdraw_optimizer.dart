@@ -330,4 +330,9 @@ class OverdrawOptimizer extends Visitor<_Result, Node>
     _result.children.addAll(children);
     return _result;
   }
+
+  @override
+  _Result visitResolvedPatternNode(ResolvedPatternNode patternNode, Node data) {
+    return _Result(patternNode);
+  }
 }

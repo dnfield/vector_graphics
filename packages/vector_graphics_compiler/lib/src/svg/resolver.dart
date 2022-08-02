@@ -248,6 +248,31 @@ class ResolvingVisitor extends Visitor<Node, AffineMatrix> {
     assert(false);
     return resolvedImageNode;
   }
+
+  @override
+  Node visitPatternNode(PatternNode patternNode, AffineMatrix data) {
+    final AttributedNode? resolvedPattern =
+        patternNode.resolver(patternNode.patternId);
+    if (resolvedPattern == null) {
+      return patternNode.child.accept(this, data);
+    }
+    final Node child = patternNode.child.accept(this, data);
+    final AffineMatrix childTransform = patternNode.concatTransform(data);
+    final Node pattern = resolvedPattern.accept(this, childTransform);
+
+    return ResolvedPatternNode(
+      child: child,
+      pattern: pattern,
+    );
+  }
+
+  @override
+  Node visitResolvedPatternNode(
+      ResolvedPatternNode patternNode, AffineMatrix data) {
+    assert(false);
+    return ResolvedPatternNode(
+        child: patternNode.child, pattern: patternNode.pattern);
+  }
 }
 
 /// A block of text that has its position and final transfrom fully known.
@@ -418,4 +443,42 @@ class ResolvedImageNode extends Node {
 
   @override
   void visitChildren(NodeCallback visitor) {}
+}
+
+/// A pattern node that has a fully resolved position and data.
+class ResolvedPatternNode extends Node {
+  /// Creates a new [ResolvedPatternNode].
+
+  ResolvedPatternNode({
+    required this.child,
+    required this.pattern,
+  });
+
+  /// The child to apply a pattern to.
+  final Node child;
+
+  /// A node that represents the pattern.
+  final Node pattern;
+
+  /// The x coordinate shift of the pattern tile.
+  double? x;
+
+  /// The y coordinate shift of the pattern tile.
+  double? y;
+
+  /// The width of the pattern as a percentage.
+  double? width;
+
+  /// The height of the pattern as a percentage.
+  double? height;
+
+  @override
+  void visitChildren(NodeCallback visitor) {
+    // TODO: implement visitChildren
+  }
+
+  @override
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitResolvedPatternNode(this, data);
+  }
 }

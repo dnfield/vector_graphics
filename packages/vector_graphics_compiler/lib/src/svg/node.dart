@@ -7,6 +7,7 @@ import 'dart:typed_data';
 import '../geometry/basic_types.dart';
 import '../geometry/matrix.dart';
 import '../geometry/path.dart';
+import '../geometry/pattern.dart';
 import '../paint.dart';
 import 'parser.dart' show SvgAttributes;
 import 'visitor.dart';
@@ -506,4 +507,40 @@ class ImageNode extends AttributedNode {
   S accept<S, V>(Visitor<S, V> visitor, V data) {
     return visitor.visitImageNode(this, data);
   }
+}
+
+/// A leaf node in the tree that reprents an patterned-node.
+class PatternNode extends AttributedNode {
+  /// Creates a new pattern node.
+  PatternNode(
+    this.x,
+    this.y,
+    this.id,
+    this.width,
+    this.height,
+    this.child,
+    this.elements,
+    super.attributes,
+  );
+
+  /// The x coordinate shift of the pattern tile.
+  final double x;
+
+  /// The y coordinate shift of the pattern tile.
+  final double y;
+
+  /// The id of the pattern.
+  final String id;
+
+  /// The child to apply a pattern to.
+  final Node child;
+
+  /// List of all elements in pattern.
+  final List<PatternElement> elements;
+
+  /// The width of the pattern as a percentage.
+  final double width;
+
+  /// The height of the pattern as a percentage.
+  final double height;
 }

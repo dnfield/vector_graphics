@@ -135,7 +135,6 @@ class _OpacityForwarder extends Visitor<Node, _ForwardResult>
   Node visitResolvedPatternNode(
       ResolvedPatternNode patternNode, _ForwardResult data) {
     throw UnsupportedError('Cannot forward opacity through a pattern node');
-    ;
   }
 }
 

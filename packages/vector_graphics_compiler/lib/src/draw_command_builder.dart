@@ -60,7 +60,7 @@ class DrawCommandBuilder {
 
   /// Adds a pattern to the command stack.
   void addPattern() {
-    _commands.add();
+    _commands.add(const DrawCommand(DrawCommandType.pattern));
   }
 
   /// Add a path to the current draw command stack

@@ -15,6 +15,42 @@ abstract class ControlPointTypes {
   static const int close = 3;
 }
 
+/// An pattern element. Either a path or an image.
+class PatternElement {
+  /// Constructs a pattern Element.
+  PatternElement();
+
+  /// Path is set if element is a shape.
+  PatternPath? path;
+
+  /// Image is set if element is an image;
+  PatternImage? image;
+}
+
+/// An image class for vector_graphics_codec to interpret.
+class PatternImage {
+  /// Constructs a pattern Image.
+  PatternImage(this.format, this.data);
+
+  /// The format of the image.
+  int format;
+
+  /// The data in the image.
+  Uint8List data;
+}
+
+/// A path class for vector_graphics_codec to interpret.
+class PatternPath {
+  /// Constructs a pattern Path.
+  PatternPath(this.controlPoints, this.controlTypes, this.fillType);
+
+  Uint8List controlTypes;
+
+  Float32List controlPoints;
+
+  int fillType;
+}
+
 /// Enumeration of the types of image data accepted by [VectorGraphicsCodec.writeImage].
 ///
 /// Currently only PNG encoding is supported.
@@ -169,6 +205,9 @@ class VectorGraphicsCodec {
           continue;
         case _drawImageTag:
           _readDrawImage(buffer, listener);
+          continue;
+        case _patternTag:
+          _readPattern(buffer, listener);
           continue;
         default:
           throw StateError('Unknown type tag $type');
@@ -583,10 +622,36 @@ class VectorGraphicsCodec {
     buffer._putUint8(_maskTag);
   }
 
-  void writePattern(VectorGraphicsBuffer buffer) {
-    buffer._checkPhase(_CurrentSection.commands);
-    buffer._addCommandsTag();
+  int writePattern(
+      VectorGraphicsBuffer buffer,
+      double x,
+      double y,
+      double width,
+      double height,
+      int elementCount,
+      List<PatternElement> elements) {
+    buffer._checkPhase(_CurrentSection.patterns);
+    assert(buffer._nextPatternId < kMaxId);
+    final int id = buffer._nextPatternId;
+    buffer._nextImageId += 1;
     buffer._putUint8(_patternTag);
+    buffer._putUint16(id);
+    buffer._putFloat32(x);
+    buffer._putFloat32(y);
+    buffer._putFloat32(width);
+    buffer._putFloat32(height);
+    buffer._putUint32(elementCount);
+    for (PatternElement element in elements) {
+      if (element.image != null) {
+        buffer._putUint8(1);
+        writeImage(buffer, element.image!.format, element.image!.data);
+      } else {
+        buffer._putUint8(2);
+        writePath(buffer, element.path!.controlTypes,
+            element.path!.controlPoints, element.path!.fillType);
+      }
+    }
+    return id;
   }
 
   /// Write a new path to the [buffer], returing the identifier
@@ -803,6 +868,24 @@ class VectorGraphicsCodec {
 
     listener?.onDrawImage(id, x, y, width, height, transformLength);
   }
+
+  void _readPattern(_ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
+    final int patternId = buffer.getUint16();
+    final double x = buffer.getFloat32();
+    final double y = buffer.getFloat32();
+    final double width = buffer.getFloat32();
+    final double height = buffer.getFloat32();
+    final int elementCount = buffer.getUint32();
+    for (int i = 0; i < elementCount; i++) {
+      int elementType = buffer.getInt32();
+      if (elementType.isOdd) {
+        _readImageConfig(buffer, listener);
+      } else {
+        _readPath(buffer, listener);
+      }
+    }
+    listener?.onPatternStart(patternId, x, y, width, height, elementCount);
+  }
 }
 
 /// Implement this listener class to support decoding of vector_graphics binary
@@ -941,6 +1024,16 @@ abstract class VectorGraphicsCodecListener {
     double height,
     Float64List? transform,
   );
+
+  /// A pattern has been decoded.
+  ///
+  /// All subsequent pattern commands will refer to this pattern, until
+  /// [onPatternFinished] is invoked.
+  void onPatternStart(int patternId, double x, double y, double width,
+      double height, int elementCount);
+
+  /// The current pattern is completed.
+  void onPatternFinished();
 }
 
 enum _CurrentSection {
@@ -951,6 +1044,7 @@ enum _CurrentSection {
   paths,
   text,
   commands,
+  patterns,
 }
 
 /// Write-only buffer for incrementally building a [ByteData] instance.
@@ -991,6 +1085,9 @@ class VectorGraphicsBuffer {
 
   /// The next image id to be used.
   int _nextImageId = 0;
+
+  /// The next pattern id to be used.
+  int _nextPatternId = 0;
 
   bool _addedCommandTag = false;
 

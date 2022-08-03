@@ -7,7 +7,6 @@ import 'dart:typed_data';
 
 import 'package:flutter/cupertino.dart';
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
-import 'package:vector_graphics_compiler/src/svg/resolver.dart';
 
 const VectorGraphicsCodec _codec = VectorGraphicsCodec();
 
@@ -262,10 +261,18 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     _canvas.clipPath(_paths[pathId]);
   }
 
+/// Make some other config dont pass in origial node
   @override
-  void onPattern(Node pattern) {
-    _canvas.dr
+  void onBeginPattern(PatternConfig config){
+
+
+    _canvas.
   }
+
+  @override
+  void onPatternEnd(PatternConfig config){
+
+  };
 
   @override
   void onLinearGradient(

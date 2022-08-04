@@ -105,6 +105,6 @@ void main() {
   });
 
   test('Point conversion', () {
-    expect(parseDoubleWithUnits('1pt', theme: const SvgTheme()), 1 + 1/3);
+    expect(parseDoubleWithUnits('1pt', theme: const SvgTheme()), 1 + 1 / 3);
   });
 }

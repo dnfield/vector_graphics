@@ -263,14 +263,13 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
 
 /// Make some other config dont pass in origial node
   @override
-  void onBeginPattern(PatternConfig config){
+  void onPatternStart(int patternId, double x, double y, double width, double height, int elementCount){
 
-
-    _canvas.
   }
 
+
   @override
-  void onPatternEnd(PatternConfig config){
+  void onPatternFinished(){
 
   };
 

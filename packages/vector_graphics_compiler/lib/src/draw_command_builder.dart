@@ -2,6 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:vector_graphics_compiler/src/geometry/pattern.dart';
+import 'package:vector_graphics_compiler/src/svg/node.dart';
+
 import 'geometry/image.dart';
 import 'geometry/path.dart';
 import 'geometry/vertices.dart';
@@ -18,6 +21,8 @@ class DrawCommandBuilder {
   final Map<DrawImageData, int> _drawImages = <DrawImageData, int>{};
   final Map<IndexedVertices, int> _vertices = <IndexedVertices, int>{};
   final List<DrawCommand> _commands = <DrawCommand>[];
+  final Map<PatternData, int> _patterns = <PatternData, int>{};
+  final Map<int, int> _patternAttributes = <int, int>{};
 
   int _getOrGenerateId<T>(T object, Map<T, int> map) =>
       map.putIfAbsent(object, () => map.length);
@@ -59,20 +64,19 @@ class DrawCommandBuilder {
   }
 
   /// Adds a pattern to the command stack.
-  void addPattern() {
-    _commands.add(const DrawCommand(DrawCommandType.pattern));
+  void addPattern(ResolvedPatternNode node) {
+    final int patternId =
+        _getOrGenerateId(PatternData.fromNode(node), _patterns);
+    _commands.add(DrawCommand(DrawCommandType.pattern, patternId: patternId));
   }
 
   /// Add a path to the current draw command stack
   void addPath(Path path, Paint paint, String? debugString) {
     final int pathId = _getOrGenerateId(path, _paths);
     final int paintId = _getOrGenerateId(paint, _paints);
-    _commands.add(DrawCommand(
-      DrawCommandType.path,
-      objectId: pathId,
-      paintId: paintId,
-      debugString: debugString,
-    ));
+
+    _commands.add(DrawCommand(DrawCommandType.path,
+        objectId: pathId, paintId: paintId, debugString: debugString));
   }
 
   /// Adds a text to the current draw command stack.
@@ -100,6 +104,7 @@ class DrawCommandBuilder {
       node.rect,
       node.transform,
     );
+
     final int drawImageId = _getOrGenerateId(drawImageData, _drawImages);
     _commands.add(DrawCommand(
       DrawCommandType.image,

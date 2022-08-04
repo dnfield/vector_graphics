@@ -15,7 +15,7 @@ abstract class ControlPointTypes {
   static const int close = 3;
 }
 
-/// An pattern element. Either a path or an image.
+/// A pattern element. Either a path or an image.
 class PatternElement {
   /// Constructs a pattern Element.
   PatternElement();
@@ -235,11 +235,12 @@ class VectorGraphicsCodec {
 
   /// Encode a draw path command in the current buffer.
   ///
-  /// Requires that [pathId] and [paintId] to already be encoded.
+  /// Requires that [pathId], [paintId] and [patternId] to already be encoded.
   void writeDrawPath(
     VectorGraphicsBuffer buffer,
     int pathId,
     int paintId,
+    int patternId,
   ) {
     buffer._checkPhase(_CurrentSection.commands);
     buffer._addCommandsTag();
@@ -247,6 +248,7 @@ class VectorGraphicsCodec {
     buffer._putUint8(_drawPathTag);
     buffer._putUint16(pathId);
     buffer._putUint16(paintId);
+    buffer._putUint16(patternId);
   }
 
   /// Encode a draw vertices command in the current buffer.
@@ -623,13 +625,12 @@ class VectorGraphicsCodec {
   }
 
   int writePattern(
-      VectorGraphicsBuffer buffer,
-      double x,
-      double y,
-      double width,
-      double height,
-      int elementCount,
-      List<PatternElement> elements) {
+    VectorGraphicsBuffer buffer,
+    double x,
+    double y,
+    double width,
+    double height,
+  ) {
     buffer._checkPhase(_CurrentSection.patterns);
     assert(buffer._nextPatternId < kMaxId);
     final int id = buffer._nextPatternId;
@@ -640,17 +641,6 @@ class VectorGraphicsCodec {
     buffer._putFloat32(y);
     buffer._putFloat32(width);
     buffer._putFloat32(height);
-    buffer._putUint32(elementCount);
-    for (PatternElement element in elements) {
-      if (element.image != null) {
-        buffer._putUint8(1);
-        writeImage(buffer, element.image!.format, element.image!.data);
-      } else {
-        buffer._putUint8(2);
-        writePath(buffer, element.path!.controlTypes,
-            element.path!.controlPoints, element.path!.fillType);
-      }
-    }
     return id;
   }
 
@@ -716,6 +706,7 @@ class VectorGraphicsCodec {
     double width,
     double height,
     Float64List? transform,
+    int patternId,
   ) {
     buffer._checkPhase(_CurrentSection.commands);
     buffer._addCommandsTag();
@@ -728,6 +719,7 @@ class VectorGraphicsCodec {
     buffer._putFloat32(width);
     buffer._putFloat32(height);
     buffer._writeTransform(transform);
+    buffer._putUint16(patternId);
   }
 
   void _readPath(
@@ -778,7 +770,8 @@ class VectorGraphicsCodec {
   ) {
     final int pathId = buffer.getUint16();
     final int paintId = buffer.getUint16();
-    listener?.onDrawPath(pathId, paintId);
+    final int patternId = buffer.getUint16();
+    listener?.onDrawPath(pathId, paintId, patternId);
   }
 
   void _readDrawVertices(
@@ -865,8 +858,9 @@ class VectorGraphicsCodec {
     final double width = buffer.getFloat32();
     final double height = buffer.getFloat32();
     final Float64List? transformLength = buffer.getTransform();
+    final int patternId = buffer.getUint16();
 
-    listener?.onDrawImage(id, x, y, width, height, transformLength);
+    listener?.onDrawImage(id, x, y, width, height, transformLength, patternId);
   }
 
   void _readPattern(_ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
@@ -875,16 +869,7 @@ class VectorGraphicsCodec {
     final double y = buffer.getFloat32();
     final double width = buffer.getFloat32();
     final double height = buffer.getFloat32();
-    final int elementCount = buffer.getUint32();
-    for (int i = 0; i < elementCount; i++) {
-      int elementType = buffer.getInt32();
-      if (elementType.isOdd) {
-        _readImageConfig(buffer, listener);
-      } else {
-        _readPath(buffer, listener);
-      }
-    }
-    listener?.onPatternStart(patternId, x, y, width, height, elementCount);
+    listener?.onPatternStart(patternId, x, y, width, height);
   }
 }
 
@@ -1023,14 +1008,15 @@ abstract class VectorGraphicsCodecListener {
     double width,
     double height,
     Float64List? transform,
+    int? patternId,
   );
 
   /// A pattern has been decoded.
   ///
   /// All subsequent pattern commands will refer to this pattern, until
   /// [onPatternFinished] is invoked.
-  void onPatternStart(int patternId, double x, double y, double width,
-      double height, int elementCount);
+  void onPatternStart(
+      int patternId, double x, double y, double width, double height);
 
   /// The current pattern is completed.
   void onPatternFinished();

@@ -201,9 +201,9 @@ class CommandBuilderVisitor extends Visitor<void, void>
 
   @override
   void visitResolvedPatternNode(ResolvedPatternNode patternNode, void data) {
-    patternNode.child.accept(this, data);
-    _builder.addPattern();
     patternNode.pattern.accept(this, data);
+    _builder.addPattern(patternNode);
+    patternNode.child.accept(this, data);
     _builder.restore();
   }
 }

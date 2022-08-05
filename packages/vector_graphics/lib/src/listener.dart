@@ -63,6 +63,24 @@ Future<PictureInfo> decodeVectorGraphics(
   return listener.toPicture();
 }
 
+/// Pattern configuration to be used when creating ImageShader
+class PatternConfig {
+  /// Constructs a [PatternConfig].
+  PatternConfig(this.patternId, this.width, this.height, this.transform);
+
+  /// The pattern's id.
+  final int patternId;
+
+  /// The pattern's width.
+  final double width;
+
+  /// The pattern's height.
+  final double height;
+
+  /// The pattern's transform.
+  final Float64List transform;
+}
+
 /// A listener implementation for the vector graphics codec that converts the
 /// format into a [ui.Picture].
 class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
@@ -95,7 +113,8 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   final TextDirection? _textDirection;
 
   final ui.PictureRecorder _recorder;
-  final ui.Canvas _canvas;
+  ui.Canvas _canvas;
+  ui.Canvas? _originalCanvas;
 
   final List<ui.Paint> _paints = <ui.Paint>[];
   final List<ui.Path> _paths = <ui.Path>[];
@@ -103,10 +122,13 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   final List<_TextConfig> _textConfig = <_TextConfig>[];
   final List<Future<ui.Image>> _pendingImages = <Future<ui.Image>>[];
   final Map<int, ui.Image> _images = <int, ui.Image>{};
+  final Map<int, ui.Shader> _patterns = <int, ui.Shader>{};
 
   ui.Path? _currentPath;
   ui.Size _size = ui.Size.zero;
   bool _done = false;
+
+  PatternConfig? _currentPattern;
 
   static final ui.Paint _emptyPaint = ui.Paint();
   static final ui.Paint _grayscaleDstInPaint = ui.Paint()
@@ -141,11 +163,14 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onDrawPath(int pathId, int? paintId) {
+  void onDrawPath(int pathId, int? paintId, int? patternId) {
     final ui.Path path = _paths[pathId];
     ui.Paint? paint;
     if (paintId != null) {
       paint = _paints[paintId];
+      if (patternId != -1) {
+        paint.shader = _patterns[patternId];
+      }
     }
     _canvas.drawPath(path, paint ?? _emptyPaint);
   }
@@ -242,6 +267,11 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
 
   @override
   void onRestoreLayer() {
+    /// check for active pattern
+    if (_currentPattern != null) {
+      /// do image listener stuff and make shader
+      onPatternFinished();
+    }
     _canvas.restore();
   }
 
@@ -261,17 +291,32 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     _canvas.clipPath(_paths[pathId]);
   }
 
-/// Make some other config dont pass in origial node
   @override
-  void onPatternStart(int patternId, double x, double y, double width, double height, int elementCount){
-
+  void onPatternStart(int patternId, double x, double y, double width,
+      double height, Float64List transform) {
+    assert(_currentPattern == null);
+    _currentPattern = PatternConfig(patternId, width, height, transform);
+    _originalCanvas = _canvas;
+    _canvas = ui.Canvas(ui.PictureRecorder());
   }
 
-
   @override
-  void onPatternFinished(){
-
-  };
+  void onPatternFinished() async {
+    assert(_currentPattern != null);
+    final ui.Image image = await toPicture()
+        .picture
+        .toImage(_size.width.round(), _size.height.round());
+    final ui.ImageShader pattern = ui.ImageShader(
+      image,
+      ui.TileMode.repeated,
+      ui.TileMode.repeated,
+      _currentPattern!.transform,
+    );
+    _patterns[_currentPattern!.patternId] = pattern;
+    _canvas = _originalCanvas!;
+    _originalCanvas = null;
+    _currentPattern = null;
+  }
 
   @override
   void onLinearGradient(
@@ -363,8 +408,11 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onDrawText(int textId, int paintId) {
+  void onDrawText(int textId, int paintId, int patternId) {
     final ui.Paint paint = _paints[paintId];
+    if (patternId != -1) {
+      paint.shader = _patterns[patternId];
+    }
     final _TextConfig textConfig = _textConfig[textId];
     final ui.ParagraphBuilder builder = ui.ParagraphBuilder(
       ui.ParagraphStyle(

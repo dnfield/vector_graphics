@@ -38,6 +38,7 @@ const Map<String, _ParseFunc> _svgElementParsers = <String, _ParseFunc>{
   'use': _Elements.use,
   'symbol': _Elements.symbol,
   'mask': _Elements.symbol, // treat as symbol
+  'pattern': _Elements.pattern,
   'radialGradient': _Elements.radialGradient,
   'linearGradient': _Elements.linearGradient,
   'clipPath': _Elements.clipPath,
@@ -119,6 +120,11 @@ class _Elements {
     if (xlinkHref.isEmpty) {
       return null;
     }
+
+  static Future<void>? pattern(SvgParser parserState, bool warningsAsErrors){
+    
+
+  }
 
     final AffineMatrix transform =
         (parseTransform(parserState.attribute('transform')) ??

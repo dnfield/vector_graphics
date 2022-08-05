@@ -124,14 +124,15 @@ Future<Uint8List> encodeSvg({
   final Map<int, int> strokeIds = <int, int>{};
   final Map<Gradient, int> shaderIds = <Gradient, int>{};
 
+  for (final PatternData data in instructions.patterns) {
+    codec.writePattern(buffer, data.x, data.y, data.width, data.height,
+        data.transform.toMatrix4());
+  }
+
   for (final ImageData data in instructions.images) {
     codec.writeImage(buffer, 0, data.data);
   }
 
-  for (final PatternData data in instructions.patterns) {
-    codec.writePattern(buffer, data.x, data.y, data.width, data.height,
-        data.elementCount, data.elements);
-  }
   for (final Paint paint in instructions.paints) {
     _encodeShader(paint.fill?.shader, shaderIds, codec, buffer);
     _encodeShader(paint.stroke?.shader, shaderIds, codec, buffer);
@@ -235,6 +236,7 @@ Future<Uint8List> encodeSvg({
             buffer,
             pathIds[command.objectId]!,
             fillIds[command.paintId]!,
+            command.patternId,
           );
         }
         if (strokeIds.containsKey(command.paintId)) {
@@ -242,6 +244,7 @@ Future<Uint8List> encodeSvg({
             buffer,
             pathIds[command.objectId]!,
             strokeIds[command.paintId]!,
+            command.patternId,
           );
         }
         break;
@@ -268,13 +271,13 @@ Future<Uint8List> encodeSvg({
         final PatternData patternData =
             instructions.patterns[command.objectId!];
         codec.writePattern(
-            buffer,
-            patternData.x,
-            patternData.y,
-            patternData.width,
-            patternData.height,
-            patternData.elementCount,
-            patternData.elements);
+          buffer,
+          patternData.x,
+          patternData.y,
+          patternData.width,
+          patternData.height,
+          patternData.transform.toMatrix4(),
+        );
         break;
       case DrawCommandType.text:
         if (fillIds.containsKey(command.paintId)) {
@@ -282,6 +285,7 @@ Future<Uint8List> encodeSvg({
             buffer,
             command.objectId!,
             fillIds[command.paintId]!,
+            command.patternId,
           );
         }
         if (strokeIds.containsKey(command.paintId)) {
@@ -289,6 +293,7 @@ Future<Uint8List> encodeSvg({
             buffer,
             command.objectId!,
             strokeIds[command.paintId]!,
+            command.patternId,
           );
         }
         break;

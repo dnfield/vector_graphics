@@ -4,6 +4,8 @@
 
 import 'dart:typed_data';
 
+import 'package:meta/meta.dart';
+
 import '../geometry/basic_types.dart';
 import '../geometry/matrix.dart';
 import '../geometry/path.dart';
@@ -250,19 +252,21 @@ class ResolvingVisitor extends Visitor<Node, AffineMatrix> {
   }
 
   @override
-  Node visitPatternNode(PatternNode patternNode, AffineMatrix data) {
-    final AttributedNode? resolvedPattern =
-        patternNode.resolver(patternNode.patternId);
+  Node visitPatternNode(PatternNode node, AffineMatrix data) {
+    final AttributedNode? resolvedPattern = node.resolver(node.patternId);
     if (resolvedPattern == null) {
-      return patternNode.child.accept(this, data);
+      return node.child.accept(this, data);
     }
-    final Node child = patternNode.child.accept(this, data);
-    final AffineMatrix childTransform = patternNode.concatTransform(data);
+    final Node child = node.child.accept(this, data);
+    final AffineMatrix childTransform = node.concatTransform(data);
     final Node pattern = resolvedPattern.accept(this, childTransform);
 
     return ResolvedPatternNode(
       child: child,
       pattern: pattern,
+      width: node.width,
+      height: node.height,
+      transform: data,
     );
   }
 
@@ -270,8 +274,7 @@ class ResolvingVisitor extends Visitor<Node, AffineMatrix> {
   Node visitResolvedPatternNode(
       ResolvedPatternNode patternNode, AffineMatrix data) {
     assert(false);
-    return ResolvedPatternNode(
-        child: patternNode.child, pattern: patternNode.pattern);
+    return patternNode;
   }
 }
 
@@ -452,6 +455,9 @@ class ResolvedPatternNode extends Node {
   ResolvedPatternNode({
     required this.child,
     required this.pattern,
+    required this.width,
+    required this.height,
+    required this.transform,
   });
 
   /// The child to apply a pattern to.
@@ -467,10 +473,13 @@ class ResolvedPatternNode extends Node {
   double? y;
 
   /// The width of the pattern as a percentage.
-  double? width;
+  double width;
 
   /// The height of the pattern as a percentage.
-  double? height;
+  double height;
+
+  /// The transform of the pattern.
+  AffineMatrix transform;
 
   @override
   void visitChildren(NodeCallback visitor) {

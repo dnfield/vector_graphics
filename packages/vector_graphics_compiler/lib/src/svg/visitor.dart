@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:ui';
-
 import '../draw_command_builder.dart';
 import '../geometry/path.dart';
 import '../paint.dart';
@@ -119,6 +117,10 @@ class CommandBuilderVisitor extends Visitor<void, void>
   late double _width;
   late double _height;
 
+  /// The current patternId. This will be `null` if
+  /// there is no current pattern.
+  int? currentPatternId;
+
   /// Return the vector instructions encoded by the visitor given to this tree.
   VectorInstructions toInstructions() {
     return _builder.toInstructions(_width, _height);
@@ -163,12 +165,13 @@ class CommandBuilderVisitor extends Visitor<void, void>
 
   @override
   void visitResolvedPath(ResolvedPathNode pathNode, void data) {
-    _builder.addPath(pathNode.path, pathNode.paint, null);
+    _builder.addPath(pathNode.path, pathNode.paint, null, currentPatternId);
   }
 
   @override
   void visitResolvedText(ResolvedTextNode textNode, void data) {
-    _builder.addText(textNode.textConfig, textNode.paint, null);
+    _builder.addText(
+        textNode.textConfig, textNode.paint, null, currentPatternId);
   }
 
   @override
@@ -203,7 +206,6 @@ class CommandBuilderVisitor extends Visitor<void, void>
   void visitResolvedPatternNode(ResolvedPatternNode patternNode, void data) {
     patternNode.pattern.accept(this, data);
     _builder.addPattern(patternNode);
-    patternNode.child.accept(this, data);
     _builder.restore();
   }
 }

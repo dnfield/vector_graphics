@@ -516,6 +516,8 @@ class PatternNode extends Node {
     required this.patternId,
     required this.resolver,
     required this.transform,
+    required this.width,
+    required this.height,
   });
 
   /// The id of the pattern.
@@ -536,11 +538,11 @@ class PatternNode extends Node {
   /// The y coordinate shift of the pattern tile.
   double? y;
 
-  /// The width of the pattern as a percentage.
-  double? width;
+  /// The width of the pattern.
+  double width;
 
-  /// The height of the pattern as a percentage.
-  double? height;
+  /// The height of the pattern.
+  double height;
 
   @override
   AffineMatrix concatTransform(AffineMatrix currentTransform) {

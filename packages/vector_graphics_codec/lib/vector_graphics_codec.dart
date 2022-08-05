@@ -15,42 +15,6 @@ abstract class ControlPointTypes {
   static const int close = 3;
 }
 
-/// A pattern element. Either a path or an image.
-class PatternElement {
-  /// Constructs a pattern Element.
-  PatternElement();
-
-  /// Path is set if element is a shape.
-  PatternPath? path;
-
-  /// Image is set if element is an image;
-  PatternImage? image;
-}
-
-/// An image class for vector_graphics_codec to interpret.
-class PatternImage {
-  /// Constructs a pattern Image.
-  PatternImage(this.format, this.data);
-
-  /// The format of the image.
-  int format;
-
-  /// The data in the image.
-  Uint8List data;
-}
-
-/// A path class for vector_graphics_codec to interpret.
-class PatternPath {
-  /// Constructs a pattern Path.
-  PatternPath(this.controlPoints, this.controlTypes, this.fillType);
-
-  Uint8List controlTypes;
-
-  Float32List controlPoints;
-
-  int fillType;
-}
-
 /// Enumeration of the types of image data accepted by [VectorGraphicsCodec.writeImage].
 ///
 /// Currently only PNG encoding is supported.
@@ -235,12 +199,12 @@ class VectorGraphicsCodec {
 
   /// Encode a draw path command in the current buffer.
   ///
-  /// Requires that [pathId], [paintId] and [patternId] to already be encoded.
+  /// Requires that [pathId] and [paintId] to already be encoded.
   void writeDrawPath(
     VectorGraphicsBuffer buffer,
     int pathId,
     int paintId,
-    int patternId,
+    int? patternId,
   ) {
     buffer._checkPhase(_CurrentSection.commands);
     buffer._addCommandsTag();
@@ -248,7 +212,7 @@ class VectorGraphicsCodec {
     buffer._putUint8(_drawPathTag);
     buffer._putUint16(pathId);
     buffer._putUint16(paintId);
-    buffer._putUint16(patternId);
+    buffer._putUint16(patternId ?? -1);
   }
 
   /// Encode a draw vertices command in the current buffer.
@@ -603,12 +567,14 @@ class VectorGraphicsCodec {
     VectorGraphicsBuffer buffer,
     int textId,
     int paintId,
+    int? patternId,
   ) {
     buffer._checkPhase(_CurrentSection.commands);
     buffer._addCommandsTag();
     buffer._putUint8(_drawTextTag);
     buffer._putUint16(textId);
     buffer._putUint16(paintId);
+    buffer._putUint16(patternId ?? -1);
   }
 
   void writeClipPath(VectorGraphicsBuffer buffer, int path) {
@@ -630,6 +596,7 @@ class VectorGraphicsCodec {
     double y,
     double width,
     double height,
+    Float64List transform,
   ) {
     buffer._checkPhase(_CurrentSection.patterns);
     assert(buffer._nextPatternId < kMaxId);
@@ -641,6 +608,7 @@ class VectorGraphicsCodec {
     buffer._putFloat32(y);
     buffer._putFloat32(width);
     buffer._putFloat32(height);
+    buffer._writeTransform(transform);
     return id;
   }
 
@@ -706,7 +674,6 @@ class VectorGraphicsCodec {
     double width,
     double height,
     Float64List? transform,
-    int patternId,
   ) {
     buffer._checkPhase(_CurrentSection.commands);
     buffer._addCommandsTag();
@@ -719,7 +686,6 @@ class VectorGraphicsCodec {
     buffer._putFloat32(width);
     buffer._putFloat32(height);
     buffer._writeTransform(transform);
-    buffer._putUint16(patternId);
   }
 
   void _readPath(
@@ -838,7 +804,8 @@ class VectorGraphicsCodec {
       _ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
     final int textId = buffer.getUint16();
     final int paintId = buffer.getUint16();
-    listener?.onDrawText(textId, paintId);
+    final int patternId = buffer.getUint16();
+    listener?.onDrawText(textId, paintId, patternId);
   }
 
   void _readImageConfig(
@@ -858,9 +825,8 @@ class VectorGraphicsCodec {
     final double width = buffer.getFloat32();
     final double height = buffer.getFloat32();
     final Float64List? transformLength = buffer.getTransform();
-    final int patternId = buffer.getUint16();
 
-    listener?.onDrawImage(id, x, y, width, height, transformLength, patternId);
+    listener?.onDrawImage(id, x, y, width, height, transformLength);
   }
 
   void _readPattern(_ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
@@ -869,7 +835,8 @@ class VectorGraphicsCodec {
     final double y = buffer.getFloat32();
     final double width = buffer.getFloat32();
     final double height = buffer.getFloat32();
-    listener?.onPatternStart(patternId, x, y, width, height);
+    final Float64List? transform = buffer.getTransform();
+    listener?.onPatternStart(patternId, x, y, width, height, transform!);
   }
 }
 
@@ -927,6 +894,7 @@ abstract class VectorGraphicsCodecListener {
   void onDrawPath(
     int pathId,
     int? paintId,
+    int? patternId,
   );
 
   /// Draw the vertices with the given [vertices] and optionally index buffer
@@ -991,6 +959,7 @@ abstract class VectorGraphicsCodecListener {
   void onDrawText(
     int textId,
     int paintId,
+    int patternId,
   );
 
   /// An image has been decoded.
@@ -1008,15 +977,14 @@ abstract class VectorGraphicsCodecListener {
     double width,
     double height,
     Float64List? transform,
-    int? patternId,
   );
 
   /// A pattern has been decoded.
   ///
   /// All subsequent pattern commands will refer to this pattern, until
   /// [onPatternFinished] is invoked.
-  void onPatternStart(
-      int patternId, double x, double y, double width, double height);
+  void onPatternStart(int patternId, double x, double y, double width,
+      double height, Float64List transform);
 
   /// The current pattern is completed.
   void onPatternFinished();

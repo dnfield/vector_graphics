@@ -2,9 +2,9 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:vector_graphics_compiler/src/geometry/pattern.dart';
-import 'package:vector_graphics_compiler/src/svg/node.dart';
+import 'package:vector_graphics_compiler/src/svg/visitor.dart';
 
+import 'geometry/pattern.dart';
 import 'geometry/image.dart';
 import 'geometry/path.dart';
 import 'geometry/vertices.dart';
@@ -22,7 +22,6 @@ class DrawCommandBuilder {
   final Map<IndexedVertices, int> _vertices = <IndexedVertices, int>{};
   final List<DrawCommand> _commands = <DrawCommand>[];
   final Map<PatternData, int> _patterns = <PatternData, int>{};
-  final Map<int, int> _patternAttributes = <int, int>{};
 
   int _getOrGenerateId<T>(T object, Map<T, int> map) =>
       map.putIfAbsent(object, () => map.length);
@@ -68,15 +67,21 @@ class DrawCommandBuilder {
     final int patternId =
         _getOrGenerateId(PatternData.fromNode(node), _patterns);
     _commands.add(DrawCommand(DrawCommandType.pattern, patternId: patternId));
+    final CommandBuilderVisitor visitor = CommandBuilderVisitor();
+    visitor.currentPatternId = patternId;
+    node.child.accept(visitor, null);
   }
 
   /// Add a path to the current draw command stack
-  void addPath(Path path, Paint paint, String? debugString) {
+  void addPath(Path path, Paint paint, String? debugString, int? patternId) {
     final int pathId = _getOrGenerateId(path, _paths);
     final int paintId = _getOrGenerateId(paint, _paints);
 
     _commands.add(DrawCommand(DrawCommandType.path,
-        objectId: pathId, paintId: paintId, debugString: debugString));
+        objectId: pathId,
+        paintId: paintId,
+        debugString: debugString,
+        patternId: patternId));
   }
 
   /// Adds a text to the current draw command stack.
@@ -84,6 +89,7 @@ class DrawCommandBuilder {
     TextConfig textConfig,
     Paint paint,
     String? debugString,
+    int? patternId,
   ) {
     final int paintId = _getOrGenerateId(paint, _paints);
     final int styleId = _getOrGenerateId(textConfig, _text);
@@ -92,6 +98,7 @@ class DrawCommandBuilder {
       objectId: styleId,
       paintId: paintId,
       debugString: debugString,
+      patternId: patternId,
     ));
   }
 

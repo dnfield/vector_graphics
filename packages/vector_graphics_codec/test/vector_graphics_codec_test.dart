@@ -96,7 +96,7 @@ void main() {
       const OnPathLineTo(2, 3),
       const OnPathClose(),
       const OnPathFinished(),
-      OnDrawPath(pathId, paintId, null),
+      OnDrawPath(pathId, paintId, 65535),
     ]);
   });
 
@@ -169,8 +169,8 @@ void main() {
       const OnPathLineTo(2, 3),
       const OnPathClose(),
       const OnPathFinished(),
-      OnDrawPath(pathId, fillId, null),
-      OnDrawPath(pathId, strokeId, null),
+      OnDrawPath(pathId, fillId, 65535),
+      OnDrawPath(pathId, strokeId, 65535),
     ]);
   });
 
@@ -496,7 +496,7 @@ void main() {
         null,
         textId,
       ),
-      OnDrawText(textId, paintId, null),
+      OnDrawText(textId, paintId, 65535),
     ]);
   });
 
@@ -542,7 +542,7 @@ void main() {
         transform,
         textId,
       ),
-      OnDrawText(textId, paintId, null),
+      OnDrawText(textId, paintId, 65535),
     ]);
   });
 
@@ -586,7 +586,7 @@ void main() {
         null,
         textId,
       ),
-      OnDrawText(textId, paintId, null),
+      OnDrawText(textId, paintId, 65535),
     ]);
   });
 
@@ -630,7 +630,7 @@ void main() {
         null,
         textId,
       ),
-      OnDrawText(textId, paintId, null),
+      OnDrawText(textId, paintId, 65535),
     ]);
   });
 
@@ -813,8 +813,8 @@ void main() {
       const OnPathLineTo(2, 3),
       const OnPathClose(),
       const OnPathFinished(),
-      OnDrawPath(pathId, fillId, null),
-      OnDrawPath(pathId, strokeId, null),
+      OnDrawPath(pathId, fillId, 65535),
+      OnDrawPath(pathId, strokeId, 65535),
       OnDrawImage(imageId, 1, 2, 100, 100, null),
     ]);
   });

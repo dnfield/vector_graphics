@@ -169,8 +169,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     if (paintId != null) {
       paint = _paints[paintId];
     }
-
-    if (patternId != -1) {
+    if (patternId != 65535) {
       if (paintId != null) {
         paint!.shader = _patterns[patternId];
       } else {
@@ -417,7 +416,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   @override
   void onDrawText(int textId, int paintId, int patternId) {
     final ui.Paint paint = _paints[paintId];
-    if (patternId != -1) {
+    if (patternId != 65535) {
       paint.shader = _patterns[patternId];
     }
     final _TextConfig textConfig = _textConfig[textId];

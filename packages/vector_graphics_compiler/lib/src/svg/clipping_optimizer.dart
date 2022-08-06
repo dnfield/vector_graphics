@@ -3,7 +3,6 @@
 // found in the LICENSE file.
 
 import 'node.dart';
-import 'resolver.dart';
 import 'visitor.dart';
 import 'masking_optimizer.dart';
 import '../../vector_graphics_compiler.dart';

@@ -736,7 +736,7 @@ class VectorGraphicsCodec {
   ) {
     final int pathId = buffer.getUint16();
     final int paintId = buffer.getUint16();
-    final int patternId = buffer.getUint16();
+    final int? patternId = buffer.getUint16();
     listener?.onDrawPath(pathId, paintId, patternId);
   }
 

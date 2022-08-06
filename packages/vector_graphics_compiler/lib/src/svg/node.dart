@@ -143,8 +143,10 @@ class ParentNode extends AttributedNode {
     AttributedNode child, {
     String? clipId,
     String? maskId,
+    String? patternId,
     required Resolver<List<Path>> clipResolver,
     required Resolver<AttributedNode?> maskResolver,
+    required Resolver<AttributedNode?> patternResolver,
   }) {
     Node wrappedChild = child;
     if (clipId != null) {
@@ -162,6 +164,19 @@ class ParentNode extends AttributedNode {
         child: wrappedChild,
         blendMode: child.attributes.blendMode,
         transform: child.attributes.transform,
+      );
+    }
+
+    if (patternId != null) {
+      wrappedChild = PatternNode(
+        resolver: patternResolver,
+        patternId: patternId,
+        child: wrappedChild,
+        transform: child.attributes.transform,
+        x: child.attributes.x!,
+        y: child.attributes.y!,
+        width: child.attributes.x!,
+        height: child.attributes.height!,
       );
     }
     _children.add(wrappedChild);
@@ -516,6 +531,8 @@ class PatternNode extends Node {
     required this.patternId,
     required this.resolver,
     required this.transform,
+    required this.x,
+    required this.y,
     required this.width,
     required this.height,
   });
@@ -533,10 +550,10 @@ class PatternNode extends Node {
   final Resolver<AttributedNode?> resolver;
 
   /// The x coordinate shift of the pattern tile.
-  double? x;
+  double x;
 
   /// The y coordinate shift of the pattern tile.
-  double? y;
+  double y;
 
   /// The width of the pattern.
   double width;

@@ -168,8 +168,15 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     ui.Paint? paint;
     if (paintId != null) {
       paint = _paints[paintId];
-      if (patternId != -1) {
-        paint.shader = _patterns[patternId];
+    }
+
+    if (patternId != -1) {
+      if (paintId != null) {
+        paint!.shader = _patterns[patternId];
+      } else {
+        final ui.Paint newPaint = ui.Paint();
+        newPaint.shader = _patterns[patternId];
+        paint = newPaint;
       }
     }
     _canvas.drawPath(path, paint ?? _emptyPaint);
@@ -298,14 +305,14 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     _currentPattern = PatternConfig(patternId, width, height, transform);
     _originalCanvas = _canvas;
     _canvas = ui.Canvas(ui.PictureRecorder());
+    _canvas.clipRect(ui.Offset(x, y) & ui.Size(width, height));
   }
 
   @override
   void onPatternFinished() async {
     assert(_currentPattern != null);
-    final ui.Image image = await toPicture()
-        .picture
-        .toImage(_size.width.round(), _size.height.round());
+    final ui.Image image = await toPicture().picture.toImage(
+        _currentPattern!.width.round(), _currentPattern!.height.round());
     final ui.ImageShader pattern = ui.ImageShader(
       image,
       ui.TileMode.repeated,

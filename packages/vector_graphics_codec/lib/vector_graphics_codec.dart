@@ -601,7 +601,7 @@ class VectorGraphicsCodec {
     buffer._checkPhase(_CurrentSection.patterns);
     assert(buffer._nextPatternId < kMaxId);
     final int id = buffer._nextPatternId;
-    buffer._nextImageId += 1;
+    buffer._nextPatternId += 1;
     buffer._putUint8(_patternTag);
     buffer._putUint16(id);
     buffer._putFloat32(x);

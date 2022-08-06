@@ -4,7 +4,6 @@
 
 import 'parser.dart';
 import 'node.dart';
-import 'resolver.dart';
 import 'visitor.dart';
 import '../../vector_graphics_compiler.dart';
 import 'masking_optimizer.dart';

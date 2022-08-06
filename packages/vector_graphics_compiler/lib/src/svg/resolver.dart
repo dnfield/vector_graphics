@@ -3,9 +3,6 @@
 // found in the LICENSE file.
 
 import 'dart:typed_data';
-
-import 'package:meta/meta.dart';
-
 import '../geometry/basic_types.dart';
 import '../geometry/matrix.dart';
 import '../geometry/path.dart';
@@ -264,6 +261,8 @@ class ResolvingVisitor extends Visitor<Node, AffineMatrix> {
     return ResolvedPatternNode(
       child: child,
       pattern: pattern,
+      x: node.x,
+      y: node.y,
       width: node.width,
       height: node.height,
       transform: data,
@@ -456,6 +455,8 @@ class ResolvedPatternNode extends Node {
     required this.child,
     required this.pattern,
     required this.width,
+    required this.x,
+    required this.y,
     required this.height,
     required this.transform,
   });

@@ -5,7 +5,6 @@
 import 'dart:typed_data';
 
 import 'node.dart';
-import 'resolver.dart';
 import 'visitor.dart';
 import '../../vector_graphics_compiler.dart';
 import 'path_ops.dart' as path_ops;

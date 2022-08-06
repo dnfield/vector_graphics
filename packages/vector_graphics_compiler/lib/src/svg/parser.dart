@@ -103,6 +103,8 @@ class _Elements {
       clipResolver: parserState._definitions.getClipPath,
       maskId: parserState.attribute('mask'),
       maskResolver: parserState._definitions.getDrawable,
+      patternId: parserState.attribute('fill'),
+      patternResolver: parserState._definitions.getDrawable,
     );
     parserState.addGroup(parserState._currentStartElement!, group);
     return null;
@@ -114,17 +116,46 @@ class _Elements {
     return null;
   }
 
+  static Future<void>? pattern(SvgParser parserState, bool warningsAsErrors) {
+    final SvgAttributes attributes = parserState._currentAttributes;
+    final _Viewport viewBox = parserState._parseViewBox();
+    final String rawX = attributes.raw['x'] ?? '0';
+    final String rawY = attributes.raw['y'] ?? '0';
+    final double x = parseDecimalOrPercentage(rawX);
+    final double y = parseDecimalOrPercentage(rawY);
+
+    final SvgAttributes newAttributes = SvgAttributes._(
+        raw: attributes.raw,
+        id: attributes.id,
+        href: attributes.href,
+        transform: attributes.transform,
+        color: attributes.color,
+        opacity: attributes.opacity,
+        stroke: attributes.stroke,
+        fill: attributes.fill,
+        fillRule: attributes.fillRule,
+        clipRule: attributes.clipRule,
+        clipPathId: attributes.clipPathId,
+        blendMode: attributes.blendMode,
+        fontFamily: attributes.fontFamily,
+        fontWeight: attributes.fontWeight,
+        fontSize: attributes.fontSize,
+        x: x,
+        y: y,
+        width: viewBox.width,
+        height: viewBox.height);
+
+    final ParentNode group = ParentNode(newAttributes);
+    parserState.addGroup(parserState._currentStartElement!, group);
+    return null;
+  }
+
   static Future<void>? use(SvgParser parserState, bool warningsAsErrors) {
     final ParentNode? parent = parserState.currentGroup;
     final String xlinkHref = parserState._currentAttributes.href!;
     if (xlinkHref.isEmpty) {
       return null;
     }
-
-  static Future<void>? pattern(SvgParser parserState, bool warningsAsErrors){
-    
-
-  }
 
     final AffineMatrix transform =
         (parseTransform(parserState.attribute('transform')) ??
@@ -151,6 +182,7 @@ class _Elements {
       ),
       clipResolver: parserState._definitions.getClipPath,
       maskResolver: parserState._definitions.getDrawable,
+      patternResolver: parserState._definitions.getDrawable,
     );
     parserState.checkForIri(group);
     parent!.addChild(
@@ -159,6 +191,8 @@ class _Elements {
       clipResolver: parserState._definitions.getClipPath,
       maskId: parserState.attribute('mask'),
       maskResolver: parserState._definitions.getDrawable,
+      patternId: parserState.attribute('fill'),
+      patternResolver: parserState._definitions.getDrawable,
     );
     return null;
   }
@@ -374,6 +408,7 @@ class _Elements {
         ImageNode(data, parserState._currentAttributes),
         clipResolver: parserState._definitions.getClipPath,
         maskResolver: parserState._definitions.getDrawable,
+        patternResolver: parserState._definitions.getDrawable,
       );
       return null;
     }
@@ -427,6 +462,7 @@ class _Elements {
         ),
         clipResolver: parserState._definitions.getClipPath,
         maskResolver: parserState._definitions.getDrawable,
+        patternResolver: parserState._definitions.getDrawable,
       );
     }
 
@@ -794,6 +830,8 @@ class SvgParser {
       clipResolver: _definitions.getClipPath,
       maskId: attribute('mask'),
       maskResolver: _definitions.getDrawable,
+      patternId: attribute('fill'),
+      patternResolver: _definitions.getDrawable,
     );
     return true;
   }
@@ -1142,6 +1180,15 @@ class SvgParser {
     return null;
   }
 
+  /// Lookup the pattern if the attribute is present.
+  Node? parsePattern() {
+    final String? rawPattern = attribute('fill');
+    if (rawPattern != null) {
+      return _definitions.getDrawable(rawPattern);
+    }
+    return null;
+  }
+
   /// Parse the raw font weight string.
   int parseFontWeight(String? fontWeight) {
     if (fontWeight == null || fontWeight == 'normal') {
@@ -1382,6 +1429,7 @@ class SvgParser {
     Color? strokeColor;
     String? shaderId;
     if (rawStroke?.startsWith('url') == true) {
+      parsePattern();
       shaderId = rawStroke;
       strokeColor = Color.fromRGBO(255, 255, 255, opacity);
     } else {
@@ -1425,6 +1473,7 @@ class SvgParser {
     }
 
     if (rawFill.startsWith('url')) {
+      parsePattern();
       return SvgFillAttributes._(
         _definitions,
         color: Color.fromRGBO(255, 255, 255, opacity),
@@ -1609,23 +1658,26 @@ class _Viewport {
 /// A collection of attributes for an SVG element.
 class SvgAttributes {
   /// Create a new [SvgAttributes] from the given properties.
-  const SvgAttributes._({
-    required this.raw,
-    this.id,
-    this.href,
-    this.transform = AffineMatrix.identity,
-    this.color,
-    this.opacity,
-    this.stroke,
-    this.fill,
-    this.fillRule = PathFillType.nonZero,
-    this.clipRule,
-    this.clipPathId,
-    this.blendMode,
-    this.fontFamily,
-    this.fontWeight,
-    this.fontSize,
-  });
+  const SvgAttributes._(
+      {required this.raw,
+      this.id,
+      this.href,
+      this.transform = AffineMatrix.identity,
+      this.color,
+      this.opacity,
+      this.stroke,
+      this.fill,
+      this.fillRule = PathFillType.nonZero,
+      this.clipRule,
+      this.clipPathId,
+      this.blendMode,
+      this.fontFamily,
+      this.fontWeight,
+      this.fontSize,
+      this.x,
+      this.y,
+      this.width,
+      this.height});
 
   /// The empty set of properties.
   static const SvgAttributes empty = SvgAttributes._(raw: <String, String>{});
@@ -1754,6 +1806,18 @@ class SvgAttributes {
   /// The `font-size` attribute.
   final double? fontSize;
 
+  /// The `width` attribute.
+  final double? width;
+
+  /// The `height` attribute.
+  final double? height;
+
+  /// The x translation.
+  final double? x;
+
+  /// The y translation.
+  final double? y;
+
   /// Creates a new set of attributes as if this inherited from `parent`.
   ///
   /// If `includePosition` is true, the `x`/`y` coordinates are also inherited. This
@@ -1782,6 +1846,10 @@ class SvgAttributes {
       fontFamily: parent.fontFamily ?? fontFamily,
       fontWeight: parent.fontWeight ?? fontWeight,
       fontSize: parent.fontSize ?? fontSize,
+      x: parent.x ?? x,
+      y: parent.y ?? y,
+      height: parent.height ?? height,
+      width: parent.width ?? width,
     );
   }
 }

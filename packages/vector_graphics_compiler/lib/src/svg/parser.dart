@@ -123,7 +123,8 @@ class _Elements {
     final String rawY = attributes.raw['y'] ?? '0';
     final double x = parseDecimalOrPercentage(rawX);
     final double y = parseDecimalOrPercentage(rawY);
-
+    final String id = parserState.buildUrlIri();
+    parserState.patternIds.add(id);
     final SvgAttributes newAttributes = SvgAttributes._(
         raw: attributes.raw,
         id: attributes.id,
@@ -632,6 +633,9 @@ class SvgParser {
 
   /// Toggles whether [OverdrawOptimizer] is enabled or disabled.
   bool enableOverdrawOptimizer = true;
+
+  /// List of known patternIds.
+  List<String> patternIds = <String>[];
 
   ViewportNode? _root;
   SvgAttributes _currentAttributes = SvgAttributes.empty;
@@ -1429,7 +1433,9 @@ class SvgParser {
     Color? strokeColor;
     String? shaderId;
     if (rawStroke?.startsWith('url') == true) {
-      parsePattern();
+      if (patternIds.contains(rawStroke)) {
+        parsePattern();
+      }
       shaderId = rawStroke;
       strokeColor = Color.fromRGBO(255, 255, 255, opacity);
     } else {
@@ -1473,7 +1479,9 @@ class SvgParser {
     }
 
     if (rawFill.startsWith('url')) {
-      parsePattern();
+      if (patternIds.contains(rawFill)) {
+        parsePattern();
+      }
       return SvgFillAttributes._(
         _definitions,
         color: Color.fromRGBO(255, 255, 255, opacity),

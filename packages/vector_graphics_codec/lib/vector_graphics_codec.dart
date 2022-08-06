@@ -991,6 +991,7 @@ abstract class VectorGraphicsCodecListener {
 }
 
 enum _CurrentSection {
+  patterns,
   size,
   images,
   shaders,
@@ -998,7 +999,6 @@ enum _CurrentSection {
   paths,
   text,
   commands,
-  patterns,
 }
 
 /// Write-only buffer for incrementally building a [ByteData] instance.

@@ -173,10 +173,6 @@ class ParentNode extends AttributedNode {
         patternId: patternId,
         child: wrappedChild,
         transform: child.attributes.transform,
-        x: child.attributes.x!,
-        y: child.attributes.y!,
-        width: child.attributes.x!,
-        height: child.attributes.height!,
       );
     }
     _children.add(wrappedChild);
@@ -531,10 +527,6 @@ class PatternNode extends Node {
     required this.patternId,
     required this.resolver,
     required this.transform,
-    required this.x,
-    required this.y,
-    required this.width,
-    required this.height,
   });
 
   /// The id of the pattern.
@@ -548,18 +540,6 @@ class PatternNode extends Node {
 
   /// Called by visitors to resolve [patternId] to an [AttributedNode].
   final Resolver<AttributedNode?> resolver;
-
-  /// The x coordinate shift of the pattern tile.
-  double x;
-
-  /// The y coordinate shift of the pattern tile.
-  double y;
-
-  /// The width of the pattern.
-  double width;
-
-  /// The height of the pattern.
-  double height;
 
   @override
   AffineMatrix concatTransform(AffineMatrix currentTransform) {

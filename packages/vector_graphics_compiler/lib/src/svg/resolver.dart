@@ -261,10 +261,10 @@ class ResolvingVisitor extends Visitor<Node, AffineMatrix> {
     return ResolvedPatternNode(
       child: child,
       pattern: pattern,
-      x: node.x,
-      y: node.y,
-      width: node.width,
-      height: node.height,
+      x: resolvedPattern.attributes.x,
+      y: resolvedPattern.attributes.y,
+      width: resolvedPattern.attributes.width!,
+      height: resolvedPattern.attributes.height!,
       transform: data,
     );
   }

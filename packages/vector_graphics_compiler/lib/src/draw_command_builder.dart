@@ -66,7 +66,7 @@ class DrawCommandBuilder {
   void addPattern(ResolvedPatternNode node) {
     final int patternId =
         _getOrGenerateId(PatternData.fromNode(node), _patterns);
-    _commands.add(DrawCommand(DrawCommandType.pattern, patternId: patternId));
+    _commands.add(DrawCommand(DrawCommandType.pattern, objectId: patternId));
     final CommandBuilderVisitor visitor = CommandBuilderVisitor();
     visitor.currentPatternId = patternId;
     node.child.accept(visitor, null);
@@ -132,6 +132,7 @@ class DrawCommandBuilder {
       images: _images.keys.toList(),
       drawImages: _drawImages.keys.toList(),
       commands: _commands,
+      patterns: _patterns.keys.toList(),
     );
   }
 }

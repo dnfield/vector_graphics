@@ -4,7 +4,6 @@
 
 import 'dart:ui' as ui;
 import 'dart:typed_data';
-
 import 'package:flutter/cupertino.dart';
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
@@ -115,6 +114,8 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   final ui.PictureRecorder _recorder;
   ui.Canvas _canvas;
   ui.Canvas? _originalCanvas;
+
+  ui.PictureRecorder? _patternRecorder;
 
   final List<ui.Paint> _paints = <ui.Paint>[];
   final List<ui.Path> _paths = <ui.Path>[];
@@ -273,9 +274,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
 
   @override
   void onRestoreLayer() {
-    /// check for active pattern
     if (_currentPattern != null) {
-      /// do image listener stuff and make shader
       onPatternFinished();
     }
     _canvas.restore();
@@ -301,17 +300,34 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   void onPatternStart(int patternId, double x, double y, double width,
       double height, Float64List transform) {
     assert(_currentPattern == null);
+    assert(_patternRecorder == null);
     _currentPattern = PatternConfig(patternId, width, height, transform);
     _originalCanvas = _canvas;
-    _canvas = ui.Canvas(ui.PictureRecorder());
+    _patternRecorder = ui.PictureRecorder();
+    _canvas = ui.Canvas(_patternRecorder!);
     _canvas.clipRect(ui.Offset(x, y) & ui.Size(width, height));
   }
 
   @override
   void onPatternFinished() async {
+    print("1111111111111111111111111111111");
     assert(_currentPattern != null);
-    final ui.Image image = await toPicture().picture.toImage(
+    assert(_patternRecorder != null);
+    final FlutterVectorGraphicsListener patternListener =
+        FlutterVectorGraphicsListener._(
+      _canvas,
+      _patternRecorder!,
+      _locale,
+      _textDirection,
+    );
+    print("222222222222222222222222222222222");
+
+    final PictureInfo pictureInfo = patternListener.toPicture();
+    print("333333333333333333333333333333333");
+
+    final ui.Image image = await pictureInfo.picture.toImage(
         _currentPattern!.width.round(), _currentPattern!.height.round());
+    print("4444444444444444444444444444444444");
     final ui.ImageShader pattern = ui.ImageShader(
       image,
       ui.TileMode.repeated,
@@ -322,6 +338,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     _canvas = _originalCanvas!;
     _originalCanvas = null;
     _currentPattern = null;
+    _patternRecorder = null;
   }
 
   @override

@@ -191,7 +191,7 @@ class VectorGraphicsCodec {
     if (buffer._decodePhase.index != _CurrentSection.size.index) {
       throw StateError('Size already written');
     }
-    buffer._decodePhase = _CurrentSection.images;
+    buffer._decodePhase = _CurrentSection.patterns;
     buffer._putUint8(_sizeTag);
     buffer._putFloat32(width);
     buffer._putFloat32(height);
@@ -991,8 +991,8 @@ abstract class VectorGraphicsCodecListener {
 }
 
 enum _CurrentSection {
-  patterns,
   size,
+  patterns,
   images,
   shaders,
   paints,

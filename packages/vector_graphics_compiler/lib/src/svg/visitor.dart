@@ -4,6 +4,7 @@
 
 import '../draw_command_builder.dart';
 import '../geometry/path.dart';
+import '../geometry/pattern.dart';
 import '../paint.dart';
 import '../vector_instructions.dart';
 import 'node.dart';
@@ -204,8 +205,13 @@ class CommandBuilderVisitor extends Visitor<void, void>
 
   @override
   void visitResolvedPatternNode(ResolvedPatternNode patternNode, void data) {
+    ///_builder.addPattern();
     patternNode.pattern.accept(this, data);
-    _builder.addPattern(patternNode);
     _builder.restore();
+    final int patternId = _builder.getOrGeneratePatternId(
+        PatternData.fromNode(patternNode), _builder.patterns);
+    currentPatternId = patternId;
+    patternNode.child.accept(this, data);
+    currentPatternId = null;
   }
 }

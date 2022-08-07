@@ -21,9 +21,13 @@ class DrawCommandBuilder {
   final Map<DrawImageData, int> _drawImages = <DrawImageData, int>{};
   final Map<IndexedVertices, int> _vertices = <IndexedVertices, int>{};
   final List<DrawCommand> _commands = <DrawCommand>[];
-  final Map<PatternData, int> _patterns = <PatternData, int>{};
+  final Map<PatternData, int> patterns = <PatternData, int>{};
 
   int _getOrGenerateId<T>(T object, Map<T, int> map) =>
+      map.putIfAbsent(object, () => map.length);
+
+  /// Generates  a new patternId.
+  int getOrGeneratePatternId<T>(T object, Map<T, int> map) =>
       map.putIfAbsent(object, () => map.length);
 
   /// Add a vertices to the command stack.
@@ -63,14 +67,9 @@ class DrawCommandBuilder {
   }
 
   /// Adds a pattern to the command stack.
-  void addPattern(ResolvedPatternNode node) {
-    final int patternId =
-        _getOrGenerateId(PatternData.fromNode(node), _patterns);
-    _commands.add(DrawCommand(DrawCommandType.pattern, objectId: patternId));
-    final CommandBuilderVisitor visitor = CommandBuilderVisitor();
-    visitor.currentPatternId = patternId;
-    node.child.accept(visitor, null);
-  }
+  ///void addPattern() {
+  ///  _commands.add(const DrawCommand(DrawCommandType.pattern));
+  ///}
 
   /// Add a path to the current draw command stack
   void addPath(Path path, Paint paint, String? debugString, int? patternId) {
@@ -132,7 +131,7 @@ class DrawCommandBuilder {
       images: _images.keys.toList(),
       drawImages: _drawImages.keys.toList(),
       commands: _commands,
-      patterns: _patterns.keys.toList(),
+      patterns: patterns.keys.toList(),
     );
   }
 }

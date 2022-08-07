@@ -267,6 +267,7 @@ Future<Uint8List> encodeSvg({
       case DrawCommandType.mask:
         codec.writeMask(buffer);
         break;
+      /*
       case DrawCommandType.pattern:
         final PatternData patternData =
             instructions.patterns[command.objectId!];
@@ -279,6 +280,7 @@ Future<Uint8List> encodeSvg({
           patternData.transform.toMatrix4(),
         );
         break;
+      */
       case DrawCommandType.text:
         if (fillIds.containsKey(command.paintId)) {
           codec.writeDrawText(

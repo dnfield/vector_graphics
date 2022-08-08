@@ -325,19 +325,18 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     final PictureInfo pictureInfo = patternListener.toPicture();
     //print("333333333333333333333333333333333");
 
-    //final ui.Image image = await pictureInfo.picture.toImage(
-    //    _currentPattern!.width.round(), _currentPattern!.height.round());
+    final ui.Image image = await pictureInfo.picture.toImage(
+        _currentPattern!.width.round(), _currentPattern!.height.round());
     //print("4444444444444444444444444444444444");
-    /*
+
     final ui.ImageShader pattern = ui.ImageShader(
       image,
       ui.TileMode.repeated,
       ui.TileMode.repeated,
       _currentPattern!.transform,
     );
-    
 
-    _patterns[_currentPattern!.patternId] = pattern;*/
+    _patterns[_currentPattern!.patternId] = pattern;
 
     _canvas = _originalCanvas!;
     _originalCanvas = null;

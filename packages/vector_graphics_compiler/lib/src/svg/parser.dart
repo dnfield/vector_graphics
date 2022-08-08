@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
+import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 import 'tessellator.dart';
 import 'masking_optimizer.dart';
 import 'clipping_optimizer.dart';
@@ -97,13 +98,14 @@ class _Elements {
     final ParentNode parent = parserState.currentGroup!;
 
     final ParentNode group = ParentNode(parserState._currentAttributes);
+
     parent.addChild(
       group,
       clipId: parserState._currentAttributes.clipPathId,
       clipResolver: parserState._definitions.getClipPath,
       maskId: parserState.attribute('mask'),
       maskResolver: parserState._definitions.getDrawable,
-      patternId: parserState.attribute('fill'),
+      patternId: parserState._definitions.getPattern(parserState),
       patternResolver: parserState._definitions.getDrawable,
     );
     parserState.addGroup(parserState._currentStartElement!, group);
@@ -192,7 +194,7 @@ class _Elements {
       clipResolver: parserState._definitions.getClipPath,
       maskId: parserState.attribute('mask'),
       maskResolver: parserState._definitions.getDrawable,
-      patternId: parserState.attribute('fill'),
+      patternId: parserState._definitions.getPattern(parserState),
       patternResolver: parserState._definitions.getDrawable,
     );
     return null;
@@ -828,13 +830,14 @@ class SvgParser {
 
     final PathNode drawable = PathNode(path, _currentAttributes);
     checkForIri(drawable);
+
     parent.addChild(
       drawable,
       clipId: _currentAttributes.clipPathId,
       clipResolver: _definitions.getClipPath,
       maskId: attribute('mask'),
       maskResolver: _definitions.getDrawable,
-      patternId: attribute('fill'),
+      patternId: _definitions.getPattern(this),
       patternResolver: _definitions.getDrawable,
     );
     return true;
@@ -1432,12 +1435,11 @@ class SvgParser {
     Paint? definitionPaint;
     Color? strokeColor;
     String? shaderId;
+    bool? hasPattern;
     if (rawStroke?.startsWith('url') == true) {
-      if (patternIds.contains(rawStroke)) {
-        parsePattern();
-      }
       shaderId = rawStroke;
       strokeColor = Color.fromRGBO(255, 255, 255, opacity);
+      hasPattern = true;
     } else {
       strokeColor = parseColor(rawStroke);
     }
@@ -1455,6 +1457,7 @@ class SvgParser {
           definitionPaint?.stroke?.width,
       dashArray: _parseDashArray(rawStrokeDashArray),
       dashOffset: _parseDashOffset(rawStrokeDashOffset),
+      hasPattern: hasPattern,
     );
   }
 
@@ -1479,13 +1482,11 @@ class SvgParser {
     }
 
     if (rawFill.startsWith('url')) {
-      if (patternIds.contains(rawFill)) {
-        parsePattern();
-      }
       return SvgFillAttributes._(
         _definitions,
         color: Color.fromRGBO(255, 255, 255, opacity),
         shaderId: rawFill,
+        hasPattern: true,
       );
     }
 
@@ -1599,6 +1600,24 @@ class _Resolver {
     return pathBuilders
         .map((PathBuilder builder) => builder.toPath())
         .toList(growable: false);
+  }
+
+  /// Get the pattern id if one exists.
+  String? getPattern(SvgParser parserState) {
+    if (parserState.attribute('fill') != null) {
+      final String? fill = parserState.attribute('fill');
+      if (fill!.startsWith('url')) {
+        return fill;
+      }
+    }
+
+    if (parserState.attribute('stroke') != null) {
+      final String? stroke = parserState.attribute('stroke');
+      if (stroke!.startsWith('url')) {
+        return stroke;
+      }
+    }
+    return null;
   }
 
   /// Retrieve the [Gradeint] defined by [ref].
@@ -1874,6 +1893,7 @@ class SvgStrokeAttributes {
     this.width,
     this.dashArray,
     this.dashOffset,
+    this.hasPattern,
   });
 
   /// Specifies that strokes should not be drawn, even if they otherwise would
@@ -1907,11 +1927,23 @@ class SvgStrokeAttributes {
   /// The offset for [dashArray], if any.
   final double? dashOffset;
 
+  /// Indicates whether or not a pattern is used for stroke;
+  final bool? hasPattern;
+
   /// Creates a stroking paint object from this set of attributes, using the
   /// bounds and transform specified for shader computation.
   ///
   /// Returns null if this is [none].
   Stroke? toStroke(Rect shaderBounds, AffineMatrix transform) {
+    if (hasPattern == true) {
+      return Stroke(
+        join: join,
+        cap: cap,
+        miterLimit: miterLimit,
+        width: width,
+      );
+    }
+
     if (_definitions == null) {
       return null;
     }
@@ -1940,7 +1972,8 @@ class SvgStrokeAttributes {
 /// SVG attributes specific to filling.
 class SvgFillAttributes {
   /// Create a new [SvgFillAttributes];
-  const SvgFillAttributes._(this._definitions, {this.color, this.shaderId});
+  const SvgFillAttributes._(this._definitions,
+      {this.color, this.shaderId, this.hasPattern});
 
   /// Specifies that fills should not be drawn, even if they otherwise would be.
   static const SvgFillAttributes none = SvgFillAttributes._(null);
@@ -1954,11 +1987,18 @@ class SvgFillAttributes {
   /// The literal reference to a shader defined elsewhere.
   final String? shaderId;
 
+  /// If there is a pattern a default fill will be returned.
+  final bool? hasPattern;
+
   /// Creates a [Fill] from this information with appropriate transforms and
   /// bounds for shaders.
   ///
   /// Returns null if this is [none].
   Fill? toFill(Rect shaderBounds, AffineMatrix transform) {
+    if (hasPattern == true) {
+      return Fill(color: color);
+    }
+
     if (_definitions == null) {
       return null;
     }

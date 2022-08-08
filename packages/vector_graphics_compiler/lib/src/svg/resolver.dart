@@ -484,7 +484,7 @@ class ResolvedPatternNode extends Node {
 
   @override
   void visitChildren(NodeCallback visitor) {
-    // TODO: implement visitChildren
+    visitor(child);
   }
 
   @override

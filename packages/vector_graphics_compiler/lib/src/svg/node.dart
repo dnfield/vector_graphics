@@ -4,6 +4,8 @@
 
 import 'dart:typed_data';
 
+import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
+
 import '../geometry/basic_types.dart';
 import '../geometry/matrix.dart';
 import '../geometry/path.dart';
@@ -166,7 +168,6 @@ class ParentNode extends AttributedNode {
         transform: child.attributes.transform,
       );
     }
-
     if (patternId != null) {
       wrappedChild = PatternNode(
         resolver: patternResolver,

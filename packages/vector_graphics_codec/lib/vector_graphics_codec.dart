@@ -598,7 +598,7 @@ class VectorGraphicsCodec {
     double height,
     Float64List transform,
   ) {
-    buffer._checkPhase(_CurrentSection.patterns);
+    buffer._checkPhase(_CurrentSection.commands);
     assert(buffer._nextPatternId < kMaxId);
     final int id = buffer._nextPatternId;
     buffer._nextPatternId += 1;
@@ -734,6 +734,7 @@ class VectorGraphicsCodec {
     _ReadBuffer buffer,
     VectorGraphicsCodecListener? listener,
   ) {
+    print("read path");
     final int pathId = buffer.getUint16();
     final int paintId = buffer.getUint16();
     final int? patternId = buffer.getUint16();
@@ -830,6 +831,7 @@ class VectorGraphicsCodec {
   }
 
   void _readPattern(_ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
+    print("read pattern");
     final int patternId = buffer.getUint16();
     final double x = buffer.getFloat32();
     final double y = buffer.getFloat32();

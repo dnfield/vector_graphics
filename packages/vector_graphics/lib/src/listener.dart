@@ -170,6 +170,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     if (paintId != null) {
       paint = _paints[paintId];
     }
+    print("The pattern ID is " + patternId.toString());
     if (patternId != 65535) {
       if (paintId != null) {
         paint!.shader = _patterns[patternId];
@@ -274,6 +275,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
 
   @override
   void onRestoreLayer() {
+    print("REACHED THE RESTORE");
     if (_currentPattern != null) {
       onPatternFinished();
     }
@@ -299,6 +301,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   @override
   void onPatternStart(int patternId, double x, double y, double width,
       double height, Float64List transform) {
+    print("The value of _currentPattern is " + _currentPattern.toString());
     assert(_currentPattern == null);
     assert(_patternRecorder == null);
     _currentPattern = PatternConfig(patternId, width, height, transform);
@@ -310,7 +313,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
 
   @override
   void onPatternFinished() async {
-    print("1111111111111111111111111111111");
+    //print("1111111111111111111111111111111");
     assert(_currentPattern != null);
     assert(_patternRecorder != null);
     final FlutterVectorGraphicsListener patternListener =
@@ -320,21 +323,26 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
       _locale,
       _textDirection,
     );
-    print("222222222222222222222222222222222");
+    //print("222222222222222222222222222222222");
 
     final PictureInfo pictureInfo = patternListener.toPicture();
-    print("333333333333333333333333333333333");
+    print(pictureInfo.picture.approximateBytesUsed);
+    //print("333333333333333333333333333333333");
 
-    final ui.Image image = await pictureInfo.picture.toImage(
-        _currentPattern!.width.round(), _currentPattern!.height.round());
-    print("4444444444444444444444444444444444");
+    //final ui.Image image = await pictureInfo.picture.toImage(
+    //    _currentPattern!.width.round(), _currentPattern!.height.round());
+    //print("4444444444444444444444444444444444");
+    /*
     final ui.ImageShader pattern = ui.ImageShader(
       image,
       ui.TileMode.repeated,
       ui.TileMode.repeated,
       _currentPattern!.transform,
     );
-    _patterns[_currentPattern!.patternId] = pattern;
+    
+
+    _patterns[_currentPattern!.patternId] = pattern;*/
+
     _canvas = _originalCanvas!;
     _originalCanvas = null;
     _currentPattern = null;

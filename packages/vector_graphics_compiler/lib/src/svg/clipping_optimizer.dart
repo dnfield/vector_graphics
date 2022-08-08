@@ -228,7 +228,9 @@ class ClippingOptimizer extends Visitor<_Result, Node>
   @override
   _Result visitResolvedImageNode(
       ResolvedImageNode resolvedImageNode, Node data) {
-    return _Result(resolvedImageNode);
+    final _Result _result = _Result(resolvedImageNode);
+    _result.deleteClipNode = false;
+    return _result;
   }
 
   @override

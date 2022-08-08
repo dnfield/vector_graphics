@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:io';
-
 import '../draw_command_builder.dart';
 import '../geometry/path.dart';
 import '../geometry/pattern.dart';

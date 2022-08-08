@@ -2,8 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'package:vector_graphics_compiler/src/svg/visitor.dart';
-
 import 'geometry/pattern.dart';
 import 'geometry/image.dart';
 import 'geometry/path.dart';
@@ -21,6 +19,8 @@ class DrawCommandBuilder {
   final Map<DrawImageData, int> _drawImages = <DrawImageData, int>{};
   final Map<IndexedVertices, int> _vertices = <IndexedVertices, int>{};
   final List<DrawCommand> _commands = <DrawCommand>[];
+
+  /// Maps a [PatternData] object to a patternId.
   final Map<PatternData, int> patterns = <PatternData, int>{};
 
   int _getOrGenerateId<T>(T object, Map<T, int> map) =>

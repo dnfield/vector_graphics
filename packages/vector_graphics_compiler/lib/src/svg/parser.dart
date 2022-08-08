@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
-import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 import 'tessellator.dart';
 import 'masking_optimizer.dart';
 import 'clipping_optimizer.dart';

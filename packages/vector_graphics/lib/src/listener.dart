@@ -170,7 +170,6 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     if (paintId != null) {
       paint = _paints[paintId];
     }
-    print("The pattern ID is " + patternId.toString());
     if (patternId != 65535) {
       if (paintId != null) {
         paint!.shader = _patterns[patternId];
@@ -275,7 +274,6 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
 
   @override
   void onRestoreLayer() {
-    print("REACHED THE RESTORE");
     if (_currentPattern != null) {
       onPatternFinished();
     }
@@ -301,7 +299,6 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   @override
   void onPatternStart(int patternId, double x, double y, double width,
       double height, Float64List transform) {
-    print("The value of _currentPattern is " + _currentPattern.toString());
     assert(_currentPattern == null);
     assert(_patternRecorder == null);
     _currentPattern = PatternConfig(patternId, width, height, transform);

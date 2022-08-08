@@ -323,7 +323,6 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     //print("222222222222222222222222222222222");
 
     final PictureInfo pictureInfo = patternListener.toPicture();
-    print(pictureInfo.picture.approximateBytesUsed);
     //print("333333333333333333333333333333333");
 
     //final ui.Image image = await pictureInfo.picture.toImage(

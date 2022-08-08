@@ -826,7 +826,6 @@ class SvgParser {
     }
     final ParentNode parent = _parentDrawables.last.drawable;
     final Path path = pathFunc(this)!;
-
     final PathNode drawable = PathNode(path, _currentAttributes);
     checkForIri(drawable);
 
@@ -1438,7 +1437,9 @@ class SvgParser {
     if (rawStroke?.startsWith('url') == true) {
       shaderId = rawStroke;
       strokeColor = Color.fromRGBO(255, 255, 255, opacity);
-      hasPattern = true;
+      if (patternIds.contains(rawStroke)) {
+        hasPattern = true;
+      }
     } else {
       strokeColor = parseColor(rawStroke);
     }
@@ -1479,13 +1480,16 @@ class SvgParser {
     if (uniformOpacity != null) {
       opacity *= uniformOpacity;
     }
-
+    bool? hasPattern;
     if (rawFill.startsWith('url')) {
+      if (patternIds.contains(rawFill)) {
+        hasPattern = true;
+      }
       return SvgFillAttributes._(
         _definitions,
         color: Color.fromRGBO(255, 255, 255, opacity),
         shaderId: rawFill,
-        hasPattern: true,
+        hasPattern: hasPattern,
       );
     }
 
@@ -1605,14 +1609,15 @@ class _Resolver {
   String? getPattern(SvgParser parserState) {
     if (parserState.attribute('fill') != null) {
       final String? fill = parserState.attribute('fill');
-      if (fill!.startsWith('url')) {
+      if (fill!.startsWith('url') && parserState.patternIds.contains(fill)) {
         return fill;
       }
     }
 
     if (parserState.attribute('stroke') != null) {
       final String? stroke = parserState.attribute('stroke');
-      if (stroke!.startsWith('url')) {
+      if (stroke!.startsWith('url') &&
+          parserState.patternIds.contains(stroke)) {
         return stroke;
       }
     }

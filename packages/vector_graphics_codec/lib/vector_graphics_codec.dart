@@ -985,9 +985,6 @@ abstract class VectorGraphicsCodecListener {
   /// [onPatternFinished] is invoked.
   void onPatternStart(int patternId, double x, double y, double width,
       double height, Float64List transform);
-
-  /// The current pattern is completed.
-  void onPatternFinished();
 }
 
 enum _CurrentSection {

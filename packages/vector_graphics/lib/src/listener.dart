@@ -7,6 +7,8 @@ import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
+import 'dart:convert';
+
 const VectorGraphicsCodec _codec = VectorGraphicsCodec();
 
 /// The deocded result of a vector graphics asset.
@@ -113,9 +115,6 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
 
   final ui.PictureRecorder _recorder;
   ui.Canvas _canvas;
-  ui.Canvas? _originalCanvas;
-
-  ui.PictureRecorder? _patternRecorder;
 
   final List<ui.Paint> _paints = <ui.Paint>[];
   final List<ui.Path> _paths = <ui.Path>[];
@@ -123,8 +122,12 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   final List<_TextConfig> _textConfig = <_TextConfig>[];
   final List<Future<ui.Image>> _pendingImages = <Future<ui.Image>>[];
   final Map<int, ui.Image> _images = <int, ui.Image>{};
-  final Map<int, ui.Shader> _patterns = <int, ui.Shader>{};
-
+  final List<Future<ui.ImageShader>> _pendingPatterns =
+      <Future<ui.ImageShader>>[];
+  final Map<int, ui.ImageShader> _patterns = <int, ui.ImageShader>{};
+  final Map<int, ui.Canvas> _patternCanvases = <int, ui.Canvas>{};
+  final Map<int, ui.PictureRecorder> _patternRecorders =
+      <int, ui.PictureRecorder>{};
   ui.Path? _currentPath;
   ui.Size _size = ui.Size.zero;
   bool _done = false;
@@ -163,14 +166,22 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     return Future.wait(_pendingImages);
   }
 
+  /// Wait for all pending patterns to load.
+  Future<void> waitForPatternDecode() {
+    assert(_pendingPatterns.isNotEmpty);
+    return Future.wait(_pendingPatterns);
+  }
+
   @override
-  void onDrawPath(int pathId, int? paintId, int? patternId) {
+  void onDrawPath(int pathId, int? paintId, int? patternId) async {
+    //print("onDrawPathStart");
     final ui.Path path = _paths[pathId];
     ui.Paint? paint;
     if (paintId != null) {
       paint = _paints[paintId];
     }
     if (patternId != 65535) {
+      await waitForPatternDecode();
       if (paintId != null) {
         paint!.shader = _patterns[patternId];
       } else {
@@ -179,7 +190,20 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
         paint = newPaint;
       }
     }
-    _canvas.drawPath(path, paint ?? _emptyPaint);
+
+    if (_currentPattern != null) {
+      _patternCanvases[_currentPattern!.patternId]!
+          .drawPath(path, paint ?? _emptyPaint);
+    } else {
+      for (ui.Canvas c in _patternCanvases.values) {
+        //print("Pattern Canvas: " + c.hashCode.toString());
+      }
+      //print("Current Canvas: " + _canvas.hashCode.toString());
+
+      _canvas.drawPath(path, paint ?? _emptyPaint);
+    }
+
+    //print("onDrawPathEnd");
   }
 
   @override
@@ -274,10 +298,16 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
 
   @override
   void onRestoreLayer() {
+    //print("onRestoreLayerStart");
     if (_currentPattern != null) {
-      onPatternFinished();
+      final int patternId = _currentPattern!.patternId;
+      onPatternFinished(_currentPattern, _patternRecorders[patternId],
+          _patternCanvases[patternId]!);
+      //print("R - Current canvas is " + _canvas.hashCode.toString());
+    } else {
+      _canvas.restore();
     }
-    _canvas.restore();
+    //print("onRestoreLayerEnd");
   }
 
   @override
@@ -300,48 +330,44 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   void onPatternStart(int patternId, double x, double y, double width,
       double height, Float64List transform) {
     assert(_currentPattern == null);
-    assert(_patternRecorder == null);
+    //print("onPatternStartStart");
     _currentPattern = PatternConfig(patternId, width, height, transform);
-    _originalCanvas = _canvas;
-    _patternRecorder = ui.PictureRecorder();
-    _canvas = ui.Canvas(_patternRecorder!);
-    _canvas.clipRect(ui.Offset(x, y) & ui.Size(width, height));
+    _patternRecorders[patternId] = ui.PictureRecorder();
+    final ui.Canvas newCanvas = ui.Canvas(_patternRecorders[patternId]!);
+    newCanvas.clipRect(ui.Offset(x, y) & ui.Size(width, height));
+    _patternCanvases[patternId] = newCanvas;
+    //print("onPatternStartEnd");
   }
 
   @override
-  void onPatternFinished() async {
-    //print("1111111111111111111111111111111");
-    assert(_currentPattern != null);
-    assert(_patternRecorder != null);
+  Future<void> onPatternFinished(PatternConfig? currentPattern,
+      ui.PictureRecorder? patternRecorder, ui.Canvas canvas) async {
+    //print("onPatternFinishedStart");
+    //print("Pattern canvas is " + canvas.hashCode.toString());
+
     final FlutterVectorGraphicsListener patternListener =
         FlutterVectorGraphicsListener._(
-      _canvas,
-      _patternRecorder!,
-      _locale,
-      _textDirection,
-    );
-    //print("222222222222222222222222222222222");
+            canvas, patternRecorder!, _locale, _textDirection);
+
+    patternListener._size =
+        ui.Size(currentPattern!.width, currentPattern.height);
 
     final PictureInfo pictureInfo = patternListener.toPicture();
-    //print("333333333333333333333333333333333");
 
-    final ui.Image image = await pictureInfo.picture.toImage(
-        _currentPattern!.width.round(), _currentPattern!.height.round());
-    //print("4444444444444444444444444444444444");
-
-    final ui.ImageShader pattern = ui.ImageShader(
-      image,
-      ui.TileMode.repeated,
-      ui.TileMode.repeated,
-      _currentPattern!.transform,
-    );
-
-    _patterns[_currentPattern!.patternId] = pattern;
-
-    _canvas = _originalCanvas!;
-    _originalCanvas = null;
+    _pendingPatterns.add(pictureInfo.picture
+        .toImage(currentPattern.width.round(), currentPattern.height.round())
+        .then((ui.Image image) async {
+      final ui.ImageShader pattern = ui.ImageShader(
+        image,
+        ui.TileMode.repeated,
+        ui.TileMode.repeated,
+        currentPattern.transform,
+      );
+      return pattern;
+    }));
     _currentPattern = null;
-    _patternRecorder = null;
+
+    //print("onPatternFinishedEnd");
   }
 
   @override
@@ -434,9 +460,10 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onDrawText(int textId, int paintId, int patternId) {
+  void onDrawText(int textId, int paintId, int patternId) async {
     final ui.Paint paint = _paints[paintId];
     if (patternId != 65535) {
+      await waitForPatternDecode();
       paint.shader = _patterns[patternId];
     }
     final _TextConfig textConfig = _textConfig[textId];

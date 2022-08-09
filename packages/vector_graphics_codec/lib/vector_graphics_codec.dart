@@ -60,23 +60,23 @@ class VectorGraphicsCodec {
   /// Vertices are written inline and not subject to this constraint.
   static const int kMaxId = 65535;
 
-  static const int _pathTag = 27;
-  static const int _fillPaintTag = 28;
-  static const int _strokePaintTag = 29;
-  static const int _drawPathTag = 30;
-  static const int _drawVerticesTag = 31;
-  static const int _saveLayerTag = 37;
-  static const int _restoreTag = 38;
-  static const int _linearGradientTag = 39;
-  static const int _radialGradientTag = 40;
-  static const int _sizeTag = 41;
-  static const int _clipPathTag = 42;
-  static const int _maskTag = 43;
-  static const int _drawTextTag = 44;
-  static const int _textConfigTag = 45;
-  static const int _imageConfigTag = 46;
-  static const int _drawImageTag = 47;
-  static const int _beginCommandsTag = 48;
+  static const int _pathTag = 0;
+  static const int _fillPaintTag = 1;
+  static const int _strokePaintTag = 2;
+  static const int _drawPathTag = 3;
+  static const int _drawVerticesTag = 4;
+  static const int _saveLayerTag = 5;
+  static const int _restoreTag = 6;
+  static const int _linearGradientTag = 7;
+  static const int _radialGradientTag = 8;
+  static const int _sizeTag = 9;
+  static const int _clipPathTag = 10;
+  static const int _maskTag = 11;
+  static const int _drawTextTag = 12;
+  static const int _textConfigTag = 13;
+  static const int _imageConfigTag = 14;
+  static const int _drawImageTag = 15;
+  static const int _beginCommandsTag = 16;
 
   static const int _version = 1;
   static const int _magicNumber = 0x00882d62;
@@ -112,68 +112,49 @@ class VectorGraphicsCodec {
     }
 
     bool readImage = false;
+    final List<void Function(_ReadBuffer, VectorGraphicsCodecListener?)>
+        callbacks = <void Function(_ReadBuffer, VectorGraphicsCodecListener?)>[
+      _readPath,
+      _readFillPaint,
+      _readStrokePaint,
+      _readDrawPath,
+      _readDrawVertices,
+      _readSaveLayer,
+      _readRestoreLayer,
+      _readLinearGradient,
+      _readRadialGradient,
+      _readSize,
+      _readClipPath,
+      _readMaskTag,
+      _readDrawText,
+      _readTextConfig,
+      ((p0, p1) {
+        readImage = true;
+        _readImageConfig(p0, p1);
+      }),
+      _readDrawImage,
+    ];
     while (buffer.hasRemaining) {
       final int type = buffer.getUint8();
-      switch (type) {
-        case _beginCommandsTag:
-          if (readImage) {
-            return DecodeResponse(false, buffer);
-          }
-          continue;
-        case _linearGradientTag:
-          _readLinearGradient(buffer, listener);
-          continue;
-        case _radialGradientTag:
-          _readRadialGradient(buffer, listener);
-          continue;
-        case _fillPaintTag:
-          _readFillPaint(buffer, listener);
-          continue;
-        case _strokePaintTag:
-          _readStrokePaint(buffer, listener);
-          continue;
-        case _pathTag:
-          _readPath(buffer, listener);
-          continue;
-        case _drawPathTag:
-          _readDrawPath(buffer, listener);
-          continue;
-        case _drawVerticesTag:
-          _readDrawVertices(buffer, listener);
-          continue;
-        case _restoreTag:
-          listener?.onRestoreLayer();
-          continue;
-        case _saveLayerTag:
-          _readSaveLayer(buffer, listener);
-          continue;
-        case _sizeTag:
-          _readSize(buffer, listener);
-          continue;
-        case _clipPathTag:
-          _readClipPath(buffer, listener);
-          continue;
-        case _maskTag:
-          listener?.onMask();
-          continue;
-        case _textConfigTag:
-          _readTextConfig(buffer, listener);
-          continue;
-        case _drawTextTag:
-          _readDrawText(buffer, listener);
-          continue;
-        case _imageConfigTag:
-          readImage = true;
-          _readImageConfig(buffer, listener);
-          continue;
-        case _drawImageTag:
-          _readDrawImage(buffer, listener);
-          continue;
-        default:
-          throw StateError('Unknown type tag $type');
+      if (type == _beginCommandsTag) {
+        if (readImage) {
+          return DecodeResponse(false, buffer);
+        }
+        continue;
+      } else {
+        callbacks[type](buffer, listener);
       }
     }
     return const DecodeResponse(true, null);
+  }
+
+  void _readRestoreLayer(
+      _ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
+    listener?.onRestoreLayer();
+  }
+
+  void _readMaskTag(_ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
+    listener?.onMask();
   }
 
   /// Encode the dimensions of the vector graphic.

@@ -43,6 +43,7 @@ Future<PictureInfo> decodeVectorGraphics(
   required Locale? locale,
   required TextDirection? textDirection,
 }) async {
+  var sw = Stopwatch()..start();
   assert(() {
     _debugLastTextDirection = textDirection;
     _debugLastLocale = locale;
@@ -54,6 +55,7 @@ Future<PictureInfo> decodeVectorGraphics(
   );
   DecodeResponse response = _codec.decode(data, listener);
   if (response.complete) {
+    print(sw.elapsed);
     return listener.toPicture();
   }
   await listener.waitForImageDecode();

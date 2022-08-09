@@ -498,7 +498,6 @@ class TestListener extends VectorGraphicsCodecListener {
     commands.add(OnPatternStart(patternId, x, y, width, height, transform));
   }
 
-  @override
   void onPatternFinished() {
     commands.add(const OnPatternFinished());
   }

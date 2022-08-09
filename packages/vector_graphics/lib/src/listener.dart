@@ -7,8 +7,6 @@ import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
-import 'dart:convert';
-
 const VectorGraphicsCodec _codec = VectorGraphicsCodec();
 
 /// The deocded result of a vector graphics asset.
@@ -196,9 +194,9 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
           .drawPath(path, paint ?? _emptyPaint);
     } else {
       for (ui.Canvas c in _patternCanvases.values) {
-        //print("Pattern Canvas: " + c.hashCode.toString());
+        print('Pattern Canvas: ' + c.hashCode.toString());
       }
-      //print("Current Canvas: " + _canvas.hashCode.toString());
+      print('Current Canvas: ' + _canvas.hashCode.toString());
 
       _canvas.drawPath(path, paint ?? _emptyPaint);
     }
@@ -339,7 +337,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     //print("onPatternStartEnd");
   }
 
-  @override
+  /// Creates ImageShader for active pattern.
   Future<void> onPatternFinished(PatternConfig? currentPattern,
       ui.PictureRecorder? patternRecorder, ui.Canvas canvas) async {
     //print("onPatternFinishedStart");

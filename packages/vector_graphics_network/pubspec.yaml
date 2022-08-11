@@ -1,0 +1,35 @@
+name: vector_graphics_network
+description: An experimental package for compiling SVGs on device
+version: 0.0.1
+homepage: https://github.com/dnfield/vector_graphics
+
+environment:
+  sdk: '>=2.17.0 <3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  vector_graphics: 0.0.1
+  vector_graphics_codec: 0.0.1
+  vector_graphics_compiler: 0.0.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+# Comment out before publishing
+dependency_overrides:
+  vector_graphics:
+    path: ../vector_graphics
+  vector_graphics_codec:
+    path: ../vector_graphics_codec
+  vector_graphics_compiler:
+    path: ../vector_graphics_compiler
+
+platforms:
+  android:
+  ios:
+  linux:
+  macos:
+  web:
+  windows:

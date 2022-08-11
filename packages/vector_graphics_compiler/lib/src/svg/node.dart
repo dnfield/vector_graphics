@@ -167,6 +167,7 @@ class ParentNode extends AttributedNode {
       );
     }
     if (patternId != null) {
+      print("pattern id is " + patternId.toString());
       wrappedChild = PatternNode(
         resolver: patternResolver,
         patternId: patternId,

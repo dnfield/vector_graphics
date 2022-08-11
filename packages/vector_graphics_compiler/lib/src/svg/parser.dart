@@ -118,6 +118,7 @@ class _Elements {
   }
 
   static Future<void>? pattern(SvgParser parserState, bool warningsAsErrors) {
+    print("reached _Elements.patterns");
     final SvgAttributes attributes = parserState._currentAttributes;
     final _Viewport viewBox = parserState._parseViewBox();
     final String rawX = attributes.raw['x'] ?? '0';
@@ -149,6 +150,7 @@ class _Elements {
 
     final ParentNode group = ParentNode(newAttributes);
     parserState.addGroup(parserState._currentStartElement!, group);
+    print("added new group");
     return null;
   }
 
@@ -462,6 +464,7 @@ class _Elements {
               parserState.parseFontWeight(attributes.raw['font-weight'])],
           attributes,
         ),
+        patternId: parserState._definitions.getPattern(parserState),
         clipResolver: parserState._definitions.getClipPath,
         maskResolver: parserState._definitions.getDrawable,
         patternResolver: parserState._definitions.getDrawable,
@@ -742,6 +745,7 @@ class SvgParser {
 
     Node newRoot = _root!.accept(resolvingVisitor, AffineMatrix.identity);
 
+    /*
     if (enableOverdrawOptimizer == true) {
       if (path_ops.isPathOpsInitialized) {
         newRoot = overdrawOptimizer.apply(newRoot);
@@ -770,6 +774,7 @@ class SvgParser {
         throw Exception('PathOps library was not initialized.');
       }
     }
+    */
 
     /// Convert to vector instructions
     final CommandBuilderVisitor commandVisitor = CommandBuilderVisitor();
@@ -817,6 +822,7 @@ class SvgParser {
 
   /// Updates the [VectorInstructions] with the current path and paint.
   bool addShape(XmlStartElementEvent event) {
+    print("reached add shape");
     final _PathFunc? pathFunc = _svgPathFuncs[event.name];
     if (pathFunc == null) {
       return false;

@@ -124,13 +124,6 @@ Future<Uint8List> encodeSvg({
   final Map<int, int> strokeIds = <int, int>{};
   final Map<Gradient, int> shaderIds = <Gradient, int>{};
 
-  /*
-  for (final PatternData data in instructions.patterns) {
-    codec.writePattern(buffer, data.x, data.y, data.width, data.height,
-        data.transform.toMatrix4());
-  }
-  */
-
   for (final ImageData data in instructions.images) {
     codec.writeImage(buffer, 0, data.data);
   }

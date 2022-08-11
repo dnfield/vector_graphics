@@ -171,6 +171,7 @@ class CommandBuilderVisitor extends Visitor<void, void>
 
   @override
   void visitResolvedText(ResolvedTextNode textNode, void data) {
+    print("current pattern id for text node is " + currentPatternId.toString());
     _builder.addText(
         textNode.textConfig, textNode.paint, null, currentPatternId);
   }
@@ -205,6 +206,8 @@ class CommandBuilderVisitor extends Visitor<void, void>
 
   @override
   void visitResolvedPatternNode(ResolvedPatternNode patternNode, void data) {
+    print("reached resolved pattern node");
+    print("child is " + patternNode.child.runtimeType.toString());
     final int patternId = _builder.getOrGeneratePatternId(
         PatternData.fromNode(patternNode), _builder.patterns);
     _builder.addPattern(patternId);

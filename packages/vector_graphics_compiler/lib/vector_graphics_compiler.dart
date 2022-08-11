@@ -5,7 +5,7 @@
 import 'dart:typed_data';
 
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
-import 'package:vector_graphics_compiler/src/geometry/pattern.dart';
+import 'src/geometry/pattern.dart';
 import 'src/geometry/matrix.dart';
 import 'src/geometry/image.dart';
 import 'src/geometry/vertices.dart';

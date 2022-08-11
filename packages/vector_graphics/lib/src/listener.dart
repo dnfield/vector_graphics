@@ -472,6 +472,10 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     ));
 
     if (textConfig.transform != null) {
+      print(textConfig.fontFamily);
+      print(textConfig.fontSize);
+      print(textConfig.fontWeight);
+      print(textConfig.text);
       _canvas.save();
       _canvas.transform(textConfig.transform!);
     }

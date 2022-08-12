@@ -734,6 +734,9 @@ void main() {
     final VectorInstructions instructions = await parse(
       starPatternCircles,
       warningsAsErrors: true,
+      enableMaskingOptimizer: false,
+      enableClippingOptimizer: false,
+      enableOverdrawOptimizer: false,
     );
 
     expect(instructions.commands, const <DrawCommand>[
@@ -761,6 +764,9 @@ void main() {
     final VectorInstructions instructions = await parse(
       textWithPattern,
       warningsAsErrors: true,
+      enableMaskingOptimizer: false,
+      enableClippingOptimizer: false,
+      enableOverdrawOptimizer: false,
     );
 
     expect(instructions.commands, const <DrawCommand>[

@@ -2,7 +2,6 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
-import 'dart:convert';
 import 'dart:ui' as ui;
 import 'dart:typed_data';
 import 'package:flutter/cupertino.dart';
@@ -130,7 +129,6 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   ui.Path? _currentPath;
   ui.Size _size = ui.Size.zero;
   bool _done = false;
-  List<ui.Image> imagesTest = [];
 
   PatternConfig? _currentPattern;
 
@@ -356,8 +354,6 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     );
 
     _patterns[currentPattern.patternId] = pattern;
-
-    imagesTest.add(image);
   }
 
   @override
@@ -452,11 +448,9 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   @override
   void onDrawText(int textId, int paintId, int? patternId) async {
     final ui.Paint paint = _paints[paintId];
-    print("in the listener pattern id is: " + patternId.toString());
     if (patternId != 65535) {
       paint.shader = _patterns[patternId];
     }
-    print(paint.color);
     final _TextConfig textConfig = _textConfig[textId];
     final ui.ParagraphBuilder builder = ui.ParagraphBuilder(
       ui.ParagraphStyle(
@@ -478,10 +472,6 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     ));
 
     if (textConfig.transform != null) {
-      print(textConfig.fontFamily);
-      print(textConfig.fontSize);
-      print(textConfig.fontWeight);
-      print(textConfig.text);
       _canvas.save();
       _canvas.transform(textConfig.transform!);
     }
@@ -492,7 +482,6 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     if (textConfig.transform != null) {
       _canvas.restore();
     }
-    print("finished drawing text");
   }
 
   @override

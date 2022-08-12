@@ -1,6 +1,5 @@
 import 'dart:collection';
 import 'dart:convert';
-import 'dart:ffi';
 import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
@@ -119,7 +118,6 @@ class _Elements {
   }
 
   static Future<void>? pattern(SvgParser parserState, bool warningsAsErrors) {
-    print("reached _Elements.patterns");
     final SvgAttributes attributes = parserState._currentAttributes;
     final String rawWidth = parserState.attribute('width') ?? '';
     final String rawHeight = parserState.attribute('height') ?? '';
@@ -772,7 +770,6 @@ class SvgParser {
 
     Node newRoot = _root!.accept(resolvingVisitor, AffineMatrix.identity);
 
-    /*
     if (enableOverdrawOptimizer == true) {
       if (path_ops.isPathOpsInitialized) {
         newRoot = overdrawOptimizer.apply(newRoot);
@@ -801,7 +798,6 @@ class SvgParser {
         throw Exception('PathOps library was not initialized.');
       }
     }
-    */
 
     /// Convert to vector instructions
     final CommandBuilderVisitor commandVisitor = CommandBuilderVisitor();
@@ -849,7 +845,6 @@ class SvgParser {
 
   /// Updates the [VectorInstructions] with the current path and paint.
   bool addShape(XmlStartElementEvent event) {
-    print("reached add shape");
     final _PathFunc? pathFunc = _svgPathFuncs[event.name];
     if (pathFunc == null) {
       return false;

@@ -117,7 +117,7 @@ void main() {
       const OnPathMoveTo(34, 76),
       const OnPathLineTo(57, 76),
       const OnPathFinished(),
-      const OnDrawPath(0, 0, 65535),
+      const OnDrawPath(0, 0, null),
     ]);
   });
 
@@ -203,12 +203,12 @@ void main() {
       const OnTextConfig(
           'Stroked bold line', 150, 215, 55, 'Roboto', 8, null, 3),
       const OnTextConfig('Line 3', 150, 50, 55, 'Roboto', 3, null, 4),
-      const OnDrawText(0, 0, 65535),
-      const OnDrawText(1, 0, 65535),
-      const OnDrawText(2, 0, 65535),
-      const OnDrawText(3, 1, 65535),
-      const OnDrawText(3, 2, 65535),
-      const OnDrawText(4, 3, 65535),
+      const OnDrawText(0, 0, null),
+      const OnDrawText(1, 0, null),
+      const OnDrawText(2, 0, null),
+      const OnDrawText(3, 1, null),
+      const OnDrawText(3, 2, null),
+      const OnDrawText(4, 3, null),
     ]);
   });
 

@@ -534,7 +534,7 @@ class PatternNode extends Node {
   /// The child to apply a pattern to.
   final Node child;
 
-  /// The decendant child's transform
+  /// The decendant child's transform.
   final AffineMatrix transform;
 
   /// Called by visitors to resolve [patternId] to an [AttributedNode].

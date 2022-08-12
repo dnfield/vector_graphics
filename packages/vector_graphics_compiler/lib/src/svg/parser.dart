@@ -122,28 +122,10 @@ class _Elements {
     final String rawWidth = parserState.attribute('width') ?? '';
     final String rawHeight = parserState.attribute('height') ?? '';
 
-    double? patternWidth;
-    double? patternHeight;
-
-    if (rawWidth.contains('%')) {
-      patternWidth =
-          ((double.parse(rawWidth.substring(0, rawWidth.length - 1))) / 100) *
-              parserState._root!.width;
-    } else if (rawWidth.contains('.') && rawWidth.startsWith('0.')) {
-      patternWidth = (double.parse(rawWidth)) * parserState._root!.width;
-    } else if (rawWidth.isNotEmpty) {
-      patternWidth = (double.parse(rawWidth));
-    }
-
-    if (rawHeight.contains('%')) {
-      patternHeight =
-          ((double.parse(rawHeight.substring(0, rawHeight.length - 1))) / 100) *
-              parserState._root!.height;
-    } else if (rawHeight.contains('.') && rawHeight.startsWith('0.')) {
-      patternHeight = (double.parse(rawHeight)) * parserState._root!.height;
-    } else if (rawHeight.isNotEmpty) {
-      patternHeight = (double.parse(rawHeight));
-    }
+    double? patternWidth =
+        parsePatternUnitToDouble(rawWidth, viewBox: parserState._root);
+    double? patternHeight =
+        parsePatternUnitToDouble(rawHeight, viewBox: parserState._root);
 
     if (patternWidth == null || patternHeight == null) {
       final _Viewport viewBox = parserState._parseViewBox();
@@ -1721,26 +1703,27 @@ class _Viewport {
 /// A collection of attributes for an SVG element.
 class SvgAttributes {
   /// Create a new [SvgAttributes] from the given properties.
-  const SvgAttributes._(
-      {required this.raw,
-      this.id,
-      this.href,
-      this.transform = AffineMatrix.identity,
-      this.color,
-      this.opacity,
-      this.stroke,
-      this.fill,
-      this.fillRule = PathFillType.nonZero,
-      this.clipRule,
-      this.clipPathId,
-      this.blendMode,
-      this.fontFamily,
-      this.fontWeight,
-      this.fontSize,
-      this.x,
-      this.y,
-      this.width,
-      this.height});
+  const SvgAttributes._({
+    required this.raw,
+    this.id,
+    this.href,
+    this.transform = AffineMatrix.identity,
+    this.color,
+    this.opacity,
+    this.stroke,
+    this.fill,
+    this.fillRule = PathFillType.nonZero,
+    this.clipRule,
+    this.clipPathId,
+    this.blendMode,
+    this.fontFamily,
+    this.fontWeight,
+    this.fontSize,
+    this.x,
+    this.y,
+    this.width,
+    this.height,
+  });
 
   /// The empty set of properties.
   static const SvgAttributes empty = SvgAttributes._(raw: <String, String>{});

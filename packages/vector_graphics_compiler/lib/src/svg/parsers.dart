@@ -4,6 +4,9 @@
 
 import 'dart:math';
 
+import 'package:vector_graphics_compiler/src/svg/node.dart';
+import 'package:vector_graphics_compiler/src/svg/parser.dart';
+
 import '../geometry/matrix.dart';
 import '../geometry/path.dart';
 import 'numbers.dart';
@@ -140,3 +143,19 @@ double parsePercentage(String val, {double multiplier = 1.0}) {
 
 /// Whether a string should be treated as a percentage (i.e. if it ends with a `'%'`).
 bool isPercentage(String val) => val.endsWith('%');
+
+/// Parses value from the form '25%', 0.25 or 25.0 as a double.
+/// Note: Percentage or decimals will be multipled by the total
+/// view box size, where as doubles will be returned as is.
+double? parsePatternUnitToDouble(String rawValue, {ViewportNode? viewBox}) {
+  double? value;
+  if (rawValue.contains('%')) {
+    value = ((double.parse(rawValue.substring(0, rawValue.length - 1))) / 100) *
+        viewBox!.width;
+  } else if (rawValue.startsWith('0.')) {
+    value = (double.parse(rawValue)) * viewBox!.width;
+  } else if (rawValue.isNotEmpty) {
+    value = (double.parse(rawValue));
+  }
+  return value;
+}

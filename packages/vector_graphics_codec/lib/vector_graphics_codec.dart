@@ -191,7 +191,7 @@ class VectorGraphicsCodec {
     if (buffer._decodePhase.index != _CurrentSection.size.index) {
       throw StateError('Size already written');
     }
-    buffer._decodePhase = _CurrentSection.patterns;
+    buffer._decodePhase = _CurrentSection.images;
     buffer._putUint8(_sizeTag);
     buffer._putFloat32(width);
     buffer._putFloat32(height);
@@ -212,7 +212,7 @@ class VectorGraphicsCodec {
     buffer._putUint8(_drawPathTag);
     buffer._putUint16(pathId);
     buffer._putUint16(paintId);
-    buffer._putUint16(patternId ?? -1);
+    buffer._putUint16(patternId ?? kMaxId);
   }
 
   /// Encode a draw vertices command in the current buffer.
@@ -574,7 +574,7 @@ class VectorGraphicsCodec {
     buffer._putUint8(_drawTextTag);
     buffer._putUint16(textId);
     buffer._putUint16(paintId);
-    buffer._putUint16(patternId ?? -1);
+    buffer._putUint16(patternId ?? kMaxId);
   }
 
   void writeClipPath(VectorGraphicsBuffer buffer, int path) {
@@ -736,7 +736,10 @@ class VectorGraphicsCodec {
   ) {
     final int pathId = buffer.getUint16();
     final int paintId = buffer.getUint16();
-    final int? patternId = buffer.getUint16();
+    int? patternId = buffer.getUint16();
+    if (patternId == kMaxId) {
+      patternId = null;
+    }
     listener?.onDrawPath(pathId, paintId, patternId);
   }
 
@@ -804,7 +807,10 @@ class VectorGraphicsCodec {
       _ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
     final int textId = buffer.getUint16();
     final int paintId = buffer.getUint16();
-    final int patternId = buffer.getUint16();
+    int? patternId = buffer.getUint16();
+    if (patternId == kMaxId) {
+      patternId = null;
+    }
     listener?.onDrawText(textId, paintId, patternId);
   }
 
@@ -959,7 +965,7 @@ abstract class VectorGraphicsCodecListener {
   void onDrawText(
     int textId,
     int paintId,
-    int patternId,
+    int? patternId,
   );
 
   /// An image has been decoded.
@@ -989,7 +995,6 @@ abstract class VectorGraphicsCodecListener {
 
 enum _CurrentSection {
   size,
-  patterns,
   images,
   shaders,
   paints,

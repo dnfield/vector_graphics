@@ -4,9 +4,7 @@
 
 import 'dart:math';
 
-import 'package:vector_graphics_compiler/src/svg/node.dart';
-import 'package:vector_graphics_compiler/src/svg/parser.dart';
-
+import 'node.dart';
 import '../geometry/matrix.dart';
 import '../geometry/path.dart';
 import 'numbers.dart';

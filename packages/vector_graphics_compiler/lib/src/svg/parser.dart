@@ -125,12 +125,17 @@ class _Elements {
     double? patternWidth;
     double? patternHeight;
 
+    print(rawWidth);
+    print(rawHeight);
+
     if (rawWidth.contains('%')) {
       patternWidth =
           ((double.parse(rawWidth.substring(0, rawWidth.length - 1))) / 100) *
               parserState._root!.width;
     } else if (rawWidth.contains('.') && rawWidth.startsWith('0.')) {
       patternWidth = (double.parse(rawWidth)) * parserState._root!.width;
+    } else if (rawWidth.isNotEmpty) {
+      patternWidth = (double.parse(rawWidth));
     }
 
     if (rawHeight.contains('%')) {
@@ -139,6 +144,8 @@ class _Elements {
               parserState._root!.height;
     } else if (rawHeight.contains('.') && rawHeight.startsWith('0.')) {
       patternHeight = (double.parse(rawHeight)) * parserState._root!.height;
+    } else if (rawHeight.isNotEmpty) {
+      patternHeight = (double.parse(rawHeight));
     }
 
     if (patternWidth == null || patternHeight == null) {

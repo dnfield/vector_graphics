@@ -125,9 +125,6 @@ class _Elements {
     double? patternWidth;
     double? patternHeight;
 
-    print(rawWidth);
-    print(rawHeight);
-
     if (rawWidth.contains('%')) {
       patternWidth =
           ((double.parse(rawWidth.substring(0, rawWidth.length - 1))) / 100) *

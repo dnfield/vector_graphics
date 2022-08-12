@@ -1,5 +1,6 @@
 import 'dart:collection';
 import 'dart:convert';
+import 'dart:ffi';
 import 'dart:typed_data';
 
 import 'package:meta/meta.dart';
@@ -120,7 +121,34 @@ class _Elements {
   static Future<void>? pattern(SvgParser parserState, bool warningsAsErrors) {
     print("reached _Elements.patterns");
     final SvgAttributes attributes = parserState._currentAttributes;
-    final _Viewport viewBox = parserState._parseViewBox();
+    final String rawWidth = parserState.attribute('width') ?? '';
+    final String rawHeight = parserState.attribute('height') ?? '';
+
+    double? patternWidth;
+    double? patternHeight;
+
+    if (rawWidth.contains('%')) {
+      patternWidth =
+          ((double.parse(rawWidth.substring(0, rawWidth.length - 1))) / 100) *
+              parserState._root!.width;
+    } else if (rawWidth.contains('.') && rawWidth.startsWith('0.')) {
+      patternWidth = (double.parse(rawWidth)) * parserState._root!.width;
+    }
+
+    if (rawHeight.contains('%')) {
+      patternHeight =
+          ((double.parse(rawHeight.substring(0, rawHeight.length - 1))) / 100) *
+              parserState._root!.height;
+    } else if (rawHeight.contains('.') && rawHeight.startsWith('0.')) {
+      patternHeight = (double.parse(rawHeight)) * parserState._root!.height;
+    }
+
+    if (patternWidth == null || patternHeight == null) {
+      final _Viewport viewBox = parserState._parseViewBox();
+      patternWidth = viewBox.width;
+      patternHeight = viewBox.height;
+    }
+
     final String rawX = attributes.raw['x'] ?? '0';
     final String rawY = attributes.raw['y'] ?? '0';
     final double x = parseDecimalOrPercentage(rawX);
@@ -145,12 +173,11 @@ class _Elements {
         fontSize: attributes.fontSize,
         x: x,
         y: y,
-        width: viewBox.width,
-        height: viewBox.height);
+        width: patternWidth,
+        height: patternHeight);
 
     final ParentNode group = ParentNode(newAttributes);
     parserState.addGroup(parserState._currentStartElement!, group);
-    print("added new group");
     return null;
   }
 

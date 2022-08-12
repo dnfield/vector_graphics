@@ -130,6 +130,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   ui.Path? _currentPath;
   ui.Size _size = ui.Size.zero;
   bool _done = false;
+  List<ui.Image> imagesTest = [];
 
   PatternConfig? _currentPattern;
 
@@ -329,15 +330,23 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     final FlutterVectorGraphicsListener patternListener =
         FlutterVectorGraphicsListener._(
             canvas, patternRecorder!, _locale, _textDirection);
+    double imageWidth = currentPattern!.width;
+    double imageHeight = currentPattern.height;
+
+    if (imageWidth < 1) {
+      imageWidth = (_size.width * imageWidth);
+    }
+    if (imageHeight < 1) {
+      imageHeight = (_size.width * imageHeight);
+    }
 
     patternListener._size =
-        ui.Size(currentPattern!.width, currentPattern.height);
+        ui.Size(imageWidth.toDouble(), imageHeight.toDouble());
 
     final PictureInfo pictureInfo = patternListener.toPicture();
     _currentPattern = null;
-
-    final ui.Image image = pictureInfo.picture.toImageSync(
-        currentPattern.width.round(), currentPattern.height.round());
+    final ui.Image image = pictureInfo.picture
+        .toImageSync(imageWidth.round(), imageHeight.round());
 
     final ui.ImageShader pattern = ui.ImageShader(
       image,
@@ -348,10 +357,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
 
     _patterns[currentPattern.patternId] = pattern;
 
-    final ByteData? imageBytes =
-        await image.toByteData(format: ui.ImageByteFormat.png);
-    print(
-        'data:image/png;base64,${base64Encode(imageBytes!.buffer.asUint8List())}');
+    imagesTest.add(image);
   }
 
   @override

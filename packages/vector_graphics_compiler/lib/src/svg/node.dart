@@ -528,10 +528,10 @@ class PatternNode extends Node {
     required this.transform,
   });
 
-  /// The id of the pattern.
+  /// This id will match any path or text element that has a non-null patternId.
   final String patternId;
 
-  /// The child to apply a pattern to.
+  /// The child(ren) to apply the pattern to.
   final Node child;
 
   /// The decendant child's transform.

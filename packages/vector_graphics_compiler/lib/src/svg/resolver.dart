@@ -473,13 +473,15 @@ class ResolvedPatternNode extends Node {
   /// The y coordinate shift of the pattern tile.
   double? y;
 
-  /// The width of the pattern as a percentage.
+  /// The width of the pattern's viewbox in px.
+  /// Values must be > = 1.
   double width;
 
-  /// The height of the pattern as a percentage.
+  /// The height of the pattern's viewbox in px.
+  /// Values must be > = 1.
   double height;
 
-  /// The transform of the pattern.
+  /// This is the transform of the pattern that has been created from the children.
   AffineMatrix transform;
 
   @override

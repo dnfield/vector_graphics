@@ -7,17 +7,17 @@ class PatternData {
   PatternData(this.x, this.y, this.width, this.height, this.transform);
 
   /// The x coordinate shift of the pattern tile in px.
-  /// Values must be > = 1.
   double x;
 
   /// The y coordinate shift of the pattern tile in px.
-  /// Values must be > = 1.
   double y;
 
   /// The width of the pattern's viewbox in px.
+  /// Values must be > = 1.
   double width;
 
   /// The height of the pattern's viewbox in px.
+  /// Values must be > = 1.
   double height;
 
   /// The transform of the pattern generated from its children.

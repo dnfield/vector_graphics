@@ -123,9 +123,9 @@ class _Elements {
     final String rawHeight = parserState.attribute('height') ?? '';
 
     double? patternWidth =
-        parsePatternUnitToDouble(rawWidth, viewBox: parserState._root);
-    double? patternHeight =
-        parsePatternUnitToDouble(rawHeight, viewBox: parserState._root);
+        parsePatternUnitToDouble(rawWidth, 'width', viewBox: parserState._root);
+    double? patternHeight = parsePatternUnitToDouble(rawHeight, 'height',
+        viewBox: parserState._root);
 
     if (patternWidth == null || patternHeight == null) {
       final _Viewport viewBox = parserState._parseViewBox();

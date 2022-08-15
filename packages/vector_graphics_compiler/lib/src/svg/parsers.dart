@@ -145,13 +145,23 @@ bool isPercentage(String val) => val.endsWith('%');
 /// Parses value from the form '25%', 0.25 or 25.0 as a double.
 /// Note: Percentage or decimals will be multipled by the total
 /// view box size, where as doubles will be returned as is.
-double? parsePatternUnitToDouble(String rawValue, {ViewportNode? viewBox}) {
+double? parsePatternUnitToDouble(String rawValue, String mode,
+    {ViewportNode? viewBox}) {
   double? value;
+  double? viewBoxValue;
+  if (viewBox != null) {
+    if (mode == 'width') {
+      viewBoxValue = viewBox.width;
+    } else if (mode == 'height') {
+      viewBoxValue = viewBox.height;
+    }
+  }
+
   if (rawValue.contains('%')) {
     value = ((double.parse(rawValue.substring(0, rawValue.length - 1))) / 100) *
-        viewBox!.width;
+        viewBoxValue!;
   } else if (rawValue.startsWith('0.')) {
-    value = (double.parse(rawValue)) * viewBox!.width;
+    value = (double.parse(rawValue)) * viewBoxValue!;
   } else if (rawValue.isNotEmpty) {
     value = (double.parse(rawValue));
   }

@@ -7,6 +7,7 @@ import 'package:vector_graphics_compiler/src/svg/node.dart';
 import 'package:vector_graphics_compiler/src/svg/overdraw_optimizer.dart';
 import 'package:vector_graphics_compiler/src/svg/parser.dart';
 import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
+import 'helpers.dart';
 import 'test_svg_strings.dart';
 
 Future<Node> parseAndResolve(String source) async {
@@ -15,25 +16,13 @@ Future<Node> parseAndResolve(String source) async {
   return node.accept(visitor, AffineMatrix.identity);
 }
 
-List<T> queryChildren<T extends Node>(Node node) {
-  final List<T> children = <T>[];
-  void visitor(Node child) {
-    if (child is T) {
-      children.add(child);
-    }
-    child.visitChildren(visitor);
-  }
-
-  node.visitChildren(visitor);
-  return children;
-}
-
 void main() {
   setUpAll(() {
     if (!initializePathOpsFromFlutterCache()) {
       fail('error in setup');
     }
   });
+
   test('Basic case of two opaque shapes overlapping', () async {
     final Node node = await parseAndResolve(basicOverlap);
     final VectorInstructions instructions = await parse(basicOverlap);

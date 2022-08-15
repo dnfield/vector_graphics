@@ -118,4 +118,8 @@ void main() {
     expect(
         parsePatternUnitToDouble('0.1%', 'height', viewBox: viewportNode), 1.0);
   });
+
+  test('Point conversion', () {
+    expect(parseDoubleWithUnits('1pt', theme: const SvgTheme()), 1 + 1 / 3);
+  });
 }

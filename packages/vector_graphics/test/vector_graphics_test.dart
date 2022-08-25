@@ -410,7 +410,10 @@ void main() {
   testWidgets('Throws a helpful exception if decoding fails',
       (WidgetTester tester) async {
     final Uint8List data = Uint8List(256);
-    final TestBytesLoader loader = TestBytesLoader(data.buffer.asByteData(), '/foo/bar/whatever.vec');
+    final TestBytesLoader loader = TestBytesLoader(
+      data.buffer.asByteData(),
+      '/foo/bar/whatever.vec',
+    );
     final GlobalKey key = GlobalKey();
     await tester.pumpWidget(Placeholder(key: key));
 

@@ -38,7 +38,6 @@ class Path implements PathProxy {
     return FillType.values[_getFillTypeFn(_path!)];
   }
 
-
   ffi.Pointer<_SkPath>? _path;
   ffi.Pointer<_PathData>? _pathData;
 

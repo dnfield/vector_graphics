@@ -112,7 +112,7 @@ Future<void> main(List<String> args) async {
   loadPathOpsIfNeeded(results);
 
   final List<Pair> pairs = <Pair>[];
-  if (results.wasParsed('--input-dir')) {
+  if (results.wasParsed('input-dir')) {
     final Directory directory = Directory(results['input-dir'] as String);
     for (final File file
         in directory.listSync(recursive: true).whereType<File>()) {

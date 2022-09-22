@@ -3,12 +3,9 @@
 // found in the LICENSE file.
 
 import 'dart:io';
-import 'dart:isolate';
-import 'dart:typed_data';
 
 import 'package:args/args.dart';
-import 'package:pool/pool.dart';
-import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
+import 'package:vector_graphics_compiler/src/isolate_processor.dart';
 
 final ArgParser argParser = ArgParser()
   ..addOption(
@@ -49,10 +46,15 @@ final ArgParser argParser = ArgParser()
         'Only includes files that end with .svg. '
         'Cannot be combined with --input or --output.',
   )
-  ..addOption('input',
-      abbr: 'i',
-      help: 'The path to a file containing a single SVG',
+  ..addOption(
+    'input',
+    abbr: 'i',
+    help: 'The path to a file containing a single SVG',
   )
+  ..addOption('concurrency',
+      abbr: 'k',
+      help: 'The maximum number of SVG processing isolates to spawn at once. '
+          'If not provided, defaults to the number of cores.')
   ..addOption(
     'output',
     abbr: 'o',
@@ -60,20 +62,6 @@ final ArgParser argParser = ArgParser()
         'The path to a file where the resulting vector_graphic will be written.\n'
         'If not provided, defaults to <input-file>.vg',
   );
-
-void loadPathOpsIfNeeded(ArgResults results) {
-  if (results['optimize-masks'] == true ||
-      results['optimize-clips'] == true ||
-      results['optimize-overdraw'] == true) {
-    if (results.wasParsed('libpathops')) {
-      initializeLibPathOps(results['libpathops'] as String);
-    } else {
-      if (!initializePathOpsFromFlutterCache()) {
-        exit(1);
-      }
-    }
-  }
-}
 
 void validateOptions(ArgResults results) {
   if (results.wasParsed('input-dir') &&
@@ -99,21 +87,13 @@ Future<void> main(List<String> args) async {
   }
   validateOptions(results);
 
-  if (results['tessellate'] == true) {
-    if (results.wasParsed('libtessellator')) {
-      initializeLibTesselator(results['libtessellator'] as String);
-    } else {
-      if (!initializeTessellatorFromFlutterCache()) {
-        exit(1);
-      }
-    }
-  }
-
-  loadPathOpsIfNeeded(results);
-
   final List<Pair> pairs = <Pair>[];
   if (results.wasParsed('input-dir')) {
     final Directory directory = Directory(results['input-dir'] as String);
+    if (!directory.existsSync()) {
+      print('input-dir ${directory.path} does not exist.');
+      exit(1);
+    }
     for (final File file
         in directory.listSync(recursive: true).whereType<File>()) {
       if (!file.path.endsWith('.svg')) {
@@ -129,97 +109,27 @@ Future<void> main(List<String> args) async {
     pairs.add(Pair(inputFilePath, outputFilePath));
   }
 
-  bool maskingOptimizerEnabled = true;
-  bool clippingOptimizerEnabled = true;
-  bool overdrawOptimizerEnabled = true;
-
-  if (results['optimize-masks'] == false) {
-    maskingOptimizerEnabled = false;
-  }
-
-  if (results['optimize-clips'] == false) {
-    clippingOptimizerEnabled = false;
-  }
-
-  if (results['optimize-overdraw'] == false) {
-    overdrawOptimizerEnabled = false;
-  }
-
-  if (pairs.length == 1) {
-    final Uint8List bytes = await encodeSvg(
-      xml: File(pairs[0].inputPath).readAsStringSync(),
-      debugName: args[0],
-      enableMaskingOptimizer: maskingOptimizerEnabled,
-      enableClippingOptimizer: clippingOptimizerEnabled,
-      enableOverdrawOptimizer: overdrawOptimizerEnabled,
-    );
-
-    File(pairs[0].outputPath).writeAsBytesSync(bytes);
+  final bool maskingOptimizerEnabled = results['optimize-masks'] == true;
+  final bool clippingOptimizerEnabled = results['optimize-clips'] == true;
+  final bool overdrawOptimizerEnabled = results['optimize-overdraw'] == true;
+  final bool tessellate = results['tessellate'] == true;
+  final int concurrency;
+  if (results.wasParsed('concurrency')) {
+    concurrency = int.parse(results['concurrency'] as String);
   } else {
-    final IsolateProcessor processor = IsolateProcessor();
-    await processor.process(
-      pairs,
-      maskingOptimizerEnabled: maskingOptimizerEnabled,
-      clippingOptimizerEnabled: clippingOptimizerEnabled,
-      overdrawOptimizerEnabled: overdrawOptimizerEnabled,
-    );
-  }
-}
-
-class IsolateProcessor {
-  final Pool pool = Pool(4);
-  int _total = 0;
-  int _current = 0;
-
-  Future<void> process(
-    List<Pair> pairs, {
-    required bool maskingOptimizerEnabled,
-    required bool clippingOptimizerEnabled,
-    required bool overdrawOptimizerEnabled,
-  }) async {
-    _total = pairs.length;
-    _current = 0;
-    await Future.wait(<Future<void>>[
-      for (Pair pair in pairs)
-        _process(
-          pair,
-          maskingOptimizerEnabled: maskingOptimizerEnabled,
-          clippingOptimizerEnabled: clippingOptimizerEnabled,
-          overdrawOptimizerEnabled: overdrawOptimizerEnabled,
-        )
-    ]);
+    concurrency = Platform.numberOfProcessors;
   }
 
-  Future<void> _process(
-    Pair pair, {
-    required bool maskingOptimizerEnabled,
-    required bool clippingOptimizerEnabled,
-    required bool overdrawOptimizerEnabled,
-  }) async {
-    PoolResource? resource;
-    try {
-      resource = await pool.request();
-      await Isolate.run(() async {
-        final Uint8List bytes = await encodeSvg(
-          xml: File(pair.inputPath).readAsStringSync(),
-          debugName: pair.inputPath,
-          enableMaskingOptimizer: maskingOptimizerEnabled,
-          enableClippingOptimizer: clippingOptimizerEnabled,
-          enableOverdrawOptimizer: overdrawOptimizerEnabled,
-        );
-        File(pair.outputPath).writeAsBytesSync(bytes);
-      });
-      _current++;
-      print('Progress: $_current/$_total');
-    } finally {
-      resource?.release();
-    }
-  }
-}
-
-class Pair {
-  const Pair(this.inputPath, this.outputPath);
-
-  final String inputPath;
-  final String outputPath;
+  final IsolateProcessor processor = IsolateProcessor(
+    results['libpathops'] as String?,
+    results['libtessellator'] as String?,
+    concurrency,
+  );
+  await processor.process(
+    pairs,
+    maskingOptimizerEnabled: maskingOptimizerEnabled,
+    clippingOptimizerEnabled: clippingOptimizerEnabled,
+    overdrawOptimizerEnabled: overdrawOptimizerEnabled,
+    tessellate: tessellate,
+  );
 }

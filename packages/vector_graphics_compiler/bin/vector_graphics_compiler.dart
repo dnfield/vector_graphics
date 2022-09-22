@@ -52,7 +52,7 @@ final ArgParser argParser = ArgParser()
   ..addOption('input',
       abbr: 'i',
       help: 'The path to a file containing a single SVG',
-      mandatory: true)
+  )
   ..addOption(
     'output',
     abbr: 'o',
@@ -80,6 +80,10 @@ void validateOptions(ArgResults results) {
       (results.wasParsed('input') || results.wasParsed('output'))) {
     print(
         '--input-dir cannot be combined with --input and/or --output options.');
+    exit(1);
+  }
+  if (!results.wasParsed('input') && !results.wasParsed('input-dir')) {
+    print('One of --input or --input-dir must be specified.');
     exit(1);
   }
 }

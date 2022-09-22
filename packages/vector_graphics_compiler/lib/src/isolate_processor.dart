@@ -24,7 +24,9 @@ class IsolateProcessor {
   int _current = 0;
 
   /// Process the provided input/output [Pair] objects into vector graphics.
-  Future<void> process(
+  ///
+  /// Returns whether all requests were successful.
+  Future<bool> process(
     List<Pair> pairs, {
     required bool maskingOptimizerEnabled,
     required bool clippingOptimizerEnabled,
@@ -53,8 +55,8 @@ class IsolateProcessor {
     ]);
     if (failure) {
       print('Some targets failed.');
-      exit(1);
     }
+    return !failure;
   }
 
   static void _loadPathOps(String? libpathops) {

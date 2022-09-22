@@ -60,7 +60,7 @@ final ArgParser argParser = ArgParser()
     abbr: 'o',
     help:
         'The path to a file where the resulting vector_graphic will be written.\n'
-        'If not provided, defaults to <input-file>.vg',
+        'If not provided, defaults to <input-file>.vec',
   );
 
 void validateOptions(ArgResults results) {
@@ -99,13 +99,13 @@ Future<void> main(List<String> args) async {
       if (!file.path.endsWith('.svg')) {
         continue;
       }
-      final String outputPath = '${file.path}.vg';
+      final String outputPath = '${file.path}.vec';
       pairs.add(Pair(file.path, outputPath));
     }
   } else {
     final String inputFilePath = results['input'] as String;
     final String outputFilePath =
-        results['output'] as String? ?? '$inputFilePath.vg';
+        results['output'] as String? ?? '$inputFilePath.vec';
     pairs.add(Pair(inputFilePath, outputFilePath));
   }
 
@@ -125,11 +125,13 @@ Future<void> main(List<String> args) async {
     results['libtessellator'] as String?,
     concurrency,
   );
-  await processor.process(
+  if (!await processor.process(
     pairs,
     maskingOptimizerEnabled: maskingOptimizerEnabled,
     clippingOptimizerEnabled: clippingOptimizerEnabled,
     overdrawOptimizerEnabled: overdrawOptimizerEnabled,
     tessellate: tessellate,
-  );
+  )) {
+    exit(1);
+  }
 }

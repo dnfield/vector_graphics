@@ -55,7 +55,7 @@ final ArgParser argParser = ArgParser()
       abbr: 'k',
       help: 'The maximum number of SVG processing isolates to spawn at once. '
           'If not provided, defaults to the number of cores.')
-  ..addOption('dump-debug',
+  ..addFlag('dump-debug',
       help:
           'Dump a human readable debugging format alongside the compiled asset',
       hide: true)

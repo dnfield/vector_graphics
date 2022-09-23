@@ -20,48 +20,52 @@ Uint8List dumpToDebugFormat(Uint8List bytes) {
   return utf8.encode(listener.buffer.toString()) as Uint8List;
 }
 
+String _intToColor(int value) {
+  return 'Color(0x${(value & 0xFFFFFFFF).toRadixString(16).padLeft(8, '0')})';
+}
+
 class _DebugVectorGraphicsListener extends VectorGraphicsCodecListener {
   final StringBuffer buffer = StringBuffer();
 
   @override
   void onClipPath(int pathId) {
-    buffer.writeln('ApplyClip: $pathId');
+    buffer.writeln('DrawClip: id:$pathId');
   }
 
   @override
   void onDrawImage(int imageId, double x, double y, double width, double height,
       Float64List? transform) {
     buffer.writeln(
-        'DrawImage: $imageId (Rect.fromLTWH($x, $y, $width, $height), transform: $transform)');
+        'DrawImage: id:$imageId (Rect.fromLTWH($x, $y, $width, $height), transform: $transform)');
   }
 
   @override
   void onDrawPath(int pathId, int? paintId, int? patternId) {
-    buffer.writeln('DrawPath: $pathId ($paintId, $patternId)');
+    buffer.writeln('DrawPath: id:$pathId ($paintId, $patternId)');
   }
 
   @override
   void onDrawText(int textId, int paintId, int? patternId) {
-    buffer.writeln('DrawText: $textId ($paintId, $patternId)');
+    buffer.writeln('DrawText: id:$textId ($paintId, $patternId)');
   }
 
   @override
   void onDrawVertices(Float32List vertices, Uint16List? indices, int? paintId) {
-    buffer.writeln(
-        'DrawVertices: ${vertices.lengthInBytes} (${indices?.lengthInBytes ?? 0}, $paintId)');
+    buffer.writeln('DrawVertices: $vertices ($indices, paintId: $paintId)');
   }
 
   @override
   void onImage(int imageId, int format, Uint8List data) {
-    buffer.writeln('StoreImage: $imageId ($format, ${data.lengthInBytes}');
+    buffer.writeln(
+        'StoreImage: id:$imageId (format:$format, byteLength:${data.lengthInBytes}');
   }
 
   @override
   void onLinearGradient(double fromX, double fromY, double toX, double toY,
       Int32List colors, Float32List? offsets, int tileMode, int id) {
     buffer.writeln(
-        'StoreGradient: $id Linear(from: ($fromX, $fromY), to: ($toX, $toY), '
-        'colors: $colors, offsets: $offsets, tileMode: $tileMode');
+        'StoreGradient: id:$id Linear(from: ($fromX, $fromY), to: ($toX, $toY), '
+        'colors: [${colors.map(_intToColor).join(',')}], offsets: $offsets, tileMode: $tileMode');
   }
 
   @override
@@ -84,10 +88,10 @@ class _DebugVectorGraphicsListener extends VectorGraphicsCodecListener {
     // Fill
     if (paintStyle == 0) {
       buffer.writeln(
-          'StorePaint: $id Fill($color, blendMode: $blendMode, shader: $shaderId');
+          'StorePaint: id:$id Fill(${_intToColor(color)}, blendMode: $blendMode, shader: $shaderId');
     } else {
       buffer.writeln(
-          'StorePaint: $id Stroke($color, strokeCap: $strokeCap, $strokeJoin: $strokeJoin, '
+          'StorePaint: id:$id Stroke(${_intToColor(color)}, strokeCap: $strokeCap, $strokeJoin: $strokeJoin, '
           'blendMode: $blendMode, strokeMiterLimit: $strokeMiterLimit, strokeWidth: $strokeWidth, shader: $shaderId');
     }
   }
@@ -120,7 +124,7 @@ class _DebugVectorGraphicsListener extends VectorGraphicsCodecListener {
 
   @override
   void onPathStart(int id, int fillType) {
-    buffer.writeln('PathStart: $id ${fillType == 0 ? 'Fill' : 'Stroke'}');
+    buffer.writeln('PathStart: id:$id ${fillType == 0 ? 'Fill' : 'Stroke'}');
   }
 
   @override
@@ -143,8 +147,8 @@ class _DebugVectorGraphicsListener extends VectorGraphicsCodecListener {
       int tileMode,
       int id) {
     buffer.writeln(
-        'StoreGradient: $id Radial(center: ($centerX, $centerY), radius: $radius,'
-        ' focal: ($focalX, $focalY), colors: $colors, offsets: $offsets, '
+        'StoreGradient: id:$id Radial(center: ($centerX, $centerY), radius: $radius,'
+        ' focal: ($focalX, $focalY), colors: [${colors.map(_intToColor).join(',')}], offsets: $offsets, '
         'transform: $transform, tileMode: $tileMode');
   }
 
@@ -175,6 +179,6 @@ class _DebugVectorGraphicsListener extends VectorGraphicsCodecListener {
     int id,
   ) {
     buffer.writeln(
-        'RecordText: $id ($text, ($x, $y), weight: $fontWeight, size: $fontSize, family: $fontFamily, transform: $transform)');
+        'RecordText: id:$id ($text, ($x, $y), weight: $fontWeight, size: $fontSize, family: $fontFamily, transform: $transform)');
   }
 }

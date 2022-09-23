@@ -7,6 +7,8 @@ import 'dart:typed_data';
 
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
+import 'paint.dart';
+
 /// Write an unstable but human readable form of the vector graphics binary
 /// package intended to be used for debugging and development.
 Uint8List dumpToDebugFormat(Uint8List bytes) {
@@ -41,7 +43,9 @@ class _DebugVectorGraphicsListener extends VectorGraphicsCodecListener {
 
   @override
   void onDrawPath(int pathId, int? paintId, int? patternId) {
-    buffer.writeln('DrawPath: id:$pathId ($paintId, $patternId)');
+    final String patternContext =
+        patternId != null ? ', patternId:$patternId' : '';
+    buffer.writeln('DrawPath: id:$pathId (paintId:$paintId$patternContext)');
   }
 
   @override
@@ -64,8 +68,13 @@ class _DebugVectorGraphicsListener extends VectorGraphicsCodecListener {
   void onLinearGradient(double fromX, double fromY, double toX, double toY,
       Int32List colors, Float32List? offsets, int tileMode, int id) {
     buffer.writeln(
-        'StoreGradient: id:$id Linear(from: ($fromX, $fromY), to: ($toX, $toY), '
-        'colors: [${colors.map(_intToColor).join(',')}], offsets: $offsets, tileMode: $tileMode');
+      'StoreGradient: id:$id Linear(\n'
+      '  from: ($fromX, $fromY)\n'
+      '  to: ($toX, $toY)\n'
+      '  colors: [${colors.map(_intToColor).join(',')}]\n'
+      '  offsets: $offsets\n'
+      '  tileMode: ${TileMode.values[tileMode].name}',
+    );
   }
 
   @override
@@ -88,11 +97,11 @@ class _DebugVectorGraphicsListener extends VectorGraphicsCodecListener {
     // Fill
     if (paintStyle == 0) {
       buffer.writeln(
-          'StorePaint: id:$id Fill(${_intToColor(color)}, blendMode: $blendMode, shader: $shaderId');
+          'StorePaint: id:$id Fill(${_intToColor(color)}, blendMode: ${BlendMode.values[blendMode].name}, shader: $shaderId)');
     } else {
       buffer.writeln(
           'StorePaint: id:$id Stroke(${_intToColor(color)}, strokeCap: $strokeCap, $strokeJoin: $strokeJoin, '
-          'blendMode: $blendMode, strokeMiterLimit: $strokeMiterLimit, strokeWidth: $strokeWidth, shader: $shaderId');
+          'blendMode: ${BlendMode.values[blendMode].name}, strokeMiterLimit: $strokeMiterLimit, strokeWidth: $strokeWidth, shader: $shaderId)');
     }
   }
 
@@ -124,7 +133,8 @@ class _DebugVectorGraphicsListener extends VectorGraphicsCodecListener {
 
   @override
   void onPathStart(int id, int fillType) {
-    buffer.writeln('PathStart: id:$id ${fillType == 0 ? 'Fill' : 'Stroke'}');
+    buffer
+        .writeln('PathStart: id:$id ${fillType == 0 ? 'nonZero' : 'evenOdd'}');
   }
 
   @override
@@ -146,10 +156,17 @@ class _DebugVectorGraphicsListener extends VectorGraphicsCodecListener {
       Float64List? transform,
       int tileMode,
       int id) {
+    final bool hasFocal = focalX != null;
     buffer.writeln(
-        'StoreGradient: id:$id Radial(center: ($centerX, $centerY), radius: $radius,'
-        ' focal: ($focalX, $focalY), colors: [${colors.map(_intToColor).join(',')}], offsets: $offsets, '
-        'transform: $transform, tileMode: $tileMode');
+      'StoreGradient: id:$id Radial(\n'
+      'center: ($centerX, $centerY)\n'
+      'radius: $radius\n'
+      '${hasFocal ? 'focal: ($focalX, $focalY)\n' : ''}'
+      'colors: [${colors.map(_intToColor).join(',')}]\n'
+      'offsets: $offsets\n'
+      'transform: $transform\n'
+      'tileMode: ${TileMode.values[tileMode].name}',
+    );
   }
 
   @override

@@ -13,9 +13,10 @@ import 'debug.dart';
 
 /// A render object which draws a vector graphic instance as a picture
 /// for HTML compatibility.
-class WebRenderVectorGraphic extends RenderBox {
-  /// Create a new [RenderVectorGraphic].
-  WebRenderVectorGraphic(
+class RenderWebVectorGraphic extends RenderBox {
+
+  /// Create a new [RenderWebVectorGraphic].
+  RenderWebVectorGraphic(
     this._pictureInfo,
     this._assetKey,
     this._colorFilter,

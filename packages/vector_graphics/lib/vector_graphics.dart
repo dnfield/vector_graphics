@@ -410,7 +410,7 @@ class _RawWebVectorGraphicWidget extends SingleChildRenderObjectWidget {
 
   @override
   RenderObject createRenderObject(BuildContext context) {
-    return WebRenderVectorGraphic(
+    return RenderWebVectorGraphic(
       pictureInfo,
       assetKey,
       colorFilter,
@@ -421,7 +421,7 @@ class _RawWebVectorGraphicWidget extends SingleChildRenderObjectWidget {
   @override
   void updateRenderObject(
     BuildContext context,
-    covariant WebRenderVectorGraphic renderObject,
+    covariant RenderWebVectorGraphic renderObject,
   ) {
     renderObject
       ..pictureInfo = pictureInfo

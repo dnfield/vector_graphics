@@ -24,7 +24,7 @@ bool useHtmlRenderObject() {
   try {
     image = picture.toImageSync(1, 1);
     _cachedUseHtmlRenderObject = false;
-  } on UnsupportedError catch (_)  {
+  } on UnsupportedError catch (_) {
     _cachedUseHtmlRenderObject = true;
   } finally {
     image?.dispose();

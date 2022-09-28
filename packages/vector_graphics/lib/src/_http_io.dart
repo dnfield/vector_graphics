@@ -6,10 +6,11 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 
+final HttpClient _httpClient = HttpClient();
+
 /// Fetches an HTTP resource from the specified [uri] using the specified [headers].
 Future<Uint8List> httpGet(Uri uri, {Map<String, String>? headers}) async {
-  final HttpClient httpClient = HttpClient();
-  final HttpClientRequest request = await httpClient.getUrl(uri);
+  final HttpClientRequest request = await _httpClient.getUrl(uri);
   headers?.forEach(request.headers.add);
   final HttpClientResponse response = await request.close();
 

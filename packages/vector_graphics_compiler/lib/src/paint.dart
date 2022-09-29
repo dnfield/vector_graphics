@@ -112,7 +112,7 @@ abstract class Gradient {
   /// The transform, if any, to apply to the gradient.
   final AffineMatrix? transform;
 
-  /// Apply the bounds and transform the the shader.
+  /// Apply the bounds and transform the shader.
   Gradient applyBounds(Rect bounds, AffineMatrix transform);
 
   /// Creates a new gradient
@@ -456,7 +456,7 @@ class Paint {
 
   @override
   String toString() {
-    final StringBuffer buffer = StringBuffer('Paint($blendMode: $blendMode');
+    final StringBuffer buffer = StringBuffer('Paint(blendMode: $blendMode');
     const String leading = ', ';
     if (stroke != null) {
       buffer.write('${leading}stroke: $stroke');
@@ -581,7 +581,7 @@ class Fill {
 
   @override
   String toString() {
-    final StringBuffer buffer = StringBuffer('Fill($color: $color');
+    final StringBuffer buffer = StringBuffer('Fill(color: $color');
     const String leading = ', ';
 
     if (shader != null) {

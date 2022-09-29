@@ -6,8 +6,8 @@ import 'package:test/test.dart';
 import 'package:vector_graphics_compiler/src/svg/node.dart';
 import 'package:vector_graphics_compiler/src/svg/overdraw_optimizer.dart';
 import 'package:vector_graphics_compiler/src/svg/parser.dart';
-import 'package:vector_graphics_compiler/src/svg/resolver.dart';
 import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
+import 'helpers.dart';
 import 'test_svg_strings.dart';
 
 Future<Node> parseAndResolve(String source) async {
@@ -16,25 +16,60 @@ Future<Node> parseAndResolve(String source) async {
   return node.accept(visitor, AffineMatrix.identity);
 }
 
-List<T> queryChildren<T extends Node>(Node node) {
-  final List<T> children = <T>[];
-  void visitor(Node child) {
-    if (child is T) {
-      children.add(child);
-    }
-    child.visitChildren(visitor);
-  }
-
-  node.visitChildren(visitor);
-  return children;
-}
-
 void main() {
   setUpAll(() {
     if (!initializePathOpsFromFlutterCache()) {
       fail('error in setup');
     }
   });
+
+  test(
+      'Basic case of two opaque shapes overlapping with a stroke (cannot be optimized yet)',
+      () async {
+    final Node node = await parseAndResolve(basicOverlapWithStroke);
+    final VectorInstructions instructions = await parse(basicOverlapWithStroke);
+
+    final List<ResolvedPathNode> pathNodesOld =
+        queryChildren<ResolvedPathNode>(node);
+
+    final OverdrawOptimizer visitor = OverdrawOptimizer();
+    final Node newNode = visitor.apply(node);
+
+    final List<ResolvedPathNode> pathNodesNew =
+        queryChildren<ResolvedPathNode>(newNode);
+
+    expect(pathNodesOld.length, pathNodesNew.length);
+
+    expect(instructions.paints, const <Paint>[
+      Paint(
+          blendMode: BlendMode.srcOver,
+          stroke: Stroke(color: Color(0xff008000)),
+          fill: Fill(color: Color(0xffff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xff0000ff)))
+    ]);
+
+    expect(instructions.paths, <Path>[
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(99.0, 221.5),
+          LineToCommand(692.0, 221.5),
+          LineToCommand(692.0, 316.5),
+          LineToCommand(99.0, 316.5),
+          CloseCommand()
+        ],
+      ),
+      Path(
+        commands: const <PathCommand>[
+          MoveToCommand(367.0, 41.50001),
+          LineToCommand(448.0, 41.50001),
+          LineToCommand(448.0, 527.49999),
+          LineToCommand(367.0, 527.49999),
+          CloseCommand()
+        ],
+      )
+    ]);
+  });
+
   test('Basic case of two opaque shapes overlapping', () async {
     final Node node = await parseAndResolve(basicOverlap);
     final VectorInstructions instructions = await parse(basicOverlap);
@@ -51,20 +86,25 @@ void main() {
     expect(pathNodesOld.length, pathNodesNew.length);
 
     expect(instructions.paints, const <Paint>[
-      Paint(
-          blendMode: BlendMode.srcOver,
-          stroke: Stroke(color: Color(0xff000000), width: 0.0),
-          fill: Fill(color: Color(0xffff0000))),
+      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xffff0000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xff0000ff)))
     ]);
 
     expect(instructions.paths, <Path>[
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
-          MoveToCommand(99.0, 221.5),
-          LineToCommand(692.0, 221.5),
-          LineToCommand(692.0, 316.5),
+          MoveToCommand(367.0, 221.5),
+          LineToCommand(99.0, 221.5),
           LineToCommand(99.0, 316.5),
+          LineToCommand(367.0, 316.5),
+          LineToCommand(367.0, 221.5),
+          CloseCommand(),
+          MoveToCommand(448.0, 221.5),
+          LineToCommand(448.0, 316.5),
+          LineToCommand(692.0, 316.5),
+          LineToCommand(692.0, 221.5),
+          LineToCommand(448.0, 221.5),
           CloseCommand()
         ],
       ),
@@ -100,6 +140,7 @@ void main() {
 
     expect(instructions.paths, <Path>[
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(343.0, 240.5),
           LineToCommand(88.0, 240.5),
@@ -116,6 +157,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(484.0, 63.5),
           LineToCommand(343.0, 63.5),
@@ -132,6 +174,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(343.0, 240.5),
           LineToCommand(484.0, 240.5),
@@ -162,6 +205,7 @@ void main() {
 
     expect(instructions.paths, <Path>[
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(343.0, 240.5),
           LineToCommand(88.0, 240.5),
@@ -209,6 +253,7 @@ void main() {
 
     expect(instructions.paths, <Path>[
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(343.0, 240.5),
           LineToCommand(88.0, 240.5),
@@ -225,6 +270,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(484.0, 63.5),
           LineToCommand(343.0, 63.5),
@@ -241,6 +287,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(343.0, 240.5),
           LineToCommand(484.0, 240.5),
@@ -273,17 +320,13 @@ void main() {
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xccff0000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x99ff0000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x66ff0000))),
-      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xc2ff0000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x33ff0000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xff008000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xbfff0000))),
-      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xffbf2000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xbf008000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x7fff0000))),
-      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0xdf913700))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x7f008000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x3fff0000))),
-      Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x9fff0000))),
       Paint(blendMode: BlendMode.srcOver, fill: Fill(color: Color(0x3f008000)))
     ]);
 
@@ -298,6 +341,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(150.0, 100.0),
           LineToCommand(100.0, 100.0),
@@ -313,6 +357,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(200.0, 50.0),
           CubicToCommand(
@@ -327,6 +372,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(400.0, 50.0),
           CubicToCommand(
@@ -340,8 +386,8 @@ void main() {
           CloseCommand()
         ],
       ),
-      Path(),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(600.0, 50.0),
           CubicToCommand(
@@ -356,6 +402,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(800.0, 50.0),
           CubicToCommand(
@@ -370,6 +417,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(1000.0, 50.0),
           CubicToCommand(
@@ -384,6 +432,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(200.0000457763672, 203.1529998779297),
           CubicToCommand(194.55233764648438, 201.1146697998047,
@@ -402,6 +451,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(217.5, 200.0),
           CubicToCommand(
@@ -416,6 +466,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(382.5, 200.0),
           CubicToCommand(410.09576416015625, 200.0, 432.5, 222.4042510986328,
@@ -430,6 +481,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(417.5, 200.0),
           CubicToCommand(445.09576416015625, 200.0, 467.5, 222.4042510986328,
@@ -444,6 +496,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(582.5, 200.0),
           CubicToCommand(
@@ -458,6 +511,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(617.5, 200.0),
           CubicToCommand(
@@ -472,6 +526,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(817.5, 200.0),
           CubicToCommand(
@@ -486,6 +541,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(782.5, 200.0),
           CubicToCommand(
@@ -500,6 +556,7 @@ void main() {
         ],
       ),
       Path(
+        fillType: PathFillType.evenOdd,
         commands: const <PathCommand>[
           MoveToCommand(982.5, 200.0),
           CubicToCommand(1010.0957641601562, 200.0, 1032.5, 222.4042510986328,

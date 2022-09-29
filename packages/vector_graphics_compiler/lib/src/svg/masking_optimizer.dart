@@ -5,7 +5,6 @@
 import 'dart:typed_data';
 
 import 'node.dart';
-import 'resolver.dart';
 import 'visitor.dart';
 import '../../vector_graphics_compiler.dart';
 import 'path_ops.dart' as path_ops;
@@ -82,6 +81,18 @@ Path toVectorGraphicsPath(path_ops.Path path) {
         break;
       case path_ops.PathVerb.lineTo:
         newCommands.add(LineToCommand(points[index++], points[index++]));
+        break;
+      case path_ops.PathVerb.quadTo:
+        final double cpX = points[index++];
+        final double cpY = points[index++];
+        newCommands.add(CubicToCommand(
+          cpX,
+          cpY,
+          cpX,
+          cpY,
+          points[index++],
+          points[index++],
+        ));
         break;
       case path_ops.PathVerb.cubicTo:
         newCommands.add(CubicToCommand(
@@ -324,6 +335,13 @@ class MaskingOptimizer extends Visitor<_Result, Node>
   @override
   _Result visitResolvedImageNode(
       ResolvedImageNode resolvedImageNode, Node data) {
-    return _Result(resolvedImageNode);
+    final _Result _result = _Result(resolvedImageNode);
+    _result.deleteMaskNode = false;
+    return _result;
+  }
+
+  @override
+  _Result visitResolvedPatternNode(ResolvedPatternNode patternNode, Node data) {
+    return _Result(patternNode);
   }
 }

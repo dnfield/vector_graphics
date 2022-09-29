@@ -3,11 +3,11 @@
 // found in the LICENSE file.
 
 import 'dart:typed_data';
-
 import '../geometry/basic_types.dart';
 import '../geometry/matrix.dart';
 import '../geometry/path.dart';
 import '../geometry/vertices.dart';
+import '../image/image_info.dart';
 import '../paint.dart';
 import 'node.dart';
 import 'parser.dart';
@@ -207,13 +207,44 @@ class ResolvingVisitor extends Visitor<Node, AffineMatrix> {
     final SvgAttributes attributes = imageNode.attributes;
     final double left = double.parse(attributes.raw['x'] ?? '0');
     final double top = double.parse(attributes.raw['y'] ?? '0');
-    final double width = double.parse(attributes.raw['width']!);
-    final double height = double.parse(attributes.raw['height']!);
-    final Rect rect =
-        data.transformRect(Rect.fromLTWH(left, top, width, height));
+
+    double? width = double.tryParse(attributes.raw['width'] ?? '');
+    double? height = double.tryParse(attributes.raw['height'] ?? '');
+    if (width == null || height == null) {
+      final ImageSizeData data = ImageSizeData.fromBytes(imageNode.data);
+      width ??= data.width.toDouble();
+      height ??= data.height.toDouble();
+    }
+    final Rect rect = Rect.fromLTWH(left, top, width, height);
+
+    // Determine if this image can be drawn without any transforms because
+    // it only has an offset and/or scale.
+    final AffineMatrix removedTranslation = data.removeTranslation();
+
+    final Point? scale = removedTranslation.getScale();
+    if (scale == null) {
+      // Non-trivial transform.
+      return ResolvedImageNode(
+        data: imageNode.data,
+        rect: rect,
+        transform: data,
+      );
+    }
+    final AffineMatrix removedScale = removedTranslation.removeScale()!;
+    if (removedScale == AffineMatrix.identity) {
+      // trivial transform.
+      return ResolvedImageNode(
+        data: imageNode.data,
+        rect: data.transformRect(rect),
+        transform: null,
+      );
+    }
+
+    // Non-trivial transform.
     return ResolvedImageNode(
       data: imageNode.data,
       rect: rect,
+      transform: data,
     );
   }
 
@@ -222,6 +253,34 @@ class ResolvingVisitor extends Visitor<Node, AffineMatrix> {
       ResolvedImageNode resolvedImageNode, AffineMatrix data) {
     assert(false);
     return resolvedImageNode;
+  }
+
+  @override
+  Node visitPatternNode(PatternNode node, AffineMatrix data) {
+    final AttributedNode? resolvedPattern = node.resolver(node.patternId);
+    if (resolvedPattern == null) {
+      return node.child.accept(this, data);
+    }
+    final Node child = node.child.accept(this, data);
+    final AffineMatrix childTransform = node.concatTransform(data);
+    final Node pattern = resolvedPattern.accept(this, childTransform);
+
+    return ResolvedPatternNode(
+      child: child,
+      pattern: pattern,
+      x: resolvedPattern.attributes.x,
+      y: resolvedPattern.attributes.y,
+      width: resolvedPattern.attributes.width!,
+      height: resolvedPattern.attributes.height!,
+      transform: data,
+    );
+  }
+
+  @override
+  Node visitResolvedPatternNode(
+      ResolvedPatternNode patternNode, AffineMatrix data) {
+    assert(false);
+    return patternNode;
   }
 }
 
@@ -371,6 +430,7 @@ class ResolvedImageNode extends Node {
   const ResolvedImageNode({
     required this.data,
     required this.rect,
+    required this.transform,
   });
 
   /// The image [data] encoded as a PNG.
@@ -379,6 +439,12 @@ class ResolvedImageNode extends Node {
   /// The region to draw the image to.
   final Rect rect;
 
+  /// An optional transform.
+  ///
+  /// This is set when the accumulated image transform causes the image rect
+  /// to not stay rectangular.
+  final AffineMatrix? transform;
+
   @override
   S accept<S, V>(Visitor<S, V> visitor, V data) {
     return visitor.visitResolvedImageNode(this, data);
@@ -386,4 +452,52 @@ class ResolvedImageNode extends Node {
 
   @override
   void visitChildren(NodeCallback visitor) {}
+}
+
+/// A pattern node that has a fully resolved position and data.
+class ResolvedPatternNode extends Node {
+  /// Creates a new [ResolvedPatternNode].
+
+  ResolvedPatternNode({
+    required this.child,
+    required this.pattern,
+    required this.width,
+    required this.x,
+    required this.y,
+    required this.height,
+    required this.transform,
+  });
+
+  /// The child to apply a pattern to.
+  final Node child;
+
+  /// A node that represents the pattern.
+  final Node pattern;
+
+  /// The x coordinate shift of the pattern tile.
+  double? x;
+
+  /// The y coordinate shift of the pattern tile.
+  double? y;
+
+  /// The width of the pattern's viewbox in px.
+  /// Values must be > = 1.
+  double width;
+
+  /// The height of the pattern's viewbox in px.
+  /// Values must be > = 1.
+  double height;
+
+  /// This is the transform of the pattern that has been created from the children.
+  AffineMatrix transform;
+
+  @override
+  void visitChildren(NodeCallback visitor) {
+    visitor(child);
+  }
+
+  @override
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitResolvedPatternNode(this, data);
+  }
 }

@@ -6,7 +6,7 @@
 
 import '_path_ops_unsupported.dart' if (dart.library.ffi) '_path_ops_ffi.dart'
     as impl;
-export '_path_ops_ffi.dart';
+export '_path_ops_unsupported.dart' if (dart.library.ffi) '_path_ops_ffi.dart';
 
 // ignore_for_file: camel_case_types, non_constant_identifier_names
 
@@ -57,6 +57,12 @@ enum PathVerb {
   /// A straight line from the current point to the specified point.
   lineTo,
 
+  /// A quadratic bezier curve from the current point.
+  ///
+  /// The next two points are the control point. The next two points after
+  /// that are the target point.
+  quadTo,
+
   /// A cubic bezier curve from the current point.
   ///
   /// The next two points are used as the first control point. The next two
@@ -88,4 +94,38 @@ abstract class PathProxy {
 
   /// Called by [Path.replay] to indicate that a new path is being played.
   void reset() {}
+}
+
+/// A path proxy that can print the SVG path-data representation of this path.
+class SvgPathProxy implements PathProxy {
+  final StringBuffer _buffer = StringBuffer();
+
+  @override
+  void reset() {
+    _buffer.clear();
+  }
+
+  @override
+  void close() {
+    _buffer.write('Z');
+  }
+
+  @override
+  void cubicTo(
+      double x1, double y1, double x2, double y2, double x3, double y3) {
+    _buffer.write('C$x1,$y1 $x2,$y2 $x3,$y3');
+  }
+
+  @override
+  void lineTo(double x, double y) {
+    _buffer.write('L$x,$y');
+  }
+
+  @override
+  void moveTo(double x, double y) {
+    _buffer.write('M$x,$y');
+  }
+
+  @override
+  String toString() => _buffer.toString();
 }

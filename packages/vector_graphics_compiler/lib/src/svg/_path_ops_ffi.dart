@@ -13,40 +13,6 @@ import 'path_ops.dart';
 final ffi.DynamicLibrary _dylib = ffi.DynamicLibrary.open(_dylibPath);
 late final String _dylibPath;
 
-/// A path proxy that can print the SVG path-data representation of this path.
-class SvgPathProxy implements PathProxy {
-  final StringBuffer _buffer = StringBuffer();
-
-  @override
-  void reset() {
-    _buffer.clear();
-  }
-
-  @override
-  void close() {
-    _buffer.write('Z');
-  }
-
-  @override
-  void cubicTo(
-      double x1, double y1, double x2, double y2, double x3, double y3) {
-    _buffer.write('C$x1,$y1 $x2,$y2 $x3,$y3');
-  }
-
-  @override
-  void lineTo(double x, double y) {
-    _buffer.write('L$x,$y');
-  }
-
-  @override
-  void moveTo(double x, double y) {
-    _buffer.write('M$x,$y');
-  }
-
-  @override
-  String toString() => _buffer.toString();
-}
-
 /// Creates a path object to operate on.
 ///
 /// First, build up the path contours with the [moveTo], [lineTo], [cubicTo],
@@ -56,7 +22,7 @@ class SvgPathProxy implements PathProxy {
 /// [dispose] has been called, this class must not be used again.
 class Path implements PathProxy {
   /// Creates an empty path object with the specified fill type.
-  Path([this.fillType = FillType.nonZero])
+  Path([FillType fillType = FillType.nonZero])
       : _path = _createPathFn(fillType.index);
 
   /// Creates a copy of this path.
@@ -67,7 +33,10 @@ class Path implements PathProxy {
   }
 
   /// The [FillType] of this path.
-  final FillType fillType;
+  FillType get fillType {
+    assert(_path != null);
+    return FillType.values[_getFillTypeFn(_path!)];
+  }
 
   ffi.Pointer<_SkPath>? _path;
   ffi.Pointer<_PathData>? _pathData;
@@ -97,6 +66,21 @@ class Path implements PathProxy {
         case PathVerb.lineTo:
           proxy.lineTo(points[index++], points[index++]);
           break;
+        case PathVerb.quadTo:
+          // TODO(dnfield): Avoid degree elevation?
+          // The binary format only supports cubics. Skia might have
+          // used a quad when combining paths somewhere though.
+          final double cpX = points[index++];
+          final double cpY = points[index++];
+          proxy.cubicTo(
+            cpX,
+            cpY,
+            cpX,
+            cpY,
+            points[index++],
+            points[index++],
+          );
+          break;
         case PathVerb.cubicTo:
           proxy.cubicTo(
             points[index++],
@@ -125,6 +109,7 @@ class Path implements PathProxy {
   static const Map<int, PathVerb> pathVerbDict = <int, PathVerb>{
     0: PathVerb.moveTo,
     1: PathVerb.lineTo,
+    2: PathVerb.quadTo,
     4: PathVerb.cubicTo,
     5: PathVerb.close
   };
@@ -313,3 +298,9 @@ typedef _destroy_data_type = ffi.Void Function(ffi.Pointer<_PathData>);
 
 final _DestroyDataType _destroyDataFn =
     _dylib.lookupFunction<_destroy_data_type, _DestroyDataType>('DestroyData');
+
+typedef _GetFillTypeType = int Function(ffi.Pointer<_SkPath>);
+typedef _get_fill_type_type = ffi.Int32 Function(ffi.Pointer<_SkPath>);
+
+final _GetFillTypeType _getFillTypeFn =
+    _dylib.lookupFunction<_get_fill_type_type, _GetFillTypeType>('GetFillType');

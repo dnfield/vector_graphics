@@ -2,6 +2,7 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:flutter/widgets.dart';
@@ -32,12 +33,6 @@ class TestBytesLoader extends BytesLoader {
 }
 
 void main() {
-  setUpAll(() {
-    if (!initializePathOpsFromFlutterCache()) {
-      fail('error in setup');
-    }
-  });
-
   testWidgets('Can endcode and decode simple SVGs with no errors',
       (WidgetTester tester) async {
     for (final String svg in allSvgTestStrings) {
@@ -45,6 +40,9 @@ void main() {
         xml: svg,
         debugName: 'test.svg',
         warningsAsErrors: true,
+        enableClippingOptimizer: false,
+        enableMaskingOptimizer: false,
+        enableOverdrawOptimizer: false,
       );
 
       await tester.pumpWidget(Center(
@@ -66,7 +64,13 @@ void main() {
 
     expect(
         () => encodeSvg(
-            xml: svgInlineImage, debugName: 'test.svg', warningsAsErrors: true),
+              xml: svgInlineImage,
+              debugName: 'test.svg',
+              warningsAsErrors: true,
+              enableClippingOptimizer: false,
+              enableMaskingOptimizer: false,
+              enableOverdrawOptimizer: false,
+            ),
         throwsA(isA<UnimplementedError>()));
   });
 
@@ -85,7 +89,13 @@ void main() {
 </svg>
 ''';
 
-    final Uint8List bytes = await encodeSvg(xml: svg, debugName: 'test');
+    final Uint8List bytes = await encodeSvg(
+      xml: svg,
+      debugName: 'test',
+      enableClippingOptimizer: false,
+      enableMaskingOptimizer: false,
+      enableOverdrawOptimizer: false,
+    );
     const VectorGraphicsCodec codec = VectorGraphicsCodec();
     final TestListener listener = TestListener();
     codec.decode(bytes.buffer.asByteData(), listener);
@@ -116,7 +126,7 @@ void main() {
       const OnPathMoveTo(34, 76),
       const OnPathLineTo(57, 76),
       const OnPathFinished(),
-      const OnDrawPath(0, 0),
+      const OnDrawPath(0, 0, null),
     ]);
   });
 
@@ -143,7 +153,13 @@ void main() {
 </svg>
 ''';
 
-    final Uint8List bytes = await encodeSvg(xml: svg, debugName: 'test');
+    final Uint8List bytes = await encodeSvg(
+      xml: svg,
+      debugName: 'test',
+      enableClippingOptimizer: false,
+      enableMaskingOptimizer: false,
+      enableOverdrawOptimizer: false,
+    );
     const VectorGraphicsCodec codec = VectorGraphicsCodec();
     final TestListener listener = TestListener();
     codec.decode(bytes.buffer.asByteData(), listener);
@@ -202,12 +218,116 @@ void main() {
       const OnTextConfig(
           'Stroked bold line', 150, 215, 55, 'Roboto', 8, null, 3),
       const OnTextConfig('Line 3', 150, 50, 55, 'Roboto', 3, null, 4),
-      const OnDrawText(0, 0),
-      const OnDrawText(1, 0),
-      const OnDrawText(2, 0),
-      const OnDrawText(3, 1),
-      const OnDrawText(3, 2),
-      const OnDrawText(4, 3),
+      const OnDrawText(0, 0, null),
+      const OnDrawText(1, 0, null),
+      const OnDrawText(2, 0, null),
+      const OnDrawText(3, 1, null),
+      const OnDrawText(3, 2, null),
+      const OnDrawText(4, 3, null),
+    ]);
+  });
+
+  test('Encodes image elids trivial translation transform', () async {
+    const String svg = '''
+<svg viewBox="0 0 1000 300" xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <g transform="translate(3, 3)">
+    <image id="image0" width="50" height="50" xlink:href="data:image/png;base64,$kBase64ImageContents"/>
+  </g>
+</svg>
+''';
+
+    final Uint8List bytes = await encodeSvg(
+      xml: svg,
+      debugName: 'test',
+      enableClippingOptimizer: false,
+      enableMaskingOptimizer: false,
+      enableOverdrawOptimizer: false,
+    );
+    const VectorGraphicsCodec codec = VectorGraphicsCodec();
+    final TestListener listener = TestListener();
+    final ByteData data = bytes.buffer.asByteData();
+    final DecodeResponse response = codec.decode(data, listener);
+    codec.decode(data, listener, response: response);
+
+    expect(listener.commands, <Object>[
+      const OnSize(1000, 300),
+      OnImage(0, 0, base64.decode(kBase64ImageContents)),
+      const OnDrawImage(0, 3, 3, 50, 50, null),
+    ]);
+  });
+
+  test('Encodes image elids trivial scale transform', () async {
+    const String svg = '''
+<svg viewBox="0 0 1000 300" xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <g transform="scale(2, 2)">
+    <image id="image0" width="50" height="50" xlink:href="data:image/png;base64,$kBase64ImageContents"/>
+  </g>
+</svg>
+''';
+
+    final Uint8List bytes = await encodeSvg(
+      xml: svg,
+      debugName: 'test',
+      enableClippingOptimizer: false,
+      enableMaskingOptimizer: false,
+      enableOverdrawOptimizer: false,
+    );
+    const VectorGraphicsCodec codec = VectorGraphicsCodec();
+    final TestListener listener = TestListener();
+    final ByteData data = bytes.buffer.asByteData();
+    final DecodeResponse response = codec.decode(data, listener);
+    codec.decode(data, listener, response: response);
+
+    expect(listener.commands, <Object>[
+      const OnSize(1000, 300),
+      OnImage(0, 0, base64.decode(kBase64ImageContents)),
+      const OnDrawImage(0, 0, 0, 100, 100, null),
+    ]);
+  });
+
+  test('Encodes image does not elide non-trivial transform', () async {
+    const String svg = '''
+<svg viewBox="0 0 1000 300" xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <g transform="matrix(3 1 -1 3 30 40)">
+    <image id="image0" width="50" height="50" xlink:href="data:image/png;base64,$kBase64ImageContents"/>
+  </g>
+</svg>
+''';
+
+    final Uint8List bytes = await encodeSvg(
+      xml: svg,
+      debugName: 'test',
+      enableClippingOptimizer: false,
+      enableMaskingOptimizer: false,
+      enableOverdrawOptimizer: false,
+    );
+    const VectorGraphicsCodec codec = VectorGraphicsCodec();
+    final TestListener listener = TestListener();
+    final ByteData data = bytes.buffer.asByteData();
+    final DecodeResponse response = codec.decode(data, listener);
+    codec.decode(data, listener, response: response);
+
+    expect(listener.commands, <Object>[
+      const OnSize(1000, 300),
+      OnImage(0, 0, base64.decode(kBase64ImageContents)),
+      const OnDrawImage(0, 0, 0, 50, 50, <double>[
+        3.0,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        3.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        3.0,
+        0.0,
+        30.0,
+        40.0,
+        0.0,
+        1.0,
+      ]),
     ]);
   });
 }
@@ -216,8 +336,8 @@ class TestListener extends VectorGraphicsCodecListener {
   final List<Object> commands = <Object>[];
 
   @override
-  void onDrawPath(int pathId, int? paintId) {
-    commands.add(OnDrawPath(pathId, paintId));
+  void onDrawPath(int pathId, int? paintId, int? patternId) {
+    commands.add(OnDrawPath(pathId, paintId, patternId));
   }
 
   @override
@@ -384,19 +504,35 @@ class TestListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onDrawText(int textId, int paintId) {
-    commands.add(OnDrawText(textId, paintId));
+  void onDrawText(int textId, int paintId, int? patternId) {
+    commands.add(OnDrawText(textId, paintId, patternId));
   }
 
   @override
   void onDrawImage(
-      int imageId, double x, double y, double width, double height) {
-    commands.add(OnDrawImage(imageId, x, y, width, height));
+    int imageId,
+    double x,
+    double y,
+    double width,
+    double height,
+    Float64List? transform,
+  ) {
+    commands.add(OnDrawImage(imageId, x, y, width, height, transform));
   }
 
   @override
   void onImage(int imageId, int format, Uint8List data) {
     commands.add(OnImage(imageId, format, data));
+  }
+
+  @override
+  void onPatternStart(int patternId, double x, double y, double width,
+      double height, Float64List transform) {
+    commands.add(OnPatternStart(patternId, x, y, width, height, transform));
+  }
+
+  void onPatternFinished() {
+    commands.add(const OnPatternFinished());
   }
 }
 
@@ -548,20 +684,24 @@ class OnRestoreLayer {
 }
 
 class OnDrawPath {
-  const OnDrawPath(this.pathId, this.paintId);
+  const OnDrawPath(this.pathId, this.paintId, this.patternId);
 
   final int pathId;
   final int? paintId;
+  final int? patternId;
 
   @override
-  int get hashCode => Object.hash(pathId, paintId);
+  int get hashCode => Object.hash(pathId, paintId, patternId);
 
   @override
   bool operator ==(Object other) =>
-      other is OnDrawPath && other.pathId == pathId && other.paintId == paintId;
+      other is OnDrawPath &&
+      other.pathId == pathId &&
+      other.paintId == paintId &&
+      other.patternId == patternId;
 
   @override
-  String toString() => 'OnDrawPath($pathId, $paintId)';
+  String toString() => 'OnDrawPath($pathId, $paintId, $patternId)';
 }
 
 class OnDrawVertices {
@@ -797,20 +937,24 @@ class OnTextConfig {
 }
 
 class OnDrawText {
-  const OnDrawText(this.textId, this.paintId);
+  const OnDrawText(this.textId, this.paintId, this.patternId);
 
   final int textId;
   final int paintId;
+  final int? patternId;
 
   @override
-  int get hashCode => Object.hash(textId, paintId);
+  int get hashCode => Object.hash(textId, paintId, patternId);
 
   @override
   bool operator ==(Object other) =>
-      other is OnDrawText && other.textId == textId && other.paintId == paintId;
+      other is OnDrawText &&
+      other.textId == textId &&
+      other.paintId == paintId &&
+      other.patternId == patternId;
 
   @override
-  String toString() => 'OnDrawText($textId, $paintId)';
+  String toString() => 'OnDrawText($textId, $paintId, $patternId)';
 }
 
 class OnImage {
@@ -835,13 +979,21 @@ class OnImage {
 }
 
 class OnDrawImage {
-  const OnDrawImage(this.id, this.x, this.y, this.width, this.height);
+  const OnDrawImage(
+    this.id,
+    this.x,
+    this.y,
+    this.width,
+    this.height,
+    this.transform,
+  );
 
   final int id;
   final double x;
   final double y;
   final double width;
   final double height;
+  final List<double>? transform;
 
   @override
   int get hashCode => Object.hash(id, x, y, width, height);
@@ -853,11 +1005,54 @@ class OnDrawImage {
         other.x == x &&
         other.y == y &&
         other.width == width &&
-        other.height == height;
+        other.height == height &&
+        _listEquals(other.transform, transform);
   }
 
   @override
-  String toString() => 'OnDrawImage($id, $x, $y, $width, $height)';
+  String toString() => 'OnDrawImage($id, $x, $y, $width, $height, $transform)';
+}
+
+class OnPatternStart {
+  const OnPatternStart(
+      this.patternId, this.x, this.y, this.width, this.height, this.transform);
+  final int patternId;
+  final double x;
+  final double y;
+  final double width;
+  final double height;
+  final Float64List transform;
+
+  @override
+  int get hashCode =>
+      Object.hash(patternId, x, y, width, height, Object.hashAll(transform));
+
+  @override
+  bool operator ==(Object other) =>
+      other is OnPatternStart &&
+      other.patternId == patternId &&
+      other.x == x &&
+      other.y == y &&
+      other.width == width &&
+      other.height == height &&
+      _listEquals(other.transform, transform);
+
+  @override
+  String toString() =>
+      'OnPatternStart($patternId, $x, $y, $width, $height, $transform)';
+}
+
+class OnPatternFinished {
+  const OnPatternFinished();
+
+  @override
+  int get hashCode => 55678;
+
+  @override
+  bool operator ==(Object other) => other is OnPathFinished;
+
+  @override
+  String toString() => 'OnPatternFinished';
 }
 
 bool _listEquals<E>(List<E>? left, List<E>? right) {

@@ -2,13 +2,21 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+import 'package:vector_graphics_compiler/src/svg/node.dart';
 import 'package:vector_graphics_compiler/src/svg/numbers.dart';
+import 'package:vector_graphics_compiler/src/svg/parser.dart';
 import 'package:vector_graphics_compiler/src/svg/parsers.dart';
 import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 
 import 'package:test/test.dart';
 
 void main() {
+  test('Colors', () {
+    final SvgParser parser = SvgParser('', const SvgTheme(), 'test_key', true);
+    expect(parser.parseColor('null'), null);
+    expect(parser.parseColor('red'), const Color.fromARGB(255, 255, 0, 0));
+  });
+
   test('Multiple matrix translates', () {
     final AffineMatrix expected = AffineMatrix.identity
         .translated(0.338957, 0.010104)
@@ -102,5 +110,22 @@ void main() {
     expect(parseRawFillRule('nonzero'), PathFillType.nonZero);
     expect(parseRawFillRule('evenodd'), PathFillType.evenOdd);
     expect(parseRawFillRule('invalid'), PathFillType.nonZero);
+  });
+
+  test('Parses pattern units to double correctly', () {
+    final ViewportNode viewportNode = ViewportNode(SvgAttributes.empty,
+        width: 100, height: 1000, transform: AffineMatrix.identity);
+    expect(parsePatternUnitToDouble('25.0', 'width'), 25.0);
+    expect(
+        parsePatternUnitToDouble('0.25', 'width', viewBox: viewportNode), 25.0);
+    expect(
+        parsePatternUnitToDouble('25%', 'width', viewBox: viewportNode), 25.0);
+    expect(parsePatternUnitToDouble('25', 'width'), 25.0);
+    expect(
+        parsePatternUnitToDouble('0.1%', 'height', viewBox: viewportNode), 1.0);
+  });
+
+  test('Point conversion', () {
+    expect(parseDoubleWithUnits('1pt', theme: const SvgTheme()), 1 + 1 / 3);
   });
 }

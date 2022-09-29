@@ -1,0 +1,31 @@
+name: analyze and test network loader
+
+on:
+  push:
+    branches: [main]
+    paths-ignore:
+      - '**/*.md'
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: packages/vector_graphics_network
+    steps:
+    - uses: actions/checkout@v3
+    - uses: subosito/flutter-action@v2
+      with:
+        channel: 'master'
+    - run: flutter --version
+    - run: flutter pub get
+    - run: flutter format --set-exit-if-changed .
+    - run: flutter analyze .
+    - run: flutter test --coverage
+    - run: flutter test --platform=chrome
+    # - uses: romeovs/lcov-reporter-action@v0.2.16
+    #   with:
+    #     lcov-file: ./packages/vector_graphics/coverage/lcov.info
+    #     github-token: ${{ secrets.GITHUB_TOKEN }}

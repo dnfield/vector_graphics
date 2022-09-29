@@ -24,7 +24,6 @@ jobs:
     - run: flutter format --set-exit-if-changed .
     - run: flutter analyze .
     - run: flutter test --coverage
-    - run: flutter test --platform=chrome
     # - uses: romeovs/lcov-reporter-action@v0.2.16
     #   with:
     #     lcov-file: ./packages/vector_graphics/coverage/lcov.info

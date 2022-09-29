@@ -21,11 +21,11 @@ void main() {
       (WidgetTester tester) async {
     HttpOverrides.global = TestOverrides();
 
-    final NetworkSvgLoader loader = NetworkSvgLoader(
+    const NetworkSvgLoader loader = NetworkSvgLoader(
       url: 'https://github.com/dnfield/vector_graphics',
       headers: <String, String>{'foo': 'bar'},
     );
-    await tester.pumpWidget(VectorGraphic(loader: loader));
+    await tester.pumpWidget(const VectorGraphic(loader: loader));
     await tester.pump();
     await tester.pumpAndSettle();
 

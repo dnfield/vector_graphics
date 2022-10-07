@@ -514,7 +514,6 @@ class _RawWebVectorGraphicWidget extends SingleChildRenderObjectWidget {
   }
 }
 
-
 class _RawPictureVectorGraphicWidget extends SingleChildRenderObjectWidget {
   const _RawPictureVectorGraphicWidget({
     required this.pictureInfo,
@@ -548,7 +547,6 @@ class _RawPictureVectorGraphicWidget extends SingleChildRenderObjectWidget {
       ..opacity = opacity;
   }
 }
-
 
 /// Utility functionality for interaction with vector graphic assets.
 class VectorGraphicUtilities {

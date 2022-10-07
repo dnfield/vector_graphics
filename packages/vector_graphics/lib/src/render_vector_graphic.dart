@@ -330,8 +330,6 @@ class RenderVectorGraphic extends RenderBox {
   }
 }
 
-
-
 /// A render object which draws a vector graphic instance as a picture.
 class RenderPictureVectorGraphic extends RenderBox {
   /// Create a new [RenderPictureVectorGraphic].

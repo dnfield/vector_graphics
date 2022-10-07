@@ -3,4 +3,11 @@
 // found in the LICENSE file.
 
 export 'src/vector_graphics.dart'
-    show AssetBytesLoader, NetworkBytesLoader, PictureInfo, BytesLoader, VectorGraphic, VectorGraphicUtilities, vg;
+    show
+        AssetBytesLoader,
+        NetworkBytesLoader,
+        PictureInfo,
+        BytesLoader,
+        VectorGraphic,
+        VectorGraphicUtilities,
+        vg;

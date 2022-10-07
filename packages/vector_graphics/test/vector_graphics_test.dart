@@ -484,7 +484,9 @@ void main() {
     // Opacity and color filter are drawn as savelayer
     expect(tester.layers, isNot(contains(isA<OpacityLayer>())));
     expect(tester.layers, isNot(contains(isA<ColorFilterLayer>())));
-  });
+  },
+      skip:
+          kIsWeb); // picture rasterization works differently on HTML due to saveLayer bugs in HTML backend
 }
 
 class TestAssetBundle extends Fake implements AssetBundle {

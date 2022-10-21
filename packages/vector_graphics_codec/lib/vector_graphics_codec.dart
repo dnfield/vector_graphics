@@ -530,6 +530,9 @@ class VectorGraphicsCodec {
     required double y,
     required int fontWeight,
     required double fontSize,
+    required int decoration,
+    required int decorationStyle,
+    required int decorationColor,
     required Float64List? transform,
   }) {
     buffer._checkPhase(_CurrentSection.text);
@@ -543,6 +546,9 @@ class VectorGraphicsCodec {
     buffer._putFloat32(y);
     buffer._putFloat32(fontSize);
     buffer._putUint8(fontWeight);
+    buffer._putUint8(decoration);
+    buffer._putUint8(decorationStyle);
+    buffer._putUint32(decorationColor);
 
     // font-family
     if (fontFamily != null) {
@@ -790,6 +796,9 @@ class VectorGraphicsCodec {
     final double dy = buffer.getFloat32();
     final double fontSize = buffer.getFloat32();
     final int fontWeight = buffer.getUint8();
+    final int decoration = buffer.getUint8();
+    final int decorationStyle = buffer.getUint8();
+    final int decorationColor = buffer.getUint32();
     String? fontFamily;
     final int fontFamilyLength = buffer.getUint16();
     if (fontFamilyLength > 0) {
@@ -800,7 +809,18 @@ class VectorGraphicsCodec {
     final String text = utf8.decode(buffer.getUint8List(textLength));
 
     listener?.onTextConfig(
-        text, fontFamily, dx, dy, fontWeight, fontSize, transform, id);
+      text,
+      fontFamily,
+      dx,
+      dy,
+      fontWeight,
+      fontSize,
+      decoration,
+      decorationStyle,
+      decorationColor,
+      transform,
+      id,
+    );
   }
 
   void _readDrawText(
@@ -957,6 +977,9 @@ abstract class VectorGraphicsCodecListener {
     double y,
     int fontWeight,
     double fontSize,
+    int decoration,
+    int decorationStyle,
+    int decorationColor,
     Float64List? transform,
     int id,
   );

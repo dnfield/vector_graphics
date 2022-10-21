@@ -1383,7 +1383,7 @@ class TextDecoration {
   }
 
   /// Do not draw a decoration
-  static const TextDecoration none = TextDecoration._(0x0);
+  static const TextDecoration none = TextDecoration._(kNoTextDecorationMask);
 
   /// Draw a line underneath each line of text
   static const TextDecoration underline = TextDecoration._(kUnderlineMask);

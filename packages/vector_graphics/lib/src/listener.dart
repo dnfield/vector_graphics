@@ -457,13 +457,13 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     int id,
   ) {
     final List<ui.TextDecoration> decorations = <ui.TextDecoration>[];
-    if (decoration & 0x1 != 0) {
+    if (decoration & kUnderlineMask != 0) {
       decorations.add(ui.TextDecoration.underline);
     }
-    if (decoration & 0x2 != 0) {
+    if (decoration & kOverlineMask != 0) {
       decorations.add(ui.TextDecoration.overline);
     }
-    if (decoration & 0x4 != 0) {
+    if (decoration & kLineThroughMask != 0) {
       decorations.add(ui.TextDecoration.lineThrough);
     }
 

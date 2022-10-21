@@ -3,6 +3,7 @@
 // found in the LICENSE file.
 
 import 'package:meta/meta.dart';
+import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
 import 'geometry/basic_types.dart';
 import 'geometry/matrix.dart';
@@ -1385,13 +1386,13 @@ class TextDecoration {
   static const TextDecoration none = TextDecoration._(0x0);
 
   /// Draw a line underneath each line of text
-  static const TextDecoration underline = TextDecoration._(0x1);
+  static const TextDecoration underline = TextDecoration._(kUnderlineMask);
 
   /// Draw a line above each line of text
-  static const TextDecoration overline = TextDecoration._(0x2);
+  static const TextDecoration overline = TextDecoration._(kOverlineMask);
 
   /// Draw a line through each line of text
-  static const TextDecoration lineThrough = TextDecoration._(0x4);
+  static const TextDecoration lineThrough = TextDecoration._(kLineThroughMask);
 
   @override
   bool operator ==(Object other) {

@@ -15,6 +15,20 @@ abstract class ControlPointTypes {
   static const int close = 3;
 }
 
+// See definitions in dart:ui's TextDecoration.
+
+/// The mask used to clear text decorations.
+const int kNoTextDecorationMask = 0x0;
+
+/// The mask for an underline text decoration.
+const int kUnderlineMask = 0x1;
+
+/// The mask constant for an overline text decoration.
+const int kOverlineMask = 0x2;
+
+/// The mask constant for a line through or strike text decoration.
+const int kLineThroughMask = 0x4;
+
 /// Enumeration of the types of image data accepted by [VectorGraphicsCodec.writeImage].
 ///
 /// Currently only PNG encoding is supported.

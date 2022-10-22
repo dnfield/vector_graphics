@@ -1252,9 +1252,10 @@ class TextConfig {
   /// The coordinate of the starting point of the text baseline.
   final Point baselineStart;
 
-  /// A multiplier for text anchoring. This value should be multiplied by the
-  /// length of the longest line in the text and added to [baselineStart]'s x
-  /// coordinate.
+  /// A multiplier for text anchoring.
+  ///
+  /// This value should be multiplied by the length of the longest line in the
+  /// text and subtracted from [baselineStart]'s x coordinate.
   final double xAnchorMultiplier;
 
   /// The size of the font, only supported as absolute size.

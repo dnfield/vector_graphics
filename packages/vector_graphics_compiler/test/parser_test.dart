@@ -13,7 +13,8 @@ void main() {
     );
 
     expect(instructions.paints.single.stroke, null);
-    expect(instructions.paints.single.fill, const Fill(color: Color(0xFFFFFFFF)));
+    expect(
+        instructions.paints.single.fill, const Fill(color: Color(0xFFFFFFFF)));
   });
 
   test('text anchor', () async {

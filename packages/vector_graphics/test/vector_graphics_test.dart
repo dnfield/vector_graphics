@@ -406,7 +406,8 @@ void main() {
     expect(debugLastTextDirection, TextDirection.rtl);
   });
 
-  testWidgets('Loads a picture with loadPicture and null build context', (WidgetTester tester) async {
+  testWidgets('Loads a picture with loadPicture and null build context',
+      (WidgetTester tester) async {
     final TestAssetBundle testBundle = TestAssetBundle();
     final Completer<PictureInfo> completer = Completer<PictureInfo>();
     await tester.pumpWidget(
@@ -421,7 +422,9 @@ void main() {
             bundle: testBundle,
             child: Builder(builder: (BuildContext context) {
               vg
-                  .loadPicture(AssetBytesLoader('foo.svg', assetBundle: testBundle), null)
+                  .loadPicture(
+                      AssetBytesLoader('foo.svg', assetBundle: testBundle),
+                      null)
                   .then(completer.complete);
               return const Center();
             }),

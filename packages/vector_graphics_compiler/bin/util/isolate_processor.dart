@@ -158,7 +158,7 @@ class Pool {
   void _clearAndCheckPending(PoolHandle oldHandle) {
     assert(active.contains(oldHandle));
     active.remove(oldHandle);
-    while (active.length < concurrency) {
+    while (active.length < concurrency && pending.isNotEmpty) {
       final Completer<PoolHandle> completer = pending.removeAt(0);
       final PoolHandle handle = PoolHandle(this);
       active.add(handle);

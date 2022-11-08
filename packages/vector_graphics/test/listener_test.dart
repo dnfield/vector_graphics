@@ -5,6 +5,7 @@
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_graphics/src/listener.dart';
 import 'package:vector_graphics/vector_graphics_compat.dart';
@@ -43,7 +44,7 @@ void main() {
         (await image.toByteData())!.buffer.asUint32List();
     expect(imageBytes.first, 0xFF000000);
     expect(imageBytes.last, 0x00000000);
-  });
+  }, skip: kIsWeb);
 
   test('decode with clip', () async {
     final PictureInfo info = await decodeVectorGraphics(
@@ -58,5 +59,5 @@ void main() {
         (await image.toByteData())!.buffer.asUint32List();
     expect(imageBytes.first, 0xFF000000);
     expect(imageBytes.last, 0xFF000000);
-  });
+  }, skip: kIsWeb);
 }

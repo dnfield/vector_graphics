@@ -77,9 +77,14 @@ void main() {
     final Invocation drawRect = factory.fakeCanvases.first.invocations.single;
     expect(drawRect.isMethod, true);
     expect(drawRect.memberName, #drawImageRect);
-    expect(drawRect.positionalArguments[1], const ui.Rect.fromLTRB(0, 0, 1, 1));
-    expect(drawRect.positionalArguments[2],
-        const ui.Rect.fromLTRB(10, 10, 40, 40));
+    expect(
+      drawRect.positionalArguments[1],
+      const ui.Rect.fromLTRB(0, 0, 1, 1),
+    );
+    expect(
+      drawRect.positionalArguments[2],
+      const ui.Rect.fromLTRB(10, 10, 40, 40),
+    );
   });
 }
 

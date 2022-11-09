@@ -19,7 +19,8 @@ void main() {
 </svg>
 ''';
 
-const String bluePngPixel = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPj/HwADBwIAMCbHYQAAAABJRU5ErkJggg==';
+  const String bluePngPixel =
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPj/HwADBwIAMCbHYQAAAABJRU5ErkJggg==';
 
   late ByteData vectorGraphicBuffer;
 
@@ -66,7 +67,8 @@ const String bluePngPixel = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUl
 
   test('Scales image correctly', () async {
     final TestPictureFactory factory = TestPictureFactory();
-    final FlutterVectorGraphicsListener listener = FlutterVectorGraphicsListener(
+    final FlutterVectorGraphicsListener listener =
+        FlutterVectorGraphicsListener(
       pictureFactory: factory,
     );
     listener.onImage(0, 0, base64.decode(bluePngPixel));
@@ -76,7 +78,8 @@ const String bluePngPixel = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUl
     expect(drawRect.isMethod, true);
     expect(drawRect.memberName, #drawImageRect);
     expect(drawRect.positionalArguments[1], const ui.Rect.fromLTRB(0, 0, 1, 1));
-    expect(drawRect.positionalArguments[2], const ui.Rect.fromLTRB(10, 10, 40, 40));
+    expect(drawRect.positionalArguments[2],
+        const ui.Rect.fromLTRB(10, 10, 40, 40));
   });
 }
 

@@ -3,9 +3,9 @@
 // found in the LICENSE file.
 
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
 
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
@@ -579,18 +579,24 @@ class VectorGraphicUtilities {
   ///
   /// ```dart
   /// await tester.pumpWidget(MyWidgetThatHasVectorGraphics());
-  /// await tester.runAsync(() async { await vg.waitForPendingDecodes(); });
+  /// await tester.runAsync(() => vg.waitForPendingDecodes());
   /// await expect(
   ///   find.byType(MyWidgetThatHasVectorGraphics),
-  ///   matchesGoldenFile('golden_file'),
+  ///   matchesGoldenFile('golden_file.png'),
   /// );
   /// ```
   ///
-  /// Without the `waitForPendingDecodes` call,
+  /// Without the `waitForPendingDecodes` call, the golden file would have the
+  /// placeholder for the [VectorGraphic] widgets, which defaults to a blank sized
+  /// box.
   @visibleForTesting
   Future<void> waitForPendingDecodes() {
-    // ignore: invalid_use_of_visible_for_testing_member
-    return Future.wait(debugGetPendingDecodeTasks);
+    if (kDebugMode) {
+      // ignore: invalid_use_of_visible_for_testing_member
+      return Future.wait(debugGetPendingDecodeTasks);
+    }
+    throw UnsupportedError(
+        'This method is only for use in tests in debug mode for tests.');
   }
 
   /// Load the [PictureInfo] from a given [loader].

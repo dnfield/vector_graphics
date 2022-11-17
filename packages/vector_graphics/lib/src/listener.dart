@@ -38,6 +38,7 @@ Locale? _debugLastLocale;
 TextDirection? get debugLastTextDirection => _debugLastTextDirection;
 TextDirection? _debugLastTextDirection;
 
+/// Internal testing only.
 @visibleForTesting
 Iterable<Future<void>> get debugGetPendingDecodeTasks =>
     _pendingDecodes.values.map((Completer<void> e) => e.future);
@@ -95,7 +96,7 @@ Future<PictureInfo> decodeVectorGraphics(
       });
     }
 
-    if (!useZone) {
+    if (!kDebugMode || !useZone) {
       return process();
     }
 

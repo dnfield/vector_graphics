@@ -648,15 +648,18 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
         imageCache.putIfAbsent(_createImageKey(imageId, format), () {
       return OneFrameImageStreamCompleter(ImmutableBuffer.fromUint8List(data)
           .then((ImmutableBuffer buffer) async {
-        final ImageDescriptor descriptor =
-            await ImageDescriptor.encoded(buffer);
-        final Codec codec = await descriptor.instantiateCodec();
-        final FrameInfo info = await codec.getNextFrame();
-        final Image image = info.image;
-        buffer.dispose();
-        descriptor.dispose();
-        codec.dispose();
-        return ImageInfo(image: image);
+        try {
+          final ImageDescriptor descriptor =
+              await ImageDescriptor.encoded(buffer);
+          final Codec codec = await descriptor.instantiateCodec();
+          final FrameInfo info = await codec.getNextFrame();
+          final Image image = info.image;
+          descriptor.dispose();
+          codec.dispose();
+          return ImageInfo(image: image);
+        } finally {
+          buffer.dispose();
+        }
       }));
     });
     // an error occurred.

@@ -570,6 +570,29 @@ class _RawPictureVectorGraphicWidget extends SingleChildRenderObjectWidget {
 class VectorGraphicUtilities {
   const VectorGraphicUtilities._();
 
+  /// A future that completes when any in-flight vector graphic decodes have
+  /// completed.
+  ///
+  /// A vector graphic may require asynchronous work during decoding, for
+  /// example to decode an image that was embedded in the source graphic. This
+  /// method may be useful in golden image unit tests.
+  ///
+  /// ```dart
+  /// await tester.pumpWidget(MyWidgetThatHasVectorGraphics());
+  /// await tester.runAsync(() async { await vg.waitForPendingDecodes(); });
+  /// await expect(
+  ///   find.byType(MyWidgetThatHasVectorGraphics),
+  ///   matchesGoldenFile('golden_file'),
+  /// );
+  /// ```
+  ///
+  /// Without the `waitForPendingDecodes` call,
+  @visibleForTesting
+  Future<void> waitForPendingDecodes() {
+    // ignore: invalid_use_of_visible_for_testing_member
+    return Future.wait(debugGetPendingDecodeTasks);
+  }
+
   /// Load the [PictureInfo] from a given [loader].
   ///
   /// It is the caller's responsibility to handle disposing the picture when

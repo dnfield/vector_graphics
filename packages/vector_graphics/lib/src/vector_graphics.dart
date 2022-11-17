@@ -587,8 +587,8 @@ class VectorGraphicUtilities {
   /// ```
   ///
   /// Without the `waitForPendingDecodes` call, the golden file would have the
-  /// placeholder for the [VectorGraphic] widgets, which defaults to a blank sized
-  /// box.
+  /// placeholder for the [VectorGraphic] widgets, which defaults to a blank
+  /// sized box.
   @visibleForTesting
   Future<void> waitForPendingDecodes() {
     if (kDebugMode) {
@@ -596,7 +596,8 @@ class VectorGraphicUtilities {
       return Future.wait(debugGetPendingDecodeTasks);
     }
     throw UnsupportedError(
-        'This method is only for use in tests in debug mode for tests.');
+      'This method is only for use in tests in debug mode for tests.',
+    );
   }
 
   /// Load the [PictureInfo] from a given [loader].

@@ -26,12 +26,12 @@ dev_dependencies:
     sdk: flutter
   vector_graphics: 1.0.0
 
-# # Comment out before publishing
-# dependency_overrides:
-#   vector_graphics:
-#     path: ../vector_graphics
-#   vector_graphics_codec:
-#     path: ../vector_graphics_codec
+# Comment out before publishing
+dependency_overrides:
+  vector_graphics:
+    path: ../vector_graphics
+  vector_graphics_codec:
+    path: ../vector_graphics_codec
 
 platforms:
   android:

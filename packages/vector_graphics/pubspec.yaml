@@ -18,10 +18,10 @@ dev_dependencies:
   flutter_lints: ^1.0.0
   vector_graphics_compiler: 1.0.0
 
-# # Comment out before publishing
-# dependency_overrides:
-#   vector_graphics_codec:
-#     path: ../vector_graphics_codec
+# Comment out before publishing
+dependency_overrides:
+  vector_graphics_codec:
+    path: ../vector_graphics_codec
 
 platforms:
   android:

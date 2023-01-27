@@ -686,6 +686,24 @@ class SvgParser {
     }
   }
 
+  bool _isShapeOrText(String elementName) {
+    // Avoid applying default fill colors unless we need to.
+    // https://www.w3.org/TR/SVG11/single-page.html#intro-TermShape
+    // https://www.w3.org/TR/SVG11/single-page.html#intro-TermTextContentElement
+    return elementName == 'path' ||
+        elementName == 'rect' ||
+        elementName == 'circle' ||
+        elementName == 'ellipse' ||
+        elementName == 'line' ||
+        elementName == 'polyline' ||
+        elementName == 'polygon' ||
+        elementName == 'altGlyph' ||
+        elementName == 'textPath' ||
+        elementName == 'text' ||
+        elementName == 'tref' ||
+        elementName == 'tspan';
+  }
+
   Iterable<XmlEvent> _readSubtree() sync* {
     final int subtreeStartDepth = depth;
     while (_eventIterator.moveNext()) {
@@ -703,6 +721,7 @@ class SvgParser {
         }
         _currentStartElement = event;
         _currentAttributes = _createSvgAttributes(
+          _isShapeOrText(event.localName),
           attributeMap,
           currentColor: depth == 0 ? theme.currentColor : null,
         );
@@ -1200,6 +1219,7 @@ class SvgParser {
   }
 
   Color? _determineFillColor(
+    bool isShapeOrText,
     String rawFill,
     double opacity,
     bool explicitOpacity,
@@ -1209,7 +1229,7 @@ class SvgParser {
   ) {
     final Color? color = parseColor(rawFill, attributeName: 'fill', id: id) ??
         currentColor ??
-        defaultFillColor;
+        (isShapeOrText ? defaultFillColor : null);
 
     if (explicitOpacity && color != null) {
       return color.withOpacity(opacity);
@@ -1564,6 +1584,7 @@ class SvgParser {
   }
 
   SvgFillAttributes? _parseFillAttributes(
+    bool isShapeOrText,
     Map<String, String> attributeMap,
     double? uniformOpacity,
     Color? currentColor,
@@ -1597,6 +1618,7 @@ class SvgParser {
     }
 
     final Color? fillColor = _determineFillColor(
+      isShapeOrText,
       rawFill,
       opacity,
       uniformOpacity != null || rawFillOpacity != '',
@@ -1621,6 +1643,7 @@ class SvgParser {
   }
 
   SvgAttributes _createSvgAttributes(
+    bool isShapeOrText,
     Map<String, String> attributeMap, {
     Color? currentColor,
   }) {
@@ -1637,7 +1660,13 @@ class SvgParser {
         opacity: opacity,
         color: color,
         stroke: _parseStrokeAttributes(attributeMap, opacity, color, id),
-        fill: _parseFillAttributes(attributeMap, opacity, color, id),
+        fill: _parseFillAttributes(
+          isShapeOrText,
+          attributeMap,
+          opacity,
+          color,
+          id,
+        ),
         fillRule:
             parseRawFillRule(attributeMap['fill-rule']) ?? PathFillType.nonZero,
         clipRule: parseRawFillRule(attributeMap['clip-rule']),

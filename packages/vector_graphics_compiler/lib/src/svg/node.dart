@@ -449,7 +449,8 @@ class TextNode extends AttributedNode {
 
   /// Compute the [Paint] that this text node uses.
   Paint? computePaint(Rect bounds, AffineMatrix transform) {
-    final Fill? fill = attributes.fill?.toFill(bounds, transform, defaultColor: Color.opaqueBlack);
+    final Fill? fill = attributes.fill
+        ?.toFill(bounds, transform, defaultColor: Color.opaqueBlack);
     final Stroke? stroke = attributes.stroke?.toStroke(bounds, transform);
     // if (fill == null && stroke == null) {
     //   return null;

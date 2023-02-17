@@ -452,9 +452,9 @@ class TextNode extends AttributedNode {
     final Fill? fill = attributes.fill
         ?.toFill(bounds, transform, defaultColor: Color.opaqueBlack);
     final Stroke? stroke = attributes.stroke?.toStroke(bounds, transform);
-    // if (fill == null && stroke == null) {
-    //   return null;
-    // }
+    if (fill == null && stroke == null) {
+      return null;
+    }
     return Paint(
       blendMode: attributes.blendMode,
       fill: fill,

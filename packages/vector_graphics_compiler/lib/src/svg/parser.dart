@@ -1489,9 +1489,6 @@ class SvgParser {
 
   Map<String, String> _createAttributeMap(List<XmlEventAttribute> attributes) {
     final Map<String, String> attributeMap = <String, String>{};
-    // if (_parentDrawables.isNotEmpty && currentGroup != null) {
-    //   attributeMap.addEntries(currentGroup!.attributes.heritable);
-    // }
 
     for (final XmlEventAttribute attribute in attributes) {
       final String value = attribute.value.trim();

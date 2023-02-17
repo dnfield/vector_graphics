@@ -4,6 +4,243 @@ import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 import 'test_svg_strings.dart';
 
 void main() {
+  test('Use handles stroke and fill correctly', () async {
+    final VectorInstructions instructions = parseWithoutOptimizers(
+      useStar,
+    );
+
+    expect(
+      instructions.paths,
+      <Path>[
+        Path(
+          commands: const <PathCommand>[
+            MoveToCommand(23.0, 45.0),
+            CubicToCommand(
+                20.251849702554694,
+                42.30737481875774,
+                15.845722390999327,
+                42.337351151460766,
+                13.134463616466057,
+                45.06711825578068),
+            CubicToCommand(
+                10.423204841932787,
+                47.79688536010059,
+                10.423204841932787,
+                52.20311463989941,
+                13.134463616466057,
+                54.93288174421932),
+            CubicToCommand(
+                15.845722390999327,
+                57.66264884853924,
+                20.251849702554694,
+                57.69262518124226,
+                22.999998793005943,
+                55.00000022351742),
+            LineToCommand(77.0, 55.0),
+            CubicToCommand(
+                79.7481502974453,
+                57.69262518124226,
+                84.15427760900067,
+                57.66264884853924,
+                86.86553638353394,
+                54.93288174421932),
+            CubicToCommand(
+                89.57679515806721,
+                52.20311463989941,
+                89.57679515806721,
+                47.79688536010059,
+                86.86553638353394,
+                45.06711825578068),
+            CubicToCommand(
+                84.15427760900067,
+                42.33735115146076,
+                79.7481502974453,
+                42.30737481875774,
+                77.00000120699406,
+                44.99999977648258),
+            CloseCommand()
+          ],
+        ),
+        Path(
+          commands: const <PathCommand>[
+            MoveToCommand(34.44365081389596, 27.37258300203048),
+            CubicToCommand(
+                34.404388627702616,
+                23.525373766137015,
+                31.267589658801143,
+                20.430967733494377,
+                27.420203363252565,
+                20.44405509899495),
+            CubicToCommand(
+                23.572817067703983,
+                20.457142464495526,
+                20.457142464495522,
+                23.572817067703987,
+                20.444055098994948,
+                27.42020336325257),
+            CubicToCommand(
+                20.430967733494374,
+                31.26758965880115,
+                23.52537376613701,
+                34.404388627702616,
+                27.372581990506113,
+                34.44365011847296),
+            LineToCommand(65.55634918610404, 72.62741699796952),
+            CubicToCommand(
+                65.59561137229738,
+                76.47462623386298,
+                68.73241034119886,
+                79.56903226650562,
+                72.57979663674743,
+                79.55594490100505),
+            CubicToCommand(
+                76.42718293229602,
+                79.54285753550448,
+                79.54285753550448,
+                76.427182932296,
+                79.55594490100505,
+                72.57979663674743),
+            CubicToCommand(
+                79.56903226650563,
+                68.73241034119886,
+                76.47462623386299,
+                65.59561137229738,
+                72.62741800949388,
+                65.55634988152704),
+            CloseCommand()
+          ],
+        ),
+        Path(
+          commands: const <PathCommand>[
+            MoveToCommand(55.0, 23.0),
+            CubicToCommand(
+                57.69262518124226,
+                20.251849702554694,
+                57.662648848539234,
+                15.845722390999327,
+                54.93288174421932,
+                13.134463616466057),
+            CubicToCommand(
+                52.203114639899404,
+                10.423204841932787,
+                47.79688536010059,
+                10.423204841932787,
+                45.06711825578067,
+                13.134463616466057),
+            CubicToCommand(
+                42.33735115146076,
+                15.845722390999327,
+                42.30737481875773,
+                20.251849702554694,
+                44.99999977648258,
+                22.999998793005943),
+            LineToCommand(45.0, 77.0),
+            CubicToCommand(
+                42.30737481875774,
+                79.7481502974453,
+                42.337351151460766,
+                84.15427760900067,
+                45.06711825578068,
+                86.86553638353394),
+            CubicToCommand(
+                47.796885360100596,
+                89.57679515806721,
+                52.20311463989941,
+                89.57679515806721,
+                54.93288174421933,
+                86.86553638353394),
+            CubicToCommand(
+                57.66264884853924,
+                84.15427760900067,
+                57.69262518124227,
+                79.7481502974453,
+                55.00000022351742,
+                77.00000120699406),
+            CloseCommand()
+          ],
+        ),
+        Path(
+          commands: const <PathCommand>[
+            MoveToCommand(72.62741699796952, 34.44365081389596),
+            CubicToCommand(
+                76.47462623386298,
+                34.404388627702616,
+                79.56903226650562,
+                31.267589658801143,
+                79.55594490100505,
+                27.420203363252565),
+            CubicToCommand(
+                79.54285753550448,
+                23.572817067703983,
+                76.427182932296,
+                20.457142464495522,
+                72.57979663674743,
+                20.444055098994948),
+            CubicToCommand(
+                68.73241034119886,
+                20.430967733494374,
+                65.59561137229738,
+                23.52537376613701,
+                65.55634988152704,
+                27.372581990506113),
+            LineToCommand(27.37258300203048, 65.55634918610404),
+            CubicToCommand(
+                23.525373766137015,
+                65.59561137229738,
+                20.430967733494377,
+                68.73241034119886,
+                20.44405509899495,
+                72.57979663674743),
+            CubicToCommand(
+                20.457142464495526,
+                76.42718293229602,
+                23.572817067703987,
+                79.54285753550448,
+                27.42020336325257,
+                79.55594490100505),
+            CubicToCommand(
+                31.26758965880115,
+                79.56903226650563,
+                34.404388627702616,
+                76.47462623386299,
+                34.44365011847296,
+                72.62741800949388),
+            CloseCommand()
+          ],
+        )
+      ],
+    );
+
+    expect(
+      instructions.paints,
+      const <Paint>[
+        Paint(
+          blendMode: BlendMode.srcOver,
+          stroke: Stroke(color: Color(0xff000000), width: 12.0),
+        ),
+        Paint(
+          blendMode: BlendMode.srcOver,
+          stroke: Stroke(color: Color(0xff008000)),
+          fill: Fill(color: Color(0xffffbb44)),
+        ),
+      ],
+    );
+
+    expect(
+      instructions.commands,
+      const <DrawCommand>[
+        DrawCommand(DrawCommandType.path, objectId: 0, paintId: 0),
+        DrawCommand(DrawCommandType.path, objectId: 1, paintId: 0),
+        DrawCommand(DrawCommandType.path, objectId: 2, paintId: 0),
+        DrawCommand(DrawCommandType.path, objectId: 3, paintId: 0),
+        DrawCommand(DrawCommandType.path, objectId: 0, paintId: 1),
+        DrawCommand(DrawCommandType.path, objectId: 1, paintId: 1),
+        DrawCommand(DrawCommandType.path, objectId: 2, paintId: 1),
+        DrawCommand(DrawCommandType.path, objectId: 3, paintId: 1),
+      ],
+    );
+  });
+
   test('Use preserves fill from shape', () async {
     final VectorInstructions instructions = parseWithoutOptimizers(
       useColor,
@@ -910,7 +1147,7 @@ void main() {
       warningsAsErrors: true,
     );
 
-    expect(instructions.paints, ghostScriptTigerPaints.toSet().toList());
+    expect(instructions.paints.toSet(), ghostScriptTigerPaints.toSet());
     expect(instructions.paths, ghostScriptTigerPaths);
     expect(
       instructions.commands,

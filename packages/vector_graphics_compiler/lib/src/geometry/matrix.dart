@@ -50,6 +50,22 @@ class AffineMatrix {
   /// Translations can affect this value, so we have to track it.
   final double _m4_10;
 
+  /// Calculates the scale for a stroke width based on the average of the x- and
+  /// y-axis scales of this matrix.
+  ///
+  /// Returns null if either scale values are zero.
+  double? scaleStrokeWidth(double? width) {
+    if (width == null || (a == 1 && d == 1)) {
+      return width;
+    }
+
+    if (a == 0 || d == 0) {
+      return null;
+    }
+
+    return (a + d) / 2 * width;
+  }
+
   /// Creates a new affine matrix rotated by `radians`.
   AffineMatrix rotated(double radians) {
     if (radians == 0) {

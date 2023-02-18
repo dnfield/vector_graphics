@@ -4,7 +4,64 @@ import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 import 'test_svg_strings.dart';
 
 void main() {
-  test('Use preserves fill from shape', () async {
+  test('Stroke width with scaling', () {
+    final VectorInstructions instructions = parseWithoutOptimizers(
+      signWithScaledStroke,
+    );
+
+    expect(instructions.paints, const <Paint>[
+      Paint(
+          blendMode: BlendMode.srcOver,
+          stroke: Stroke(
+              color: Color(0xffffee44), join: StrokeJoin.round, width: 3.0),
+          fill: Fill(color: Color(0xff000000))),
+      Paint(
+          blendMode: BlendMode.srcOver,
+          stroke: Stroke(
+              color: Color(0xff333333), join: StrokeJoin.round, width: 3.0),
+          fill: Fill(color: Color(0xffffee44))),
+      Paint(
+          blendMode: BlendMode.srcOver,
+          stroke: Stroke(color: Color(0xffccaa00), join: StrokeJoin.round),
+          fill: Fill(color: Color(0xffccaa00))),
+      Paint(
+          blendMode: BlendMode.srcOver,
+          stroke: Stroke(color: Color(0xff333333), join: StrokeJoin.round),
+          fill: Fill(color: Color(0xff555555))),
+      Paint(
+          blendMode: BlendMode.srcOver,
+          stroke: Stroke(
+              color: Color(0xff446699), join: StrokeJoin.round, width: 0.5)),
+      Paint(
+          blendMode: BlendMode.srcOver,
+          stroke: Stroke(
+              color: Color(0xffbbaa55),
+              join: StrokeJoin.round,
+              width: 0.2033683215379001)),
+      Paint(
+          blendMode: BlendMode.srcOver,
+          stroke: Stroke(
+              color: Color(0xff6688cc),
+              join: StrokeJoin.round,
+              width: 0.2033683215379001)),
+      Paint(
+          blendMode: BlendMode.srcOver,
+          stroke: Stroke(
+              color: Color(0xff333311), join: StrokeJoin.round, width: 0.5)),
+      Paint(
+          blendMode: BlendMode.srcOver,
+          stroke: Stroke(
+              color: Color(0xffffee44), join: StrokeJoin.round, width: 0.5),
+          fill: Fill(color: Color(0xff80a3cf))),
+      Paint(
+          blendMode: BlendMode.srcOver,
+          stroke: Stroke(
+              color: Color(0xffffee44), join: StrokeJoin.round, width: 0.5),
+          fill: Fill(color: Color(0xff668899)))
+    ]);
+  });
+
+  test('Use preserves fill from shape', () {
     final VectorInstructions instructions = parseWithoutOptimizers(
       useColor,
     );

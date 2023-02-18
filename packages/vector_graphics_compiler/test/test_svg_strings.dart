@@ -1395,7 +1395,7 @@ List<Path> basicClipsForClippingOptimzer = <Path>[
 ];
 
 /// https://dev.w3.org/SVG/tools/svgweb/samples/svg-files/bzrfeed.svg
-const String signWithScaledStroke  = '''
+const String signWithScaledStroke = '''
 <svg xmlns="http://www.w3.org/2000/svg" stroke-linejoin="round" viewBox="0 0 100 100">
   <path d="M50,4L4,50L50,96L96,50Z" stroke="#FE4" stroke-width="3"/>
   <path d="M50,5L5,50L50,95L95,50Z" stroke="#333" fill="#FE4" stroke-width="3"/>

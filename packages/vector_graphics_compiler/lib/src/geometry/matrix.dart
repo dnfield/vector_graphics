@@ -52,18 +52,15 @@ class AffineMatrix {
 
   /// Calculates the scale for a stroke width based on the average of the x- and
   /// y-axis scales of this matrix.
-  ///
-  /// Returns null if either scale values are zero.
   double? scaleStrokeWidth(double? width) {
     if (width == null || (a == 1 && d == 1)) {
       return width;
     }
 
-    if (a == 0 || d == 0) {
-      return null;
-    }
+    final double xScale = math.sqrt(a * a + c * c);
+    final double yScale = math.sqrt(b * b + d * d);
 
-    return (a + d) / 2 * width;
+    return (xScale + yScale) / 2 * width;
   }
 
   /// Creates a new affine matrix rotated by `radians`.

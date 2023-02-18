@@ -12,51 +12,38 @@ void main() {
     expect(instructions.paints, const <Paint>[
       Paint(
           blendMode: BlendMode.srcOver,
-          stroke: Stroke(
-              color: Color(0xffffee44), join: StrokeJoin.round, width: 3.0),
-          fill: Fill(color: Color(0xff000000))),
+          stroke: Stroke(color: Color(0xffffee44), width: 3.0)),
       Paint(
           blendMode: BlendMode.srcOver,
-          stroke: Stroke(
-              color: Color(0xff333333), join: StrokeJoin.round, width: 3.0),
+          stroke: Stroke(color: Color(0xff333333), width: 3.0),
           fill: Fill(color: Color(0xffffee44))),
       Paint(
           blendMode: BlendMode.srcOver,
-          stroke: Stroke(color: Color(0xffccaa00), join: StrokeJoin.round),
+          stroke: Stroke(color: Color(0xffccaa00)),
           fill: Fill(color: Color(0xffccaa00))),
       Paint(
           blendMode: BlendMode.srcOver,
-          stroke: Stroke(color: Color(0xff333333), join: StrokeJoin.round),
+          stroke: Stroke(color: Color(0xff333333)),
           fill: Fill(color: Color(0xff555555))),
       Paint(
           blendMode: BlendMode.srcOver,
-          stroke: Stroke(
-              color: Color(0xff446699), join: StrokeJoin.round, width: 0.5)),
+          stroke: Stroke(color: Color(0xff446699), width: 0.5)),
       Paint(
           blendMode: BlendMode.srcOver,
-          stroke: Stroke(
-              color: Color(0xffbbaa55),
-              join: StrokeJoin.round,
-              width: 0.2033683215379001)),
+          stroke: Stroke(color: Color(0xffbbaa55), width: 0.49999999999999994)),
       Paint(
           blendMode: BlendMode.srcOver,
-          stroke: Stroke(
-              color: Color(0xff6688cc),
-              join: StrokeJoin.round,
-              width: 0.2033683215379001)),
+          stroke: Stroke(color: Color(0xff6688cc), width: 0.49999999999999994)),
       Paint(
           blendMode: BlendMode.srcOver,
-          stroke: Stroke(
-              color: Color(0xff333311), join: StrokeJoin.round, width: 0.5)),
+          stroke: Stroke(color: Color(0xff333311), width: 0.5)),
       Paint(
           blendMode: BlendMode.srcOver,
-          stroke: Stroke(
-              color: Color(0xffffee44), join: StrokeJoin.round, width: 0.5),
+          stroke: Stroke(color: Color(0xffffee44), width: 0.5),
           fill: Fill(color: Color(0xff80a3cf))),
       Paint(
           blendMode: BlendMode.srcOver,
-          stroke: Stroke(
-              color: Color(0xffffee44), join: StrokeJoin.round, width: 0.5),
+          stroke: Stroke(color: Color(0xffffee44), width: 0.5),
           fill: Fill(color: Color(0xff668899)))
     ]);
   });
@@ -1498,40 +1485,40 @@ void main() {
 
 const List<Paint> ghostScriptTigerPaints = <Paint>[
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.17200001),
+      stroke: Stroke(color: Color(0xff000000), width: 0.303691181256463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.17200001),
+      stroke: Stroke(color: Color(0xff000000), width: 0.303691181256463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.17200001),
+      stroke: Stroke(color: Color(0xff000000), width: 0.303691181256463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.17200001),
+      stroke: Stroke(color: Color(0xff000000), width: 0.303691181256463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.17200001),
+      stroke: Stroke(color: Color(0xff000000), width: 0.303691181256463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.17200001),
+      stroke: Stroke(color: Color(0xff000000), width: 0.303691181256463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.17200001),
+      stroke: Stroke(color: Color(0xff000000), width: 0.303691181256463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.17200001),
+      stroke: Stroke(color: Color(0xff000000), width: 0.303691181256463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.17200001),
+      stroke: Stroke(color: Color(0xff000000), width: 0.303691181256463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.17200001),
+      stroke: Stroke(color: Color(0xff000000), width: 0.303691181256463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.17200001),
+      stroke: Stroke(color: Color(0xff000000), width: 0.303691181256463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.17200001),
+      stroke: Stroke(color: Color(0xff000000), width: 0.303691181256463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
       stroke: Stroke(color: Color(0xff000000)),
@@ -1568,60 +1555,60 @@ const List<Paint> ghostScriptTigerPaints = <Paint>[
       stroke: Stroke(color: Color(0xff000000)),
       fill: Fill(color: Color(0xffff727f))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.5),
+      stroke: Stroke(color: Color(0xff000000), width: 0.88282315),
       fill: Fill(color: Color(0xffffffcc))),
   Paint(fill: Fill(color: Color(0xffcc3f4c))),
-  Paint(stroke: Stroke(color: Color(0xffa51926), width: 2.0)),
+  Paint(stroke: Stroke(color: Color(0xffa51926), width: 3.5312926)),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.5),
+      stroke: Stroke(color: Color(0xff000000), width: 0.88282315),
       fill: Fill(color: Color(0xffffffcc))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.5),
+      stroke: Stroke(color: Color(0xff000000), width: 0.88282315),
       fill: Fill(color: Color(0xffffffcc))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.5),
+      stroke: Stroke(color: Color(0xff000000), width: 0.88282315),
       fill: Fill(color: Color(0xffffffcc))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.5),
+      stroke: Stroke(color: Color(0xff000000), width: 0.88282315),
       fill: Fill(color: Color(0xffffffcc))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.5),
+      stroke: Stroke(color: Color(0xff000000), width: 0.88282315),
       fill: Fill(color: Color(0xffffffcc))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.5),
+      stroke: Stroke(color: Color(0xff000000), width: 0.88282315),
       fill: Fill(color: Color(0xffffffcc))),
-  Paint(stroke: Stroke(color: Color(0xffa5264c), width: 2.0)),
-  Paint(stroke: Stroke(color: Color(0xffa5264c), width: 2.0)),
+  Paint(stroke: Stroke(color: Color(0xffa5264c), width: 3.5312926)),
+  Paint(stroke: Stroke(color: Color(0xffa5264c), width: 3.5312926)),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.5),
+      stroke: Stroke(color: Color(0xff000000), width: 0.88282315),
       fill: Fill(color: Color(0xffffffcc))),
-  Paint(stroke: Stroke(color: Color(0xffa5264c), width: 2.0)),
-  Paint(stroke: Stroke(color: Color(0xffa5264c), width: 2.0)),
+  Paint(stroke: Stroke(color: Color(0xffa5264c), width: 3.5312926)),
+  Paint(stroke: Stroke(color: Color(0xffa5264c), width: 3.5312926)),
   Paint(fill: Fill(color: Color(0xffb2b2b2))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.5),
+      stroke: Stroke(color: Color(0xff000000), width: 0.88282315),
       fill: Fill(color: Color(0xffffffcc))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.5),
+      stroke: Stroke(color: Color(0xff000000), width: 0.88282315),
       fill: Fill(color: Color(0xffffffcc))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.5),
+      stroke: Stroke(color: Color(0xff000000), width: 0.88282315),
       fill: Fill(color: Color(0xffffffcc))),
   Paint(fill: Fill()),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.5),
+      stroke: Stroke(color: Color(0xff000000), width: 0.88282315),
       fill: Fill(color: Color(0xffffffcc))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.5),
+      stroke: Stroke(color: Color(0xff000000), width: 0.88282315),
       fill: Fill(color: Color(0xffffffcc))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.5),
+      stroke: Stroke(color: Color(0xff000000), width: 0.88282315),
       fill: Fill(color: Color(0xffffffcc))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.5),
+      stroke: Stroke(color: Color(0xff000000), width: 0.88282315),
       fill: Fill(color: Color(0xffffffcc))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.5),
+      stroke: Stroke(color: Color(0xff000000), width: 0.88282315),
       fill: Fill(color: Color(0xffffffcc))),
   Paint(fill: Fill(color: Color(0xffe5e5b2))),
   Paint(fill: Fill(color: Color(0xffe5e5b2))),
@@ -1669,10 +1656,10 @@ const List<Paint> ghostScriptTigerPaints = <Paint>[
   Paint(fill: Fill(color: Color(0xffcc7226))),
   Paint(fill: Fill(color: Color(0xffcc7226))),
   Paint(fill: Fill()),
-  Paint(stroke: Stroke(color: Color(0xff4c0000), width: 2.0)),
-  Paint(stroke: Stroke(color: Color(0xff4c0000), width: 2.0)),
-  Paint(stroke: Stroke(color: Color(0xff4c0000), width: 2.0)),
-  Paint(stroke: Stroke(color: Color(0xff4c0000), width: 2.0)),
+  Paint(stroke: Stroke(color: Color(0xff4c0000), width: 3.5312926)),
+  Paint(stroke: Stroke(color: Color(0xff4c0000), width: 3.5312926)),
+  Paint(stroke: Stroke(color: Color(0xff4c0000), width: 3.5312926)),
+  Paint(stroke: Stroke(color: Color(0xff4c0000), width: 3.5312926)),
   Paint(fill: Fill()),
   Paint(fill: Fill(color: Color(0xff4c0000))),
   Paint(fill: Fill(color: Color(0xff99cc32))),
@@ -1722,28 +1709,28 @@ const List<Paint> ghostScriptTigerPaints = <Paint>[
   Paint(fill: Fill()),
   Paint(fill: Fill()),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(fill: Fill(color: Color(0xffcccccc))),
   Paint(fill: Fill()),
@@ -1757,83 +1744,83 @@ const List<Paint> ghostScriptTigerPaints = <Paint>[
   Paint(fill: Fill()),
   Paint(fill: Fill()),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(fill: Fill()),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(
-      stroke: Stroke(color: Color(0xff000000), width: 0.1),
+      stroke: Stroke(color: Color(0xff000000), width: 0.17656463),
       fill: Fill(color: Color(0xffffffff))),
   Paint(fill: Fill()),
   Paint(fill: Fill()),

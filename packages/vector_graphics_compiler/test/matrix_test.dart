@@ -15,14 +15,18 @@ void main() {
     expect(AffineMatrix.identity.scaleStrokeWidth(null), null);
     expect(AffineMatrix.identity.scaleStrokeWidth(1), 1);
     expect(AffineMatrix.identity.scaleStrokeWidth(2), 2);
+    expect(AffineMatrix.identity.rotated(1.2).scaleStrokeWidth(1), 1);
+    expect(AffineMatrix.identity.rotated(1.2).scaleStrokeWidth(2), 2);
 
     expect(AffineMatrix.identity.scaled(2.0).scaleStrokeWidth(1), 2);
     expect(AffineMatrix.identity.scaled(2.0).scaleStrokeWidth(2), 4);
+    expect(AffineMatrix.identity.scaled(2.0).rotated(1.2).scaleStrokeWidth(1), 2);
+    expect(AffineMatrix.identity.scaled(2.0).rotated(1.2).scaleStrokeWidth(2), 4);
 
     expect(AffineMatrix.identity.scaled(2.0, 1.0).scaleStrokeWidth(1), 1.5);
     expect(AffineMatrix.identity.scaled(2.0, 1.0).scaleStrokeWidth(2), 3);
-
-    expect(const AffineMatrix(0, 0, 0, 0, 0, 0, 0).scaleStrokeWidth(3.0), null);
+    expect(AffineMatrix.identity.scaled(2.0, 1.0).rotated(1.2).scaleStrokeWidth(1), 1.5);
+    expect(AffineMatrix.identity.scaled(2.0, 1.0).rotated(1.2).scaleStrokeWidth(2), 3);
   });
 
   test('Parse rotate and scale', () {

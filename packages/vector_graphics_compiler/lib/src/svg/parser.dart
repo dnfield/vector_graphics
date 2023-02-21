@@ -17,7 +17,6 @@ import 'masking_optimizer.dart';
 import 'node.dart';
 import 'numbers.dart' hide parseDoubleWithUnits;
 import 'numbers.dart' as numbers show parseDoubleWithUnits;
-import 'opacity_peephole.dart';
 import 'overdraw_optimizer.dart';
 import 'parsers.dart';
 import 'path_ops.dart' as path_ops;
@@ -685,24 +684,6 @@ class SvgParser {
     }
   }
 
-  bool _isShapeOrText(String elementName) {
-    // Avoid applying default fill/stroke colors unless we need to.
-    // https://www.w3.org/TR/SVG11/single-page.html#intro-TermShape
-    // https://www.w3.org/TR/SVG11/single-page.html#intro-TermTextContentElement
-    return elementName == 'path' ||
-        elementName == 'rect' ||
-        elementName == 'circle' ||
-        elementName == 'ellipse' ||
-        elementName == 'line' ||
-        elementName == 'polyline' ||
-        elementName == 'polygon' ||
-        elementName == 'altGlyph' ||
-        elementName == 'textPath' ||
-        elementName == 'text' ||
-        elementName == 'tref' ||
-        elementName == 'tspan';
-  }
-
   Iterable<XmlEvent> _readSubtree() sync* {
     final int subtreeStartDepth = depth;
     while (_eventIterator.moveNext()) {
@@ -720,7 +701,6 @@ class SvgParser {
         }
         _currentStartElement = event;
         _currentAttributes = _createSvgAttributes(
-          _isShapeOrText(event.localName),
           attributeMap,
           currentColor: depth == 0 ? theme.currentColor : null,
         );
@@ -774,8 +754,6 @@ class SvgParser {
 
     /// Resolve the tree
     final ResolvingVisitor resolvingVisitor = ResolvingVisitor();
-    final OpacityPeepholeOptimizer opacityPeepholeOptimizer =
-        OpacityPeepholeOptimizer();
     final Tessellator tessellator = Tessellator();
     final MaskingOptimizer maskingOptimizer = MaskingOptimizer();
     final ClippingOptimizer clippingOptimizer = ClippingOptimizer();
@@ -793,8 +771,6 @@ class SvgParser {
     if (isTesselatorInitialized) {
       newRoot = newRoot.accept(tessellator, null);
     }
-
-    newRoot = opacityPeepholeOptimizer.apply(newRoot);
 
     if (enableMaskingOptimizer == true) {
       if (path_ops.isPathOpsInitialized) {
@@ -1502,7 +1478,6 @@ class SvgParser {
   }
 
   SvgStrokeAttributes? _parseStrokeAttributes(
-    bool isShapeOrText,
     Map<String, String> attributeMap,
     double? uniformOpacity,
     Color? currentColor,
@@ -1550,7 +1525,7 @@ class SvgParser {
     bool? hasPattern;
     if (rawStroke?.startsWith('url') == true) {
       shaderId = rawStroke;
-      strokeColor = Color.opaqueBlack;
+      strokeColor = const Color(0xFFFFFFFF);
       if (patternIds.contains(rawStroke)) {
         hasPattern = true;
       }
@@ -1558,8 +1533,7 @@ class SvgParser {
       strokeColor = parseColor(rawStroke, attributeName: 'stroke', id: id);
     }
 
-    final Color? color =
-        isShapeOrText ? (strokeColor ?? currentColor) : strokeColor;
+    final Color? color = strokeColor ?? currentColor;
 
     return SvgStrokeAttributes._(
       _definitions,
@@ -1577,7 +1551,6 @@ class SvgParser {
   }
 
   SvgFillAttributes? _parseFillAttributes(
-    bool isShapeOrText,
     Map<String, String> attributeMap,
     double? uniformOpacity,
     Color? currentColor,
@@ -1608,7 +1581,7 @@ class SvgParser {
       }
       return SvgFillAttributes._(
         _definitions,
-        color: Color.opaqueBlack,
+        color: const Color(0xFFFFFFFF),
         shaderId: rawFill,
         hasPattern: hasPattern,
         opacity: opacity,
@@ -1620,10 +1593,6 @@ class SvgParser {
       currentColor,
       id,
     );
-
-    // if (fillColor == null && !isShapeOrText) {
-    //   return null;
-    // }
 
     return SvgFillAttributes._(
       _definitions,
@@ -1638,7 +1607,6 @@ class SvgParser {
   }
 
   SvgAttributes _createSvgAttributes(
-    bool isShapeOrText,
     Map<String, String> attributeMap, {
     Color? currentColor,
   }) {
@@ -1654,14 +1622,12 @@ class SvgParser {
         href: attributeMap['href'],
         color: color,
         stroke: _parseStrokeAttributes(
-          isShapeOrText,
           attributeMap,
           opacity,
           color,
           id,
         ),
         fill: _parseFillAttributes(
-          isShapeOrText,
           attributeMap,
           opacity,
           color,

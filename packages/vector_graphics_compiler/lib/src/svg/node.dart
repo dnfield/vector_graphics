@@ -216,7 +216,6 @@ class ParentNode extends AttributedNode {
   /// required.
   Paint? createLayerPaint() {
     final double? fillOpacity = attributes.fill?.opacity;
-    print('${attributes.blendMode} fo $fillOpacity');
     final bool needsLayer = (attributes.blendMode != null) ||
         (fillOpacity != null && fillOpacity != 1.0 && fillOpacity != 0.0);
 

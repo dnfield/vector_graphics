@@ -567,7 +567,7 @@ void main() {
     final VectorInstructions instructions = parseWithoutOptimizers(
       svg,
     );
-
+print(instructions.commands);
     expect(instructions.paints, const <Paint>[
       Paint(fill: Fill(color: Color(0xffff0000))),
       Paint(blendMode: BlendMode.screen, fill: Fill(color: Color(0xff008000))),

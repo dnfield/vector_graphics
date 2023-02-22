@@ -48,7 +48,8 @@ void main() {
         node.accept(ResolvingVisitor(), AffineMatrix.identity);
     final List<ResolvedPathNode> nodes =
         queryChildren<ResolvedPathNode>(resolvedNode);
-    final SaveLayerNode saveLayerNode = queryChildren<SaveLayerNode>(resolvedNode).single;
+    final SaveLayerNode saveLayerNode =
+        queryChildren<SaveLayerNode>(resolvedNode).single;
 
     expect(saveLayerNode.paint.fill!.color, const Color(0x7FFF0000));
 

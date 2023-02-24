@@ -4,6 +4,75 @@ import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 import 'test_svg_strings.dart';
 
 void main() {
+  test('text attributes are preserved', () {
+    final VectorInstructions instructions = parseWithoutOptimizers(textTspan);
+    expect(
+      instructions.text,
+      const <TextConfig>[
+        TextConfig(
+          'Some text',
+          Point(33.0, 53.0),
+          0.0,
+          'Roboto-Regular, Roboto',
+          FontWeight.w400,
+          16.0,
+          TextDecoration.none,
+          TextDecorationStyle.solid,
+          Color(0xff000000),
+          AffineMatrix.identity,
+        ),
+        TextConfig(
+          'more text.',
+          Point(33.0, 73.0),
+          0.0,
+          'Roboto-Regular, Roboto',
+          FontWeight.w400,
+          16.0,
+          TextDecoration.none,
+          TextDecorationStyle.solid,
+          Color(0xff000000),
+          AffineMatrix.identity,
+        ),
+        TextConfig(
+          'Even more text',
+          Point(35.0, 352.0),
+          0.0,
+          'Roboto-Regular, Roboto',
+          FontWeight.w400,
+          16.0,
+          TextDecoration.none,
+          TextDecorationStyle.solid,
+          Color(0xff000000),
+          AffineMatrix.identity,
+        ),
+        TextConfig(
+          'text everywhere',
+          Point(35.0, 372.0),
+          0.0,
+          'Roboto-Regular, Roboto',
+          FontWeight.w400,
+          16.0,
+          TextDecoration.none,
+          TextDecorationStyle.solid,
+          Color(0xff000000),
+          AffineMatrix.identity,
+        ),
+        TextConfig(
+          'so many lines',
+          Point(35.0, 392.0),
+          0.0,
+          'Roboto-Regular, Roboto',
+          FontWeight.w400,
+          16.0,
+          TextDecoration.none,
+          TextDecorationStyle.solid,
+          Color(0xff000000),
+          AffineMatrix.identity,
+        ),
+      ],
+    );
+  });
+
   test('currentColor', () {
     const String currentColorSvg = '''
 <svg viewBox="0 0 10 10">

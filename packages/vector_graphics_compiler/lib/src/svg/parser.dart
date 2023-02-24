@@ -449,6 +449,8 @@ class _Elements {
       parserState._currentAttributes
     ];
 
+    final ParentNode group = ParentNode(parserState._currentAttributes);
+
     SvgAttributes computeCurrentAttributes() {
       final SvgAttributes current = currentAttributes.last;
       final SvgAttributes newAttributes = parserState._currentAttributes
@@ -468,7 +470,7 @@ class _Elements {
           !isPercentage(rawX); // TODO: do we need to handle mixed case.
       final double x = parseDecimalOrPercentage(rawX);
       final double y = parseDecimalOrPercentage(rawY);
-      parserState.currentGroup!.addChild(
+      group.addChild(
         TextNode(
           text,
           Point(x, y),
@@ -494,6 +496,12 @@ class _Elements {
         currentAttributes.removeLast();
       }
     }
+    parserState.currentGroup!.addChild(
+      group,
+      clipResolver: parserState._definitions.getClipPath,
+      maskResolver: parserState._definitions.getDrawable,
+      patternResolver: parserState._definitions.getDrawable,
+    );
   }
 }
 

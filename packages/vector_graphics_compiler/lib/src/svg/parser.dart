@@ -666,13 +666,14 @@ class SvgParser {
   }
 
   void _appendText(String text) {
+    assert(_inTextOrTSpan);
+    text = text.splitMapJoin('\n',
+        onMatch: (Match match) => ' ',
+        onNonMatch: (String part) => part.trim());
     if (text.isEmpty) {
       return;
     }
-    if (_currentStartElement?.localName != 'text' &&
-        _currentStartElement?.localName != 'tspan') {
-      return;
-    }
+    print(_parentDrawables.last.name);
     currentGroup?.addChild(
       TextNode(
         text,
@@ -684,6 +685,11 @@ class SvgParser {
       patternResolver: _definitions.getDrawable,
     );
   }
+
+  bool get _inTextOrTSpan =>
+      _parentDrawables.isNotEmpty &&
+      (_parentDrawables.last.name == 'text' ||
+          _parentDrawables.last.name == 'tspan');
 
   void _parseTree() {
     for (XmlEvent event in _readSubtree()) {
@@ -705,10 +711,12 @@ class SvgParser {
         }
       } else if (event is XmlEndElementEvent) {
         endElement(event);
-      } else if (event is XmlCDATAEvent) {
-        _appendText(event.text.trim());
-      } else if (event is XmlTextEvent) {
-        _appendText(event.text.trim());
+      } else if (_inTextOrTSpan) {
+        if (event is XmlCDATAEvent) {
+          _appendText(event.text);
+        } else if (event is XmlTextEvent) {
+          _appendText(event.text);
+        }
       }
     }
     if (_root == null) {

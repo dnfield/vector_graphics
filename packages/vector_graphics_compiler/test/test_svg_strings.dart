@@ -1423,9 +1423,17 @@ const String signWithScaledStroke = '''
 const String textTspan = '''
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400">
   <g>
-    <g>
-      <text transform="translate(33 38)" fill="rgba(0,0,0,0.6)" font-size="16" font-family="Roboto-Regular, Roboto" letter-spacing="0.009em"><tspan x="0" y="15">Some text </tspan><tspan x="0" y="35">more text.</tspan></text>
-      <text transform="translate(35 337)" fill="rgba(0,0,0,0.6)" font-size="16" font-family="Roboto-Regular, Roboto" letter-spacing="0.009em"><tspan x="0" y="15">Even more text </tspan><tspan x="0" y="35">text everywhere </tspan><tspan x="0" y="55">so many lines</tspan></text>
+    <text transform="translate(33 38)" fill="rgba(0,0,0,0.6)" font-size="16"
+      font-family="Roboto-Regular, Roboto" letter-spacing="0.009em">
+      <tspan x="0" y="15">Some text </tspan>
+      <tspan x="0" y="35">more text.</tspan>
+    </text>
+    <text transform="translate(35 337)" fill="rgba(0,0,0,0.6)" font-size="16"
+      font-family="Roboto-Regular, Roboto" letter-spacing="0.009em">
+      <tspan x="0" y="15">Even more text </tspan>
+      <tspan x="0" y="35">text everywhere </tspan>
+      <tspan x="0" y="55">so many lines</tspan>
+    </text>
   </g>
 </svg>
 ''';

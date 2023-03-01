@@ -4,6 +4,22 @@ import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 import 'test_svg_strings.dart';
 
 void main() {
+  test('stroke-opacity is kept', () {
+    const String strokeOpacitySvg = '''
+<svg viewBox="0 0 10 10">
+  <rect x="0" y="0" width="5" height="5" stroke="red" stroke-opacity=".5" />
+</svg>
+''';
+
+    final VectorInstructions instructions =
+        parseWithoutOptimizers(strokeOpacitySvg);
+
+    expect(
+      instructions.paints.single,
+      const Paint(stroke: Stroke(color: Color(0x7fff0000))),
+    );
+  });
+
   test('text attributes are preserved', () {
     final VectorInstructions instructions = parseWithoutOptimizers(textTspan);
     expect(
@@ -19,7 +35,7 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
-          AffineMatrix.identity,
+          null,
         ),
         TextConfig(
           'more text.',
@@ -31,7 +47,7 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
-          AffineMatrix.identity,
+          null,
         ),
         TextConfig(
           'Even more text',
@@ -43,7 +59,7 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
-          AffineMatrix.identity,
+          null,
         ),
         TextConfig(
           'text everywhere',
@@ -55,7 +71,7 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
-          AffineMatrix.identity,
+          null,
         ),
         TextConfig(
           'so many lines',
@@ -67,7 +83,7 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
-          AffineMatrix.identity,
+          null,
         ),
       ],
     );
@@ -335,7 +351,7 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color(0xff000000),
-        AffineMatrix.identity,
+        null,
       ),
       TextConfig(
         'Text anchor middle',
@@ -347,7 +363,7 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color(0xff000000),
-        AffineMatrix.identity,
+        null,
       ),
       TextConfig(
         'Text anchor end',
@@ -359,7 +375,7 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color(0xff000000),
-        AffineMatrix.identity,
+        null,
       )
     ]);
   });
@@ -380,7 +396,7 @@ void main() {
         TextDecoration.overline,
         TextDecorationStyle.solid,
         Color(0xffff0000),
-        AffineMatrix.identity,
+        null,
       ),
       TextConfig(
         'Strike text',
@@ -392,7 +408,7 @@ void main() {
         TextDecoration.lineThrough,
         TextDecorationStyle.solid,
         Color(0xff008000),
-        AffineMatrix.identity,
+        null,
       ),
       TextConfig(
         'Underline text',
@@ -404,7 +420,7 @@ void main() {
         TextDecoration.underline,
         TextDecorationStyle.double,
         Color(0xff008000),
-        AffineMatrix.identity,
+        null,
       )
     ]);
   });
@@ -1094,7 +1110,7 @@ void main() {
   });
 
   test('Parses text with pattern as fill', () {
-    const String textWithPattern = ''' <svg width="600" height="400">
+    const String textWithPattern = '''<svg width="600" height="400">
     <defs>
           <pattern id="textPattern" x="7" y="7" width="10" height="10" patternUnits="userSpaceOnUse">
                   <rect x="5" y="5" width="5" height="5" fill= "#876fc1" />
@@ -1114,6 +1130,8 @@ void main() {
       DrawCommand(DrawCommandType.restore),
       DrawCommand(DrawCommandType.text, objectId: 0, paintId: 1, patternId: 0)
     ]);
+
+    expect(instructions.text, const <TextConfig>[]);
   });
 
   test('Defaults image height/width when not specified', () {

@@ -425,27 +425,11 @@ class TextNode extends AttributedNode {
   /// Create a new [TextNode] with the given [text].
   TextNode(
     this.text,
-    this.baseline,
-    this.absolute,
-    this.fontSize,
-    this.fontWeight,
     super.attributes,
   );
 
   /// The text this node contains.
   final String text;
-
-  /// The x, y coordinate of the starting point of the text baseline.
-  final Point baseline;
-
-  /// Whether the [baseline] is in absolute or relative units.
-  final bool absolute;
-
-  /// The font weight to use.
-  final FontWeight fontWeight;
-
-  /// The text node's font size.
-  final double fontSize;
 
   /// Compute the [Paint] that this text node uses.
   Paint? computePaint(Rect bounds, AffineMatrix transform) {
@@ -464,20 +448,34 @@ class TextNode extends AttributedNode {
 
   /// Compute the [TextConfig] that this text node uses.
   TextConfig computeTextConfig(Rect bounds, AffineMatrix transform) {
-    final Point newBaseline = absolute
-        ? baseline
-        : Point(baseline.x * bounds.width, baseline.y * bounds.height);
+    // Don't concat the transform since it's repeated by the parent group
+    // the way the parser is set up.
+    final bool consumeTransform = transform.encodableInRect;
+    double x = attributes.x ?? 0;
+    double y = attributes.y ?? 0;
+    if (attributes.xIsPercentage == true) {
+      assert(attributes.x != null);
+      x *= bounds.width;
+    }
+    if (attributes.yIsPercentage == true) {
+      assert(attributes.y != null);
+      y *= bounds.height;
+    }
+    final Point baseline = consumeTransform
+        ? transform.transformPoint(Point(x, y))
+        : Point(x, y);
+
     return TextConfig(
       text,
-      transform.transformPoint(newBaseline),
+      baseline,
       attributes.textAnchorMultiplier ?? 0,
       attributes.fontFamily,
-      fontWeight,
-      fontSize,
+      attributes.fontWeight ?? normalFontWeight,
+      attributes.fontSize ?? 16, // default in many browsers
       attributes.textDecoration ?? TextDecoration.none,
       attributes.textDecorationStyle ?? TextDecorationStyle.solid,
       attributes.textDecorationColor ?? Color.opaqueBlack,
-      attributes.transform,
+      consumeTransform ? null : transform,
     );
   }
 
@@ -486,15 +484,12 @@ class TextNode extends AttributedNode {
     SvgAttributes newAttributes, {
     bool replace = false,
   }) {
+    final SvgAttributes resolvedAttributes = replace
+        ? newAttributes.applyParent(attributes, transformOverride: transform)
+        : attributes.applyParent(newAttributes);
     return TextNode(
       text,
-      baseline,
-      absolute,
-      fontSize,
-      fontWeight,
-      replace
-          ? newAttributes.applyParent(attributes, transformOverride: transform)
-          : attributes.applyParent(newAttributes),
+      resolvedAttributes,
     );
   }
 

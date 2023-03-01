@@ -43,7 +43,8 @@ const Map<String, _ParseFunc> _svgElementParsers = <String, _ParseFunc>{
   'linearGradient': _Elements.linearGradient,
   'clipPath': _Elements.clipPath,
   'image': _Elements.image,
-  'text': _Elements.text,
+  'text': _Elements.g,
+  'tspan': _Elements.g,
 };
 
 const Map<String, _PathFunc> _svgPathFuncs = <String, _PathFunc>{
@@ -155,7 +156,9 @@ class _Elements {
         fontWeight: attributes.fontWeight,
         fontSize: attributes.fontSize,
         x: x,
+        xIsPercentage: isPercentage(rawX),
         y: y,
+        yIsPercentage: isPercentage(rawY),
         width: patternWidth,
         height: patternHeight);
 
@@ -436,73 +439,6 @@ class _Elements {
     }
     return;
   }
-
-  static Future<void> text(
-    SvgParser parserState,
-    bool warningsAsErrors,
-  ) async {
-    assert(parserState.currentGroup != null);
-    if (parserState._currentStartElement!.isSelfClosing) {
-      return;
-    }
-    final List<SvgAttributes> currentAttributes = <SvgAttributes>[
-      parserState._currentAttributes
-    ];
-
-    final ParentNode group = ParentNode(parserState._currentAttributes);
-
-    SvgAttributes computeCurrentAttributes() {
-      final SvgAttributes current = currentAttributes.last;
-      final SvgAttributes newAttributes = parserState._currentAttributes
-          .applyParent(current, includePosition: true);
-      currentAttributes.add(newAttributes);
-      return newAttributes;
-    }
-
-    void appendText(String text) {
-      if (text.isEmpty) {
-        return;
-      }
-      final SvgAttributes attributes = computeCurrentAttributes();
-      final String rawX = attributes.raw['x'] ?? '0';
-      final String rawY = attributes.raw['y'] ?? '0';
-      final bool absolute =
-          !isPercentage(rawX); // TODO: do we need to handle mixed case.
-      final double x = parseDecimalOrPercentage(rawX);
-      final double y = parseDecimalOrPercentage(rawY);
-      group.addChild(
-        TextNode(
-          text,
-          Point(x, y),
-          absolute,
-          parserState.parseFontSize(attributes.raw['font-size']),
-          FontWeight.values[
-              parserState.parseFontWeight(attributes.raw['font-weight'])],
-          attributes,
-        ),
-        patternId: parserState._definitions.getPattern(parserState),
-        clipResolver: parserState._definitions.getClipPath,
-        maskResolver: parserState._definitions.getDrawable,
-        patternResolver: parserState._definitions.getDrawable,
-      );
-    }
-
-    for (XmlEvent event in parserState._readSubtree()) {
-      if (event is XmlCDATAEvent) {
-        appendText(event.text.trim());
-      } else if (event is XmlTextEvent) {
-        appendText(event.text.trim());
-      } else if (event is XmlEndElementEvent) {
-        currentAttributes.removeLast();
-      }
-    }
-    parserState.currentGroup!.addChild(
-      group,
-      clipResolver: parserState._definitions.getClipPath,
-      maskResolver: parserState._definitions.getDrawable,
-      patternResolver: parserState._definitions.getDrawable,
-    );
-  }
 }
 
 // ignore: avoid_classes_with_only_static_members
@@ -729,6 +665,26 @@ class SvgParser {
     }
   }
 
+  void _appendText(String text) {
+    if (text.isEmpty) {
+      return;
+    }
+    if (_currentStartElement?.localName != 'text' &&
+        _currentStartElement?.localName != 'tspan') {
+      return;
+    }
+    currentGroup?.addChild(
+      TextNode(
+        text,
+        _currentAttributes,
+      ),
+      patternId: _definitions.getPattern(this),
+      clipResolver: _definitions.getClipPath,
+      maskResolver: _definitions.getDrawable,
+      patternResolver: _definitions.getDrawable,
+    );
+  }
+
   void _parseTree() {
     for (XmlEvent event in _readSubtree()) {
       if (event is XmlStartElementEvent) {
@@ -736,7 +692,6 @@ class SvgParser {
           continue;
         }
         final _ParseFunc? parseFunc = _svgElementParsers[event.name];
-        parseFunc?.call(this, _warningsAsErrors);
         if (parseFunc == null) {
           if (!event.isSelfClosing) {
             _discardSubtree();
@@ -745,9 +700,15 @@ class SvgParser {
             unhandledElement(event);
             return true;
           }());
+        } else {
+          parseFunc(this, _warningsAsErrors);
         }
       } else if (event is XmlEndElementEvent) {
         endElement(event);
+      } else if (event is XmlCDATAEvent) {
+        _appendText(event.text.trim());
+      } else if (event is XmlTextEvent) {
+        _appendText(event.text.trim());
       }
     }
     if (_root == null) {
@@ -943,15 +904,9 @@ class SvgParser {
   };
 
   /// Parses a `font-size` attribute.
-  double parseFontSize(
-    String? raw, {
-    double? parentValue,
-  }) {
-    // Not specified in spec, but the default in many browsers.
-    const double kDefaultFontSize = 16;
-
+  double? parseFontSize(String? raw) {
     if (raw == null || raw == '') {
-      return kDefaultFontSize;
+      return null;
     }
 
     double? ret = parseDoubleWithUnits(
@@ -968,19 +923,15 @@ class SvgParser {
       return ret;
     }
 
-    if (raw == 'larger') {
-      if (parentValue == null) {
-        return _kTextSizeMap['large']!;
-      }
-      return parentValue * 1.2;
-    }
-
-    if (raw == 'smaller') {
-      if (parentValue == null) {
-        return _kTextSizeMap['small']!;
-      }
-      return parentValue / 1.2;
-    }
+    // TODO(dnfield): support 'larger' and 'smaller'.
+    // Rough idea for how to do this: this method returns a struct that contains
+    // either a double? fontSize or a double? multiplier.
+    // Larger multiplier: 1.2
+    // Smaller multiplier: .8
+    // When resolving the font size later, multiple the incoming size by the
+    // multiplier if specified.
+    // There was once an implementation of this which was definitely not
+    // correct but probably not used much either.
 
     throw StateError('Could not parse font-size: $raw');
   }
@@ -1198,16 +1149,6 @@ class SvgParser {
     return parseDoubleWithUnits(rawDashOffset);
   }
 
-  Color? _determineFillColor(
-    String rawFill,
-    Color? currentColor,
-    String? id,
-  ) {
-    final Color? color = parseColor(rawFill, attributeName: 'fill', id: id);
-
-    return color;
-  }
-
   /// Applies a transform to a path if the [attributes] contain a `transform`.
   Path applyTransformIfNeeded(Path path, AffineMatrix? parentTransform) {
     final AffineMatrix? transform = parseTransform(attribute('transform'));
@@ -1267,32 +1208,35 @@ class SvgParser {
   }
 
   /// Parse the raw font weight string.
-  int parseFontWeight(String? fontWeight) {
-    if (fontWeight == null || fontWeight == 'normal') {
-      return normalFontWeight.index;
+  FontWeight? parseFontWeight(String? fontWeight) {
+    if (fontWeight == null) {
+      return null;
+    }
+    if (fontWeight == 'normal') {
+      return normalFontWeight;
     }
     if (fontWeight == 'bold') {
-      return boldFontWeight.index;
+      return boldFontWeight;
     }
     switch (fontWeight) {
       case '100':
-        return FontWeight.w100.index;
+        return FontWeight.w100;
       case '200':
-        return FontWeight.w200.index;
+        return FontWeight.w200;
       case '300':
-        return FontWeight.w300.index;
+        return FontWeight.w300;
       case '400':
-        return FontWeight.w400.index;
+        return FontWeight.w400;
       case '500':
-        return FontWeight.w500.index;
+        return FontWeight.w500;
       case '600':
-        return FontWeight.w600.index;
+        return FontWeight.w600;
       case '700':
-        return FontWeight.w700.index;
+        return FontWeight.w700;
       case '800':
-        return FontWeight.w800.index;
+        return FontWeight.w800;
       case '900':
-        return FontWeight.w900.index;
+        return FontWeight.w900;
     }
     throw StateError('Invalid "font-weight": $fontWeight');
   }
@@ -1595,11 +1539,12 @@ class SvgParser {
       );
     }
 
-    final Color? fillColor = _determineFillColor(
-      rawFill,
-      currentColor,
-      id,
-    );
+    Color? fillColor = parseColor(rawFill, attributeName: 'fill', id: id);
+
+    if ((fillColor?.a ?? 255) != 255) {
+      opacity = fillColor!.a / 255;
+      fillColor = fillColor.withOpacity(1);
+    }
 
     return SvgFillAttributes._(
       _definitions,
@@ -1623,9 +1568,17 @@ class SvgParser {
     final Color? color =
         parseColor(attributeMap['color'], attributeName: 'color', id: id) ??
             currentColor;
+
+    final String? rawX = attributeMap['x'];
+    final String? rawY = attributeMap['y'];
+    final double? x = rawX == null ? null : parseDecimalOrPercentage(rawX);
+    final double? y = rawY == null ? null : parseDecimalOrPercentage(rawY);
+
     return SvgAttributes._(
         raw: attributeMap,
         id: id,
+        x: x,
+        y: y,
         href: attributeMap['href'],
         color: color,
         stroke: _parseStrokeAttributes(
@@ -1823,8 +1776,10 @@ class SvgAttributes {
     this.textDecorationStyle,
     this.textDecorationColor,
     this.x,
+    this.xIsPercentage,
     this.textAnchorMultiplier,
     this.y,
+    this.yIsPercentage,
     this.width,
     this.height,
   });
@@ -1947,7 +1902,7 @@ class SvgAttributes {
   final String? fontFamily;
 
   /// The font weight attribute.
-  final int? fontWeight;
+  final FontWeight? fontWeight;
 
   /// The `font-size` attribute.
   final double? fontSize;
@@ -1970,11 +1925,17 @@ class SvgAttributes {
   /// The x translation.
   final double? x;
 
+  /// Whether [x] represents a percentage value.
+  final bool? xIsPercentage;
+
   /// A multiplier for text-anchoring.
   final double? textAnchorMultiplier;
 
   /// The y translation.
   final double? y;
+
+  /// Whether [y] represents a percentage value.
+  final bool? yIsPercentage;
 
   /// A copy of these attributes after absorbing a saveLayer.
   ///
@@ -2002,8 +1963,10 @@ class SvgAttributes {
       textDecorationStyle: textDecorationStyle,
       textDecorationColor: textDecorationColor,
       x: x,
+      xIsPercentage: xIsPercentage,
       textAnchorMultiplier: textAnchorMultiplier,
       y: y,
+      yIsPercentage: yIsPercentage,
       width: width,
       height: height,
     );
@@ -2015,14 +1978,11 @@ class SvgAttributes {
   /// is intended to be used by text parsing. Defaults to `false`.
   SvgAttributes applyParent(
     SvgAttributes parent, {
-    bool includePosition = false,
     AffineMatrix? transformOverride,
     String? hrefOverride,
   }) {
     final Map<String, String> newRaw = <String, String>{
       ...Map<String, String>.fromEntries(parent.heritable),
-      if (includePosition && parent.raw.containsKey('x')) 'x': parent.raw['x']!,
-      if (includePosition && parent.raw.containsKey('y')) 'y': parent.raw['y']!,
       ...raw,
     };
 
@@ -2045,10 +2005,13 @@ class SvgAttributes {
       textDecorationStyle: textDecorationStyle ?? parent.textDecorationStyle,
       textDecorationColor: textDecorationColor ?? parent.textDecorationColor,
       textAnchorMultiplier: textAnchorMultiplier ?? parent.textAnchorMultiplier,
-      x: x ?? parent.x,
-      y: y ?? parent.y,
       height: height ?? parent.height,
       width: width ?? parent.width,
+      // These attributes do not cascade.
+      x: x ?? parent.x,
+      y: y ?? parent.y,
+      xIsPercentage: xIsPercentage ?? parent.xIsPercentage,
+      yIsPercentage: yIsPercentage ?? parent.yIsPercentage,
     );
   }
 }
@@ -2176,7 +2139,7 @@ class SvgStrokeAttributes {
     }
 
     return Stroke(
-      color: color,
+      color: color!.withOpacity(opacity ?? 1.0),
       shader: shader,
       join: join,
       cap: cap,

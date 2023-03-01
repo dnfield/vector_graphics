@@ -612,6 +612,9 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
       decorationStyle: textConfig.decorationStyle,
       decorationColor: textConfig.decorationColor,
     ));
+    // if (textConfig.text == 'Line 3') {
+    //   builder.addPlaceholder(22.0 * 'Stroked bold line'.length, 16, PlaceholderAlignment.bottom);
+    // }
     builder.addText(textConfig.text);
 
     final Paragraph paragraph = builder.build();

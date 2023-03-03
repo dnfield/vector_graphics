@@ -21,22 +21,18 @@ class _Result {
 /// Converts a vector_graphics PathFillType to a path_ops FillType.
 path_ops.FillType toPathOpsFillTyle(PathFillType fill) {
   switch (fill) {
-    case PathFillType.evenOdd:
-      return path_ops.FillType.evenOdd;
+    case PathFillType.evenOdd: return path_ops.FillType.evenOdd;
 
-    case PathFillType.nonZero:
-      return path_ops.FillType.nonZero;
+    case PathFillType.nonZero: return path_ops.FillType.nonZero;
   }
 }
 
 /// Converts a path_ops FillType to a vector_graphics PathFillType
 PathFillType toVectorGraphicsFillType(path_ops.FillType fill) {
   switch (fill) {
-    case path_ops.FillType.evenOdd:
-      return PathFillType.evenOdd;
+    case path_ops.FillType.evenOdd: return PathFillType.evenOdd;
 
-    case path_ops.FillType.nonZero:
-      return PathFillType.nonZero;
+    case path_ops.FillType.nonZero: return PathFillType.nonZero;
   }
 }
 

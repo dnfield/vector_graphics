@@ -137,14 +137,12 @@ void main() {
     final Invocation drawParagraph1 = factory.fakeCanvases.last.invocations[1];
 
     expect(drawParagraph0.memberName, #drawParagraph);
+    // Only checking the X because Y seems to vary a bit by platform within
+    // acceptable range. X is what gets managed by the listener anyway.
     expect((drawParagraph0.positionalArguments[1] as Offset).dx, 10);
-    expect((drawParagraph0.positionalArguments[1] as Offset).dy,
-        closeTo(-2.8, .001));
 
     expect(drawParagraph1.memberName, #drawParagraph);
     expect((drawParagraph1.positionalArguments[1] as Offset).dx, 58);
-    expect((drawParagraph0.positionalArguments[1] as Offset).dy,
-        closeTo(-2.8, .001));
   });
 }
 

@@ -4,6 +4,60 @@ import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 import 'test_svg_strings.dart';
 
 void main() {
+  test('text spacing', () {
+    const String svg = '''
+<svg width="185" height="43" viewBox="0 0 185 43" xmlns="http://www.w3.org/2000/svg">
+    <g fill="none" fill-rule="evenodd">
+        <text x="35.081" y="15" font-family="OpenSans-Italic, Open Sans" font-size="14" font-style="italic" fill="#333">
+            π( D² - d² )( N - N
+            <tspan y="15" font-size="10">u</tspan>
+            )
+        </text>
+    </g>
+</svg>
+''';
+
+    final VectorInstructions instructions = parseWithoutOptimizers(svg);
+
+    expect(instructions.textPositions, const <TextPosition>[
+      TextPosition(reset: true, x: 35.081, y: 15.0),
+      TextPosition(y: 15.0),
+    ]);
+
+    expect(instructions.text, const <TextConfig>[
+      TextConfig(
+        'π( D² - d² )( N - N',
+        0.0,
+        'OpenSans-Italic, Open Sans',
+        FontWeight.w400,
+        14.0,
+        TextDecoration.none,
+        TextDecorationStyle.solid,
+        Color(0xff000000),
+      ),
+      TextConfig(
+        ' u',
+        0.0,
+        'OpenSans-Italic, Open Sans',
+        FontWeight.w400,
+        10.0,
+        TextDecoration.none,
+        TextDecorationStyle.solid,
+        Color(0xff000000),
+      ),
+      TextConfig(
+        ' )',
+        0.0,
+        'OpenSans-Italic, Open Sans',
+        FontWeight.w400,
+        14.0,
+        TextDecoration.none,
+        TextDecorationStyle.solid,
+        Color(0xff000000),
+      ),
+    ]);
+  });
+
   test('stroke-opacity', () {
     const String strokeOpacitySvg = '''
 <svg viewBox="0 0 10 10">
@@ -26,7 +80,7 @@ void main() {
       instructions.text,
       const <TextConfig>[
         TextConfig(
-          'Some text ',
+          ' Some text',
           0.0,
           'Roboto-Regular, Roboto',
           FontWeight.w400,
@@ -36,7 +90,7 @@ void main() {
           Color(0xff000000),
         ),
         TextConfig(
-          'more text.',
+          ' more text.',
           0.0,
           'Roboto-Regular, Roboto',
           FontWeight.w400,
@@ -46,7 +100,7 @@ void main() {
           Color(0xff000000),
         ),
         TextConfig(
-          'Even more text ',
+          ' Even more text',
           0.0,
           'Roboto-Regular, Roboto',
           FontWeight.w400,
@@ -56,7 +110,7 @@ void main() {
           Color(0xff000000),
         ),
         TextConfig(
-          'text everywhere ',
+          ' text everywhere',
           0.0,
           'Roboto-Regular, Roboto',
           FontWeight.w400,
@@ -66,7 +120,7 @@ void main() {
           Color(0xff000000),
         ),
         TextConfig(
-          'so many lines',
+          ' so many lines',
           0.0,
           'Roboto-Regular, Roboto',
           FontWeight.w400,
@@ -332,7 +386,7 @@ void main() {
 
     expect(instructions.text, const <TextConfig>[
       TextConfig(
-        ' Text anchor start',
+        'Text anchor start',
         0.0,
         'Roboto',
         FontWeight.w400,
@@ -342,7 +396,7 @@ void main() {
         Color(0xff000000),
       ),
       TextConfig(
-        ' Text anchor middle',
+        'Text anchor middle',
         0.5,
         'Roboto',
         FontWeight.w400,
@@ -352,7 +406,7 @@ void main() {
         Color(0xff000000),
       ),
       TextConfig(
-        ' Text anchor end',
+        'Text anchor end',
         1.0,
         'Roboto',
         FontWeight.w400,
@@ -371,7 +425,7 @@ void main() {
 
     expect(instructions.text, const <TextConfig>[
       TextConfig(
-        ' Overline text',
+        'Overline text',
         0,
         'Roboto',
         FontWeight.w400,
@@ -381,7 +435,7 @@ void main() {
         Color(0xffff0000),
       ),
       TextConfig(
-        ' Strike text',
+        'Strike text',
         0,
         'Roboto',
         FontWeight.w400,
@@ -391,7 +445,7 @@ void main() {
         Color(0xff008000),
       ),
       TextConfig(
-        ' Underline text',
+        'Underline text',
         0,
         'Roboto',
         FontWeight.w400,

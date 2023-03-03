@@ -1291,6 +1291,29 @@ class TextPosition {
         other.reset == reset &&
         other.transform == transform;
   }
+
+  @override
+  String toString() {
+    final StringBuffer buffer = StringBuffer();
+    buffer.write('TextPosition(reset: $reset');
+    if (x != null) {
+      buffer.write(', x: $x');
+    }
+    if (y != null) {
+      buffer.write(', y: $y');
+    }
+    if (dx != null) {
+      buffer.write(', dx: $dx');
+    }
+    if (dy != null) {
+      buffer.write(', dy: $dy');
+    }
+    if (transform != null) {
+      buffer.write(', transform: $transform');
+    }
+    buffer.write(')');
+    return buffer.toString();
+  }
 }
 
 /// Additional text specific configuration that is added to the encoding.

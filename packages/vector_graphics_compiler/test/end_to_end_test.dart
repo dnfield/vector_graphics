@@ -210,14 +210,14 @@ void main() {
         shaderId: null,
       ),
       const OnTextConfig(
-          ' Plain text Roboto', 0, 55, 'Roboto', 3, 0, 0, 4278190080, 0),
+          'Plain text Roboto', 0, 55, 'Roboto', 3, 0, 0, 4278190080, 0),
       const OnTextConfig(
-          ' Plain text Verdana', 0, 55, 'Verdana', 3, 0, 0, 4278190080, 1),
+          'Plain text Verdana', 0, 55, 'Verdana', 3, 0, 0, 4278190080, 1),
       const OnTextConfig(
-          ' Bold text Verdana', 0, 55, 'Verdana', 6, 0, 0, 4278190080, 2),
+          'Bold text Verdana', 0, 55, 'Verdana', 6, 0, 0, 4278190080, 2),
       const OnTextConfig(
-          'Stroked bold line', 0, 55, 'Roboto', 8, 0, 0, 4278190080, 3),
-      const OnTextConfig('Line 3', 0, 55, 'Roboto', 3, 0, 0, 4278190080, 4),
+          ' Stroked bold line', 0, 55, 'Roboto', 8, 0, 0, 4278190080, 3),
+      const OnTextConfig(' Line 3', 0, 55, 'Roboto', 3, 0, 0, 4278190080, 4),
       const OnDrawText(0, 0, null, null),
       const OnDrawText(1, 0, null, null),
       const OnDrawText(2, 0, null, null),

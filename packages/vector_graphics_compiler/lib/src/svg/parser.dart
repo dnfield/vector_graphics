@@ -31,6 +31,8 @@ typedef _ParseFunc = void Function(
     SvgParser parserState, bool warningsAsErrors);
 typedef _PathFunc = Path? Function(SvgParser parserState);
 
+final RegExp _whitespacePattern = RegExp(r'\s');
+
 const Map<String, _ParseFunc> _svgElementParsers = <String, _ParseFunc>{
   'svg': _Elements.svg,
   'g': _Elements.g,
@@ -417,8 +419,6 @@ class _Elements {
     return;
   }
 
-  static final RegExp _whitespacePattern = RegExp(r'\s');
-
   static void image(
     SvgParser parserState,
     bool warningsAsErrors,
@@ -649,6 +649,8 @@ class SvgParser {
     }
   }
 
+  XmlEndElementEvent? _lastEndElementEvent;
+
   Iterable<XmlEvent> _readSubtree() sync* {
     final int subtreeStartDepth = depth;
     while (_eventIterator.moveNext()) {
@@ -686,19 +688,30 @@ class SvgParser {
     }
   }
 
-  static final RegExp _whiteSpaceMatcher = RegExp(r'[\n\t ]+');
+  static final RegExp _contiguousSpaceMatcher = RegExp(r' +');
+  bool _lastTextEndedWithSpace = false;
   void _appendText(String text) {
     assert(_inTextOrTSpan);
+
+    assert(_whitespacePattern.pattern == r'\s');
+    // Not from the spec, but seems like how Chrome behaves:
+    final bool prependSpace = (text.startsWith(_whitespacePattern) &&
+            _lastEndElementEvent?.localName == 'tspan') ||
+        _lastTextEndedWithSpace;
+
+    _lastTextEndedWithSpace =
+        text.startsWith(_whitespacePattern, text.length - 1);
 
     // From the spec:
     //   First, it will remove all newline characters.
     //   Then it will convert all tab characters into space characters.
     //   Then, it will strip off all leading and trailing space characters.
     //   Then, all contiguous space characters will be consolidated.
-    //
-    // Even though the spec says to strip leading and trailing space, it does
-    // not visually match Chrome when a .trim() is added on the end here.
-    text = text.replaceAll(_whiteSpaceMatcher, ' ');
+    text = text
+        .replaceAll('\n', '')
+        .replaceAll('\t', ' ')
+        .trim()
+        .replaceAll(_contiguousSpaceMatcher, ' ');
 
     if (text.isEmpty) {
       return;
@@ -706,7 +719,7 @@ class SvgParser {
 
     currentGroup?.addChild(
       TextNode(
-        text,
+        prependSpace ? ' $text' : text,
         _currentAttributes,
       ),
       // Do not supply pattern/clip/mask IDs, those are handled by the group
@@ -886,6 +899,11 @@ class SvgParser {
     }
     if (event.name == _parentDrawables.last.name) {
       _parentDrawables.removeLast();
+    }
+    _lastEndElementEvent = event;
+    if (event.name == 'text') {
+      // reset state.
+      _lastTextEndedWithSpace = false;
     }
   }
 

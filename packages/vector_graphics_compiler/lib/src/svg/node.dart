@@ -237,6 +237,64 @@ class ParentNode extends AttributedNode {
   }
 }
 
+/// A node describing an update to the [TextPosition], including any applicable
+/// transformation matrix.
+class TextPositionNode extends ParentNode {
+  /// See [TextPositionNode].
+  TextPositionNode(super.attributes, {required this.reset});
+
+  /// Whether this node represents a reset of the current text position or not.
+  final bool reset;
+
+  /// Computes a [TextPosition] to encode for this node.
+  TextPosition computeTextPosition(Rect bounds, AffineMatrix transform) {
+    final AffineMatrix computedTransform = concatTransform(transform);
+    final bool consumeTransform = computedTransform.encodableInRect;
+    double? x = attributes.x?.calculate(bounds.width);
+    double? y = attributes.y?.calculate(bounds.height);
+    double? dx = attributes.dx?.calculate(bounds.width);
+    double? dy = attributes.dy?.calculate(bounds.height);
+    if (x != null && y != null) {
+      final Point baseline = consumeTransform
+          ? transform.transformPoint(Point(x, y))
+          : Point(x, y);
+      x = baseline.x;
+      y = baseline.y;
+    }
+
+    if (dx != null && dy != null) {
+      final Point baseline = consumeTransform
+          ? transform.transformPoint(Point(dx, dy))
+          : Point(dx, dy);
+      dx = baseline.x;
+      dy = baseline.y;
+    }
+
+    return TextPosition(
+      x: x,
+      y: y,
+      dx: dx,
+      dy: dy,
+      reset: reset,
+      transform: consumeTransform ? null : computedTransform,
+    );
+  }
+
+  @override
+  S accept<S, V>(Visitor<S, V> visitor, V data) {
+    return visitor.visitTextPositionNode(this, data);
+  }
+
+  @override
+  AttributedNode applyAttributes(
+    SvgAttributes newAttributes, {
+    bool replace = false,
+  }) {
+    return TextPositionNode(attributes.applyParent(newAttributes), reset: reset)
+      .._children.addAll(_children);
+  }
+}
+
 /// A parent node that applies a save layer to its children.
 class SaveLayerNode extends ParentNode {
   /// Create a new [SaveLayerNode]
@@ -450,24 +508,8 @@ class TextNode extends AttributedNode {
   TextConfig computeTextConfig(Rect bounds, AffineMatrix transform) {
     // Don't concat the transform since it's repeated by the parent group
     // the way the parser is set up.
-    final bool consumeTransform = transform.encodableInRect;
-    double x = attributes.x ?? 0;
-    double y = attributes.y ?? 0;
-    if (attributes.xIsPercentage == true) {
-      assert(attributes.x != null);
-      x *= bounds.width;
-    }
-    if (attributes.yIsPercentage == true) {
-      assert(attributes.y != null);
-      y *= bounds.height;
-    }
-    final Point baseline = consumeTransform
-        ? transform.transformPoint(Point(x, y))
-        : Point(x, y);
-
     return TextConfig(
       text,
-      baseline,
       attributes.textAnchorMultiplier ?? 0,
       attributes.fontFamily,
       attributes.fontWeight ?? normalFontWeight,
@@ -475,7 +517,6 @@ class TextNode extends AttributedNode {
       attributes.textDecoration ?? TextDecoration.none,
       attributes.textDecorationStyle ?? TextDecorationStyle.solid,
       attributes.textDecorationColor ?? Color.opaqueBlack,
-      consumeTransform ? null : transform,
     );
   }
 

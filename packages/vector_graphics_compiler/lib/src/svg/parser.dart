@@ -43,8 +43,8 @@ const Map<String, _ParseFunc> _svgElementParsers = <String, _ParseFunc>{
   'linearGradient': _Elements.linearGradient,
   'clipPath': _Elements.clipPath,
   'image': _Elements.image,
-  'text': _Elements.g,
-  'tspan': _Elements.g,
+  'text': _Elements.textOrTspan,
+  'tspan': _Elements.textOrTspan,
 };
 
 const Map<String, _PathFunc> _svgPathFuncs = <String, _PathFunc>{
@@ -112,6 +112,31 @@ class _Elements {
     return;
   }
 
+  static void textOrTspan(SvgParser parserState, bool warningsAsErrors) {
+    if (parserState._currentStartElement?.isSelfClosing == true) {
+      return;
+    }
+    final ParentNode parent = parserState.currentGroup!;
+    final XmlStartElementEvent element = parserState._currentStartElement!;
+
+    final TextPositionNode group = TextPositionNode(
+      parserState._currentAttributes,
+      reset: element.localName == 'text',
+    );
+
+    parent.addChild(
+      group,
+      clipId: parserState._currentAttributes.clipPathId,
+      clipResolver: parserState._definitions.getClipPath,
+      maskId: parserState.attribute('mask'),
+      maskResolver: parserState._definitions.getDrawable,
+      patternId: parserState._definitions.getPattern(parserState),
+      patternResolver: parserState._definitions.getDrawable,
+    );
+    parserState.addGroup(element, group);
+    return;
+  }
+
   static void symbol(SvgParser parserState, bool warningsAsErrors) {
     final ParentNode group = ParentNode(parserState._currentAttributes);
     parserState.addGroup(parserState._currentStartElement!, group);
@@ -134,10 +159,8 @@ class _Elements {
       patternHeight = viewBox.height;
     }
 
-    final String rawX = attributes.raw['x'] ?? '0';
-    final String rawY = attributes.raw['y'] ?? '0';
-    final double x = parseDecimalOrPercentage(rawX);
-    final double y = parseDecimalOrPercentage(rawY);
+    final String? rawX = attributes.raw['x'];
+    final String? rawY = attributes.raw['y'];
     final String id = parserState.buildUrlIri();
     parserState.patternIds.add(id);
     final SvgAttributes newAttributes = SvgAttributes._(
@@ -155,10 +178,8 @@ class _Elements {
         fontFamily: attributes.fontFamily,
         fontWeight: attributes.fontWeight,
         fontSize: attributes.fontSize,
-        x: x,
-        xIsPercentage: isPercentage(rawX),
-        y: y,
-        yIsPercentage: isPercentage(rawY),
+        x: DoubleOrPercentage.fromString(rawX),
+        y: DoubleOrPercentage.fromString(rawY),
         width: patternWidth,
         height: patternHeight);
 
@@ -665,21 +686,31 @@ class SvgParser {
     }
   }
 
+  static final RegExp _whiteSpaceMatcher = RegExp(r'[\n\t ]+');
   void _appendText(String text) {
     assert(_inTextOrTSpan);
-    text = text.splitMapJoin('\n',
-        onMatch: (Match match) => ' ',
-        onNonMatch: (String part) => part.trim());
+
+    // From the spec:
+    //   First, it will remove all newline characters.
+    //   Then it will convert all tab characters into space characters.
+    //   Then, it will strip off all leading and trailing space characters.
+    //   Then, all contiguous space characters will be consolidated.
+    //
+    // Even though the spec says to strip leading and trailing space, it does
+    // not visually match Chrome when a .trim() is added on the end here.
+    text = text.replaceAll(_whiteSpaceMatcher, ' ');
+
     if (text.isEmpty) {
       return;
     }
-    print(_parentDrawables.last.name);
+
     currentGroup?.addChild(
       TextNode(
         text,
         _currentAttributes,
       ),
-      patternId: _definitions.getPattern(this),
+      // Do not supply pattern/clip/mask IDs, those are handled by the group
+      // text or tspan this text is part of.
       clipResolver: _definitions.getClipPath,
       maskResolver: _definitions.getDrawable,
       patternResolver: _definitions.getDrawable,
@@ -1220,13 +1251,12 @@ class SvgParser {
     if (fontWeight == null) {
       return null;
     }
-    if (fontWeight == 'normal') {
-      return normalFontWeight;
-    }
-    if (fontWeight == 'bold') {
-      return boldFontWeight;
-    }
+
     switch (fontWeight) {
+      case 'normal':
+        return normalFontWeight;
+      case 'bold':
+        return boldFontWeight;
       case '100':
         return FontWeight.w100;
       case '200':
@@ -1246,6 +1276,7 @@ class SvgParser {
       case '900':
         return FontWeight.w900;
     }
+
     throw StateError('Invalid "font-weight": $fontWeight');
   }
 
@@ -1579,14 +1610,17 @@ class SvgParser {
 
     final String? rawX = attributeMap['x'];
     final String? rawY = attributeMap['y'];
-    final double? x = rawX == null ? null : parseDecimalOrPercentage(rawX);
-    final double? y = rawY == null ? null : parseDecimalOrPercentage(rawY);
+
+    final String? rawDx = attributeMap['dx'];
+    final String? rawDy = attributeMap['dy'];
 
     return SvgAttributes._(
         raw: attributeMap,
         id: id,
-        x: x,
-        y: y,
+        x: DoubleOrPercentage.fromString(rawX),
+        y: DoubleOrPercentage.fromString(rawY),
+        dx: DoubleOrPercentage.fromString(rawDx),
+        dy: DoubleOrPercentage.fromString(rawDy),
         href: attributeMap['href'],
         color: color,
         stroke: _parseStrokeAttributes(
@@ -1784,10 +1818,10 @@ class SvgAttributes {
     this.textDecorationStyle,
     this.textDecorationColor,
     this.x,
-    this.xIsPercentage,
+    this.dx,
     this.textAnchorMultiplier,
     this.y,
-    this.yIsPercentage,
+    this.dy,
     this.width,
     this.height,
   });
@@ -1931,19 +1965,19 @@ class SvgAttributes {
   final double? height;
 
   /// The x translation.
-  final double? x;
-
-  /// Whether [x] represents a percentage value.
-  final bool? xIsPercentage;
+  final DoubleOrPercentage? x;
 
   /// A multiplier for text-anchoring.
   final double? textAnchorMultiplier;
 
   /// The y translation.
-  final double? y;
+  final DoubleOrPercentage? y;
 
-  /// Whether [y] represents a percentage value.
-  final bool? yIsPercentage;
+  /// The relative x translation.
+  final DoubleOrPercentage? dx;
+
+  /// The relative y translation.
+  final DoubleOrPercentage? dy;
 
   /// A copy of these attributes after absorbing a saveLayer.
   ///
@@ -1971,10 +2005,8 @@ class SvgAttributes {
       textDecorationStyle: textDecorationStyle,
       textDecorationColor: textDecorationColor,
       x: x,
-      xIsPercentage: xIsPercentage,
       textAnchorMultiplier: textAnchorMultiplier,
       y: y,
-      yIsPercentage: yIsPercentage,
       width: width,
       height: height,
     );
@@ -1986,11 +2018,14 @@ class SvgAttributes {
   /// is intended to be used by text parsing. Defaults to `false`.
   SvgAttributes applyParent(
     SvgAttributes parent, {
+    bool includePosition = false,
     AffineMatrix? transformOverride,
     String? hrefOverride,
   }) {
     final Map<String, String> newRaw = <String, String>{
       ...Map<String, String>.fromEntries(parent.heritable),
+      if (includePosition && parent.raw.containsKey('x')) 'x': parent.raw['x']!,
+      if (includePosition && parent.raw.containsKey('y')) 'y': parent.raw['y']!,
       ...raw,
     };
 
@@ -2015,12 +2050,54 @@ class SvgAttributes {
       textAnchorMultiplier: textAnchorMultiplier ?? parent.textAnchorMultiplier,
       height: height ?? parent.height,
       width: width ?? parent.width,
-      // These attributes do not cascade.
-      x: x ?? parent.x,
-      y: y ?? parent.y,
-      xIsPercentage: xIsPercentage ?? parent.xIsPercentage,
-      yIsPercentage: yIsPercentage ?? parent.yIsPercentage,
+      x: x,
+      y: y,
+      dx: dx,
+      dy: dy,
     );
+  }
+}
+
+/// A value that represents either an absolute pixel coordinate or a percentage
+/// of a bounding dimension.
+@immutable
+class DoubleOrPercentage {
+  const DoubleOrPercentage._(this._value, this._isPercentage);
+
+  /// Constructs a [DoubleOrPercentage] from a raw SVG attribute string.
+  static DoubleOrPercentage? fromString(String? raw) {
+    if (raw == null || raw == '') {
+      return null;
+    }
+
+    if (isPercentage(raw)) {
+      return DoubleOrPercentage._(parsePercentage(raw), true);
+    }
+    return DoubleOrPercentage._(parseDouble(raw)!, false);
+  }
+
+  final double _value;
+  final bool _isPercentage;
+
+  /// Calculates the result of applying this dimension within [bound].
+  ///
+  /// If this is a percentage, it will return a percentage of bound. Otherwise,
+  /// it returns the value of this.
+  double calculate(double bound) {
+    if (_isPercentage) {
+      return _value * bound;
+    }
+    return _value;
+  }
+
+  @override
+  int get hashCode => Object.hash(_value, _isPercentage);
+
+  @override
+  bool operator ==(Object other) {
+    return other is DoubleOrPercentage &&
+        other._isPercentage == _isPercentage &&
+        other._value == _value;
   }
 }
 

@@ -26,8 +26,7 @@ void main() {
       instructions.text,
       const <TextConfig>[
         TextConfig(
-          'Some text',
-          Point(33.0, 53.0),
+          'Some text ',
           0.0,
           'Roboto-Regular, Roboto',
           FontWeight.w400,
@@ -35,11 +34,9 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
-          null,
         ),
         TextConfig(
           'more text.',
-          Point(33.0, 73.0),
           0.0,
           'Roboto-Regular, Roboto',
           FontWeight.w400,
@@ -47,11 +44,9 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
-          null,
         ),
         TextConfig(
-          'Even more text',
-          Point(35.0, 352.0),
+          'Even more text ',
           0.0,
           'Roboto-Regular, Roboto',
           FontWeight.w400,
@@ -59,11 +54,9 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
-          null,
         ),
         TextConfig(
-          'text everywhere',
-          Point(35.0, 372.0),
+          'text everywhere ',
           0.0,
           'Roboto-Regular, Roboto',
           FontWeight.w400,
@@ -71,11 +64,9 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
-          null,
         ),
         TextConfig(
           'so many lines',
-          Point(35.0, 392.0),
           0.0,
           'Roboto-Regular, Roboto',
           FontWeight.w400,
@@ -83,7 +74,6 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
-          null,
         ),
       ],
     );
@@ -342,8 +332,7 @@ void main() {
 
     expect(instructions.text, const <TextConfig>[
       TextConfig(
-        'Text anchor start',
-        Point(100.0, 50.0),
+        ' Text anchor start',
         0.0,
         'Roboto',
         FontWeight.w400,
@@ -351,11 +340,9 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color(0xff000000),
-        null,
       ),
       TextConfig(
-        'Text anchor middle',
-        Point(100.0, 100.0),
+        ' Text anchor middle',
         0.5,
         'Roboto',
         FontWeight.w400,
@@ -363,11 +350,9 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color(0xff000000),
-        null,
       ),
       TextConfig(
-        'Text anchor end',
-        Point(100.0, 150.0),
+        ' Text anchor end',
         1.0,
         'Roboto',
         FontWeight.w400,
@@ -375,7 +360,6 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color(0xff000000),
-        null,
       )
     ]);
   });
@@ -387,8 +371,7 @@ void main() {
 
     expect(instructions.text, const <TextConfig>[
       TextConfig(
-        'Overline text',
-        Point(100.0, 60.0),
+        ' Overline text',
         0,
         'Roboto',
         FontWeight.w400,
@@ -396,11 +379,9 @@ void main() {
         TextDecoration.overline,
         TextDecorationStyle.solid,
         Color(0xffff0000),
-        null,
       ),
       TextConfig(
-        'Strike text',
-        Point(100.0, 120.0),
+        ' Strike text',
         0,
         'Roboto',
         FontWeight.w400,
@@ -408,11 +389,9 @@ void main() {
         TextDecoration.lineThrough,
         TextDecorationStyle.solid,
         Color(0xff008000),
-        null,
       ),
       TextConfig(
-        'Underline text',
-        Point(100.0, 180.0),
+        ' Underline text',
         0,
         'Roboto',
         FontWeight.w400,
@@ -420,7 +399,6 @@ void main() {
         TextDecoration.underline,
         TextDecorationStyle.double,
         Color(0xff008000),
-        null,
       )
     ]);
   });
@@ -546,9 +524,8 @@ void main() {
     expect(instructions.paints.single, const Paint(fill: Fill()));
     expect(
       instructions.text.single,
-      TextConfig(
+      const TextConfig(
         'a',
-        Point.zero,
         0,
         null,
         normalFontWeight,
@@ -556,10 +533,10 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color.opaqueBlack,
-        AffineMatrix.identity
-            .translated(-100, 50)
-            .rotated(radians(10))
-            .translated(100, -50),
+        // AffineMatrix.identity
+        //     .translated(-100, 50)
+        //     .rotated(radians(10))
+        //     .translated(100, -50),
       ),
     );
   });
@@ -1128,10 +1105,25 @@ void main() {
       DrawCommand(DrawCommandType.pattern, objectId: 0),
       DrawCommand(DrawCommandType.path, objectId: 0, paintId: 0),
       DrawCommand(DrawCommandType.restore),
+      DrawCommand(DrawCommandType.textPosition, objectId: 0),
       DrawCommand(DrawCommandType.text, objectId: 0, paintId: 1, patternId: 0)
     ]);
 
-    expect(instructions.text, const <TextConfig>[]);
+    expect(
+      instructions.text,
+      const <TextConfig>[
+        TextConfig(
+          'Text',
+          0.0,
+          null,
+          FontWeight.w400,
+          200.0,
+          TextDecoration.none,
+          TextDecorationStyle.solid,
+          Color(0xff000000),
+        )
+      ],
+    );
   });
 
   test('Defaults image height/width when not specified', () {

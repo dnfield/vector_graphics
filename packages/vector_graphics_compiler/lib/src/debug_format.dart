@@ -50,7 +50,8 @@ class _DebugVectorGraphicsListener extends VectorGraphicsCodecListener {
 
   @override
   void onDrawText(int textId, int? fillId, int? strokeId, int? patternId) {
-    buffer.writeln('DrawText: id:$textId (fill: $fillId, stroke: $strokeId, pattern: $patternId)');
+    buffer.writeln(
+        'DrawText: id:$textId (fill: $fillId, stroke: $strokeId, pattern: $patternId)');
   }
 
   @override

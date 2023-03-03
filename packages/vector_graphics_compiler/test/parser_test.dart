@@ -577,6 +577,16 @@ void main() {
     );
     expect(instructions.paints.single, const Paint(fill: Fill()));
     expect(
+      instructions.textPositions.single,
+      TextPosition(
+        reset: true,
+        transform: AffineMatrix.identity
+            .translated(-100, 50)
+            .rotated(radians(10))
+            .translated(100, -50),
+      ),
+    );
+    expect(
       instructions.text.single,
       const TextConfig(
         'a',
@@ -587,10 +597,6 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color.opaqueBlack,
-        // AffineMatrix.identity
-        //     .translated(-100, 50)
-        //     .rotated(radians(10))
-        //     .translated(100, -50),
       ),
     );
   });

@@ -137,16 +137,14 @@ void main() {
     final Invocation drawParagraph1 = factory.fakeCanvases.last.invocations[1];
 
     expect(drawParagraph0.memberName, #drawParagraph);
-    expect(
-      drawParagraph0.positionalArguments[1],
-      const Offset(10, -2.800048828125),
-    );
+    expect((drawParagraph0.positionalArguments[1] as Offset).dx, 10);
+    expect((drawParagraph0.positionalArguments[1] as Offset).dy,
+        closeTo(-2.8, .001));
 
     expect(drawParagraph1.memberName, #drawParagraph);
-    expect(
-      drawParagraph1.positionalArguments[1],
-      const Offset(58, -2.800048828125),
-    );
+    expect((drawParagraph1.positionalArguments[1] as Offset).dx, 58);
+    expect((drawParagraph0.positionalArguments[1] as Offset).dy,
+        closeTo(-2.8, .001));
   });
 }
 

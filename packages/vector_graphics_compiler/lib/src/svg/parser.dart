@@ -999,10 +999,14 @@ class SvgParser {
       return null;
     }
     switch (textDecoration) {
-      case 'none': return TextDecoration.none;
-      case 'underline': return TextDecoration.underline;
-      case 'overline': return TextDecoration.overline;
-      case 'line-through': return TextDecoration.lineThrough;
+      case 'none':
+        return TextDecoration.none;
+      case 'underline':
+        return TextDecoration.underline;
+      case 'overline':
+        return TextDecoration.overline;
+      case 'line-through':
+        return TextDecoration.lineThrough;
     }
     throw UnsupportedError(
         'Attribute value for text-decoration="$textDecoration"'
@@ -1015,11 +1019,16 @@ class SvgParser {
       return null;
     }
     switch (textDecorationStyle) {
-      case 'solid': return TextDecorationStyle.solid;
-      case 'dashed': return TextDecorationStyle.dashed;
-      case 'dotted': return TextDecorationStyle.dotted;
-      case 'double': return TextDecorationStyle.double;
-      case 'wavy': return TextDecorationStyle.wavy;
+      case 'solid':
+        return TextDecorationStyle.solid;
+      case 'dashed':
+        return TextDecorationStyle.dashed;
+      case 'dotted':
+        return TextDecorationStyle.dotted;
+      case 'double':
+        return TextDecorationStyle.double;
+      case 'wavy':
+        return TextDecorationStyle.wavy;
     }
     throw UnsupportedError(
         'Attribute value for text-decoration-style="$textDecorationStyle"'
@@ -1029,11 +1038,15 @@ class SvgParser {
   /// Parses a `text-anchor` attribute.
   double? parseTextAnchor(String? raw) {
     switch (raw) {
-      case 'end': return 1;
-      case 'middle': return .5;
-      case 'start': return 0;
+      case 'end':
+        return 1;
+      case 'middle':
+        return .5;
+      case 'start':
+        return 0;
       case 'inherit':
-      default: return null;
+      default:
+        return null;
     }
   }
 
@@ -1112,9 +1125,12 @@ class SvgParser {
   TileMode? parseTileMode() {
     final String? spreadMethod = attribute('spreadMethod');
     switch (spreadMethod) {
-      case 'pad': return TileMode.clamp;
-      case 'repeat': return TileMode.repeated;
-      case 'reflect': return TileMode.mirror;
+      case 'pad':
+        return TileMode.clamp;
+      case 'repeat':
+        return TileMode.repeated;
+      case 'reflect':
+        return TileMode.mirror;
     }
     return null;
   }
@@ -1123,8 +1139,10 @@ class SvgParser {
   GradientUnitMode? parseGradientUnitMode() {
     final String? gradientUnits = attribute('gradientUnits');
     switch (gradientUnits) {
-      case 'userSpaceOnUse': return GradientUnitMode.userSpaceOnUse;
-      case 'objectBoundingBox': return GradientUnitMode.objectBoundingBox;
+      case 'userSpaceOnUse':
+        return GradientUnitMode.userSpaceOnUse;
+      case 'objectBoundingBox':
+        return GradientUnitMode.objectBoundingBox;
     }
     return null;
   }
@@ -1134,10 +1152,14 @@ class SvgParser {
     Stroke? definitionPaint,
   ) {
     switch (raw) {
-      case 'butt': return StrokeCap.butt;
-      case 'round': return StrokeCap.round;
-      case 'square': return StrokeCap.square;
-      default: return definitionPaint?.cap;
+      case 'butt':
+        return StrokeCap.butt;
+      case 'round':
+        return StrokeCap.round;
+      case 'square':
+        return StrokeCap.square;
+      default:
+        return definitionPaint?.cap;
     }
   }
 
@@ -1146,10 +1168,14 @@ class SvgParser {
     Stroke? definitionPaint,
   ) {
     switch (raw) {
-      case 'miter': return StrokeJoin.miter;
-      case 'bevel': return StrokeJoin.bevel;
-      case 'round': return StrokeJoin.round;
-      default: return definitionPaint?.join;
+      case 'miter':
+        return StrokeJoin.miter;
+      case 'bevel':
+        return StrokeJoin.bevel;
+      case 'round':
+        return StrokeJoin.round;
+      default:
+        return definitionPaint?.join;
     }
   }
 
@@ -1245,17 +1271,28 @@ class SvgParser {
     }
 
     switch (fontWeight) {
-      case 'normal': return normalFontWeight;
-      case 'bold': return boldFontWeight;
-      case '100': return FontWeight.w100;
-      case '200': return FontWeight.w200;
-      case '300': return FontWeight.w300;
-      case '400': return FontWeight.w400;
-      case '500': return FontWeight.w500;
-      case '600': return FontWeight.w600;
-      case '700': return FontWeight.w700;
-      case '800': return FontWeight.w800;
-      case '900': return FontWeight.w900;
+      case 'normal':
+        return normalFontWeight;
+      case 'bold':
+        return boldFontWeight;
+      case '100':
+        return FontWeight.w100;
+      case '200':
+        return FontWeight.w200;
+      case '300':
+        return FontWeight.w300;
+      case '400':
+        return FontWeight.w400;
+      case '500':
+        return FontWeight.w500;
+      case '600':
+        return FontWeight.w600;
+      case '700':
+        return FontWeight.w700;
+      case '800':
+        return FontWeight.w800;
+      case '900':
+        return FontWeight.w900;
     }
 
     throw StateError('Invalid "font-weight": $fontWeight');

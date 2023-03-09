@@ -703,8 +703,9 @@ class SvgParser {
     // - If the last text wasn't whitespace and ended with whitespace, prepend
     //   a space.
     final bool prependSpace = _currentAttributes.x == null &&
-        (_lastEndElementEvent?.localName == 'tspan' && textHasNonWhitespace) ||
-            _lastTextEndedWithSpace;
+            (_lastEndElementEvent?.localName == 'tspan' &&
+                textHasNonWhitespace) ||
+        _lastTextEndedWithSpace;
 
     _lastTextEndedWithSpace = textHasNonWhitespace &&
         text.startsWith(_whitespacePattern, text.length - 1);

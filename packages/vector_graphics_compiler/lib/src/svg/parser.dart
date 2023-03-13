@@ -1660,8 +1660,7 @@ class SvgParser {
           color,
           id,
         ),
-        fillRule:
-            parseRawFillRule(attributeMap['fill-rule']),
+        fillRule: parseRawFillRule(attributeMap['fill-rule']),
         clipRule: parseRawFillRule(attributeMap['clip-rule']),
         clipPathId: attributeMap['clip-path'],
         blendMode: _blendModes[attributeMap['mix-blend-mode']],

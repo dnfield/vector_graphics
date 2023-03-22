@@ -29,6 +29,10 @@ const int kOverlineMask = 0x2;
 /// The mask constant for a line through or strike text decoration.
 const int kLineThroughMask = 0x4;
 
+/// This is Signature will report error when render an
+/// image
+typedef VGIErrorListener = void Function(Object error, StackTrace? stackTracr);
+
 /// Enumeration of the types of image data accepted by [VectorGraphicsCodec.writeImage].
 ///
 /// Currently only PNG encoding is supported.
@@ -485,7 +489,8 @@ class VectorGraphicsCodec {
       blendMode: blendMode,
       strokeMiterLimit: null,
       strokeWidth: null,
-      paintStyle: 0, // Fill
+      paintStyle: 0,
+      // Fill
       id: id,
       shaderId: shaderId == kMaxId ? null : shaderId,
     );
@@ -509,7 +514,8 @@ class VectorGraphicsCodec {
       blendMode: blendMode,
       strokeMiterLimit: strokeMiterLimit,
       strokeWidth: strokeWidth,
-      paintStyle: 1, // Stroke
+      paintStyle: 1,
+      // Stroke
       id: id,
       shaderId: shaderId == kMaxId ? null : shaderId,
     );
@@ -920,8 +926,7 @@ class VectorGraphicsCodec {
     listener?.onDrawText(textId, fillId, strokeId, patternId);
   }
 
-  void _readImageConfig(
-      _ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
+  void _readImageConfig(_ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
     final int id = buffer.getUint16();
     final int format = buffer.getUint8();
     final int dataLength = buffer.getUint32();
@@ -1077,11 +1082,7 @@ abstract class VectorGraphicsCodecListener {
   );
 
   /// An image has been decoded.
-  void onImage(
-    int imageId,
-    int format,
-    Uint8List data,
-  );
+  void onImage(int imageId, int format, Uint8List data, {VGIErrorListener? onError});
 
   /// An image should be drawn at the provided location.
   void onDrawImage(

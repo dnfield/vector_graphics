@@ -492,8 +492,7 @@ class VectorGraphicsCodec {
       blendMode: blendMode,
       strokeMiterLimit: null,
       strokeWidth: null,
-      paintStyle: 0,
-      // Fill
+      paintStyle: 0, // Fill
       id: id,
       shaderId: shaderId == kMaxId ? null : shaderId,
     );
@@ -517,8 +516,7 @@ class VectorGraphicsCodec {
       blendMode: blendMode,
       strokeMiterLimit: strokeMiterLimit,
       strokeWidth: strokeWidth,
-      paintStyle: 1,
-      // Stroke
+      paintStyle: 1, // Stroke
       id: id,
       shaderId: shaderId == kMaxId ? null : shaderId,
     );

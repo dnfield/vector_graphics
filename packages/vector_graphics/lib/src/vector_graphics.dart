@@ -45,11 +45,11 @@ enum RenderingStrategy {
 
 /// This is the Signature that errorBuilder will use to replace
 /// the vector_graphics in case of any exception
-typedef SvgErrorWidget = Widget Function(
-    BuildContext context,
-    Object error,
-    StackTrace? stackTrace,
-    );
+typedef VectorGraphicsErrorWidget = Widget Function(
+  BuildContext context,
+  Object error,
+  StackTrace stackTrace,
+);
 
 /// A vector graphic/flutter_svg compatibility shim.
 VectorGraphic createCompatVectorGraphic({
@@ -63,7 +63,7 @@ VectorGraphic createCompatVectorGraphic({
   bool excludeFromSemantics = false,
   Clip clipBehavior = Clip.hardEdge,
   WidgetBuilder? placeholderBuilder,
-  SvgErrorWidget? errorBuilder,
+  VectorGraphicsErrorWidget? errorBuilder,
   ColorFilter? colorFilter,
   Animation<double>? opacity,
   RenderingStrategy strategy = RenderingStrategy.picture,
@@ -208,7 +208,7 @@ class VectorGraphic extends StatefulWidget {
 
   /// The errorBuilder to use in case of the vector_graphics fails to load because of some
   /// error.
-  final SvgErrorWidget? errorBuilder;
+  final VectorGraphicsErrorWidget? errorBuilder;
 
   /// If provided, a color filter to apply to the vector graphic when painting.
   ///
@@ -351,7 +351,14 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
         textDirection: key.textDirection,
         clipViewbox: key.clipViewbox,
         loader: loader,
-        onError: (Object error, StackTrace? stackTrace) => _handleError(error, stackTrace),
+        onError: (
+          Object error,
+          StackTrace? stackTrace,
+        ) =>
+            _handleError(
+          error,
+          stackTrace,
+        ),
       );
     }).then((PictureInfo pictureInfo) {
       return _PictureData(pictureInfo, 0, key);
@@ -363,7 +370,7 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
     return result;
   }
 
-  void _handleError(Object error, StackTrace? stackTrace){
+  void _handleError(Object error, StackTrace? stackTrace) {
     setState(() {
       _error = error;
       _stackTrace = stackTrace;
@@ -475,11 +482,18 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
           ),
         ),
       );
-    } else if(_error != null && widget.errorBuilder != null){
-      child = widget.errorBuilder!(context, _error!, _stackTrace!);
-    }else{
+    } else if (_error != null && widget.errorBuilder != null) {
+      child = widget.errorBuilder!(
+        context,
+        _error!,
+        _stackTrace ?? StackTrace.empty,
+      );
+    } else {
       child = widget.placeholderBuilder?.call(context) ??
-          SizedBox(width: widget.width, height: widget.height);
+          SizedBox(
+            width: widget.width,
+            height: widget.height,
+          );
     }
 
     if (!widget.excludeFromSemantics) {
@@ -648,7 +662,7 @@ class VectorGraphicUtilities {
     BytesLoader loader,
     BuildContext? context, {
     bool clipViewbox = true,
-    VGIErrorListener? onError,
+    VectorGraphicsErrorListener? onError,
   }) async {
     TextDirection textDirection = TextDirection.ltr;
     Locale locale = ui.PlatformDispatcher.instance.locale;

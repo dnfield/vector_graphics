@@ -31,7 +31,10 @@ const int kLineThroughMask = 0x4;
 
 /// This is Signature will report error when render an
 /// image
-typedef VGIErrorListener = void Function(Object error, StackTrace? stackTracr);
+typedef VectorGraphicsErrorListener = void Function(
+  Object error,
+  StackTrace? stackTrace,
+);
 
 /// Enumeration of the types of image data accepted by [VectorGraphicsCodec.writeImage].
 ///
@@ -926,7 +929,8 @@ class VectorGraphicsCodec {
     listener?.onDrawText(textId, fillId, strokeId, patternId);
   }
 
-  void _readImageConfig(_ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
+  void _readImageConfig(
+      _ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
     final int id = buffer.getUint16();
     final int format = buffer.getUint8();
     final int dataLength = buffer.getUint32();
@@ -1082,7 +1086,12 @@ abstract class VectorGraphicsCodecListener {
   );
 
   /// An image has been decoded.
-  void onImage(int imageId, int format, Uint8List data, {VGIErrorListener? onError});
+  void onImage(
+    int imageId,
+    int format,
+    Uint8List data, {
+    VectorGraphicsErrorListener? onError,
+  });
 
   /// An image should be drawn at the provided location.
   void onDrawImage(

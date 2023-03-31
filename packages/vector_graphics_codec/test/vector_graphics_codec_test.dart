@@ -948,7 +948,12 @@ class TestListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onImage(int imageId, int format, Uint8List data, {VGIErrorListener? onError}) {
+  void onImage(
+    int imageId,
+    int format,
+    Uint8List data, {
+    VectorGraphicsErrorListener? onError,
+  }) {
     commands.add(OnImage(
       imageId,
       format,
@@ -1441,7 +1446,7 @@ class OnImage {
   final int id;
   final int format;
   final List<int> data;
-  final VGIErrorListener? onError;
+  final VectorGraphicsErrorListener? onError;
 
   @override
   int get hashCode => Object.hash(id, format, data, onError);

@@ -50,17 +50,18 @@ TextDirection? _debugLastTextDirection;
 Iterable<Future<void>> get debugGetPendingDecodeTasks =>
     _pendingDecodes.values.map((Completer<void> e) => e.future);
 final Map<BytesLoader, Completer<void>> _pendingDecodes =
-<BytesLoader, Completer<void>>{};
+    <BytesLoader, Completer<void>>{};
 
 /// Decode a vector graphics binary asset into a [Picture].
 ///
 /// Throws a [StateError] if the data is invalid.
-Future<PictureInfo> decodeVectorGraphics(ByteData data, {
+Future<PictureInfo> decodeVectorGraphics(
+  ByteData data, {
   required Locale? locale,
   required TextDirection? textDirection,
   required bool clipViewbox,
   required BytesLoader loader,
-  VGIErrorListener? onError,
+  VectorGraphicsErrorListener? onError,
 }) {
   try {
     // We might be in a test that's using a fake async zone. Make sure that any
@@ -79,12 +80,12 @@ Future<PictureInfo> decodeVectorGraphics(ByteData data, {
     @pragma('vm:prefer-inline')
     Future<PictureInfo> process() {
       final FlutterVectorGraphicsListener listener =
-      FlutterVectorGraphicsListener(
-          id: loader.hashCode,
-          locale: locale,
-          textDirection: textDirection,
-          clipViewbox: clipViewbox,
-          onError: onError,
+          FlutterVectorGraphicsListener(
+        id: loader.hashCode,
+        locale: locale,
+        textDirection: textDirection,
+        clipViewbox: clipViewbox,
+        onError: onError,
       );
       DecodeResponse response = _codec.decode(data, listener);
       if (response.complete) {
@@ -111,21 +112,21 @@ Future<PictureInfo> decodeVectorGraphics(ByteData data, {
 
     return Zone.current
         .fork(
-      specification: ZoneSpecification(
-        scheduleMicrotask:
-            (Zone self, ZoneDelegate parent, Zone zone, void Function() f) {
-          Zone.root.scheduleMicrotask(f);
-        },
-        createTimer: (Zone self, ZoneDelegate parent, Zone zone,
-            Duration duration, void Function() f) {
-          return Zone.root.createTimer(duration, f);
-        },
-        createPeriodicTimer: (Zone self, ZoneDelegate parent, Zone zone,
-            Duration period, void Function(Timer timer) f) {
-          return Zone.root.createPeriodicTimer(period, f);
-        },
-      ),
-    )
+          specification: ZoneSpecification(
+            scheduleMicrotask:
+                (Zone self, ZoneDelegate parent, Zone zone, void Function() f) {
+              Zone.root.scheduleMicrotask(f);
+            },
+            createTimer: (Zone self, ZoneDelegate parent, Zone zone,
+                Duration duration, void Function() f) {
+              return Zone.root.createTimer(duration, f);
+            },
+            createPeriodicTimer: (Zone self, ZoneDelegate parent, Zone zone,
+                Duration period, void Function(Timer timer) f) {
+              return Zone.root.createPeriodicTimer(period, f);
+            },
+          ),
+        )
         .run<Future<PictureInfo>>(process);
   } catch (e, s) {
     _pendingDecodes.remove(loader)?.completeError(e, s);
@@ -203,8 +204,9 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     Locale? locale,
     TextDirection? textDirection,
     bool clipViewbox = true,
-    @visibleForTesting PictureFactory pictureFactory = const _DefaultPictureFactory(),
-    VGIErrorListener? onError,
+    @visibleForTesting
+        PictureFactory pictureFactory = const _DefaultPictureFactory(),
+    VectorGraphicsErrorListener? onError,
   }) {
     final PictureRecorder recorder = pictureFactory.createPictureRecorder();
     return FlutterVectorGraphicsListener._(
@@ -219,14 +221,16 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     );
   }
 
-  FlutterVectorGraphicsListener._(this._id,
-      this._pictureFactory,
-      this._recorder,
-      this._canvas,
-      this._locale,
-      this._textDirection,
-      this._clipViewbox,
-      {this.onError});
+  FlutterVectorGraphicsListener._(
+    this._id,
+    this._pictureFactory,
+    this._recorder,
+    this._canvas,
+    this._locale,
+    this._textDirection,
+    this._clipViewbox, {
+    this.onError,
+  });
 
   final int _id;
 
@@ -240,7 +244,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   final Canvas _canvas;
 
   /// This variable will receive the Signature for the error
-  final VGIErrorListener? onError;
+  final VectorGraphicsErrorListener? onError;
 
   final List<Paint> _paints = <Paint>[];
   final List<Path> _paths = <Path>[];
@@ -353,8 +357,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     required int? shaderId,
   }) {
     assert(_paints.length == id, 'Expect ID to be ${_paints.length}');
-    final Paint paint = Paint()
-      ..color = Color(color);
+    final Paint paint = Paint()..color = Color(color);
     if (blendMode != 0) {
       paint.blendMode = BlendMode.values[blendMode];
     }
@@ -388,8 +391,8 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onPathCubicTo(double x1, double y1, double x2, double y2, double x3,
-      double y3) {
+  void onPathCubicTo(
+      double x1, double y1, double x2, double y2, double x3, double y3) {
     _currentPath!.cubicTo(x1, y1, x2, y2, x3, y3);
   }
 
@@ -463,7 +466,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   void onPatternFinished(_PatternConfig? currentPattern,
       PictureRecorder? patternRecorder, Canvas canvas) {
     final FlutterVectorGraphicsListener patternListener =
-    FlutterVectorGraphicsListener._(
+        FlutterVectorGraphicsListener._(
       0,
       _pictureFactory,
       patternRecorder!,
@@ -493,14 +496,16 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onLinearGradient(double fromX,
-      double fromY,
-      double toX,
-      double toY,
-      Int32List colors,
-      Float32List? offsets,
-      int tileMode,
-      int id,) {
+  void onLinearGradient(
+    double fromX,
+    double fromY,
+    double toX,
+    double toY,
+    Int32List colors,
+    Float32List? offsets,
+    int tileMode,
+    int id,
+  ) {
     assert(_shaders.length == id);
 
     final Offset from = Offset(fromX, fromY);
@@ -519,16 +524,18 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onRadialGradient(double centerX,
-      double centerY,
-      double radius,
-      double? focalX,
-      double? focalY,
-      Int32List colors,
-      Float32List? offsets,
-      Float64List? transform,
-      int tileMode,
-      int id,) {
+  void onRadialGradient(
+    double centerX,
+    double centerY,
+    double radius,
+    double? focalX,
+    double? focalY,
+    Int32List colors,
+    Float32List? offsets,
+    Float64List? transform,
+    int tileMode,
+    int id,
+  ) {
     assert(_shaders.length == id);
 
     final Offset center = Offset(centerX, centerY);
@@ -558,15 +565,17 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onTextConfig(String text,
-      String? fontFamily,
-      double xAnchorMultiplier,
-      int fontWeight,
-      double fontSize,
-      int decoration,
-      int decorationStyle,
-      int decorationColor,
-      int id,) {
+  void onTextConfig(
+    String text,
+    String? fontFamily,
+    double xAnchorMultiplier,
+    int fontWeight,
+    double fontSize,
+    int decoration,
+    int decorationStyle,
+    int decorationColor,
+    int id,
+  ) {
     final List<TextDecoration> decorations = <TextDecoration>[];
     if (decoration & kUnderlineMask != 0) {
       decorations.add(TextDecoration.underline);
@@ -591,13 +600,15 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onTextPosition(int textPositionId,
-      double? x,
-      double? y,
-      double? dx,
-      double? dy,
-      bool reset,
-      Float64List? transform,) {
+  void onTextPosition(
+    int textPositionId,
+    double? x,
+    double? y,
+    double? dx,
+    double? dy,
+    bool reset,
+    Float64List? transform,
+  ) {
     _textPositions.add(_TextPosition(x, y, dx, dy, reset, transform));
   }
 
@@ -628,10 +639,12 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onDrawText(int textId,
-      int? fillId,
-      int? strokeId,
-      int? patternId,) async {
+  void onDrawText(
+    int textId,
+    int? fillId,
+    int? strokeId,
+    int? patternId,
+  ) async {
     final _TextConfig textConfig = _textConfig[textId];
     final double dx = _accumulatedTextPositionX ?? 0;
     final double dy = _textPositionY;
@@ -695,8 +708,12 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   }
 
   @override
-  void onImage(int imageId, int format, Uint8List data,
-      {VGIErrorListener? onError}) {
+  void onImage(
+    int imageId,
+    int format,
+    Uint8List data, {
+    VectorGraphicsErrorListener? onError,
+  }) {
     assert(format == 0); // Only PNG is supported.
     final Completer<void> completer = Completer<void>();
     _pendingImages.add(completer.future);
@@ -725,7 +742,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     }
     late ImageStreamListener listener;
     listener = ImageStreamListener(
-          (ImageInfo image, bool synchronousCall) {
+      (ImageInfo image, bool synchronousCall) {
         cacheCompleter.removeListener(listener);
         _images[imageId] = image.image;
         completer.complete();
@@ -772,12 +789,14 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
 }
 
 class _TextPosition {
-  const _TextPosition(this.x,
-      this.y,
-      this.dx,
-      this.dy,
-      this.reset,
-      this.transform,);
+  const _TextPosition(
+    this.x,
+    this.y,
+    this.dx,
+    this.dy,
+    this.reset,
+    this.transform,
+  );
 
   final double? x;
   final double? y;
@@ -788,14 +807,16 @@ class _TextPosition {
 }
 
 class _TextConfig {
-  const _TextConfig(this.text,
-      this.fontFamily,
-      this.xAnchorMultiplier,
-      this.fontWeight,
-      this.fontSize,
-      this.decoration,
-      this.decorationStyle,
-      this.decorationColor,);
+  const _TextConfig(
+    this.text,
+    this.fontFamily,
+    this.xAnchorMultiplier,
+    this.fontWeight,
+    this.fontSize,
+    this.decoration,
+    this.decorationStyle,
+    this.decorationColor,
+  );
 
   final String text;
   final String? fontFamily;

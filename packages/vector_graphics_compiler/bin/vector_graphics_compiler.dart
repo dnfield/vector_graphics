@@ -88,7 +88,7 @@ final ArgParser argParser = ArgParser()
         'The path to a file where the resulting vector_graphic will be written.\n'
         'If not provided, defaults to <input-file>.vec',
   )
-  ..addOption('use-half-precision-control-points',
+  ..addFlag('use-half-precision-control-points',
       help:
           'Convert path control points into  IEEE 754-2008 half precision floating point values.\n'
           'This reduces file size at the cost of lost precision at larger values.');

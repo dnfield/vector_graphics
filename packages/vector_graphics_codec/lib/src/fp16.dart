@@ -2,6 +2,8 @@
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 
+// ignore_for_file: constant_identifier_names
+
 /// Adapted from libcore/util/FP16.java from the Android SDK.
 /// https://en.wikipedia.org/wiki/Half-precision_floating-point_format
 library fp16;

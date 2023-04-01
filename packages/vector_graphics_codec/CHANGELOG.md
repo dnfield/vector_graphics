@@ -4,6 +4,7 @@
 
 - Add support for encoding control points as IEEE 754-2008 half precision
   floating point values.
+- Increase minimum SDK to 2.17.0.
 
 ## 1.1.4
 

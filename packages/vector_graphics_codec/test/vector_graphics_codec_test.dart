@@ -749,13 +749,12 @@ void main() {
     ]);
   });
 
-   test('Basic message encode and decode with half precision path', () {
+  test('Basic message encode and decode with half precision path', () {
     final buffer = VectorGraphicsBuffer();
     final TestListener listener = TestListener();
 
     final int fillId = codec.writeFill(buffer, 23, 0);
-    final int strokeId =
-        codec.writeStroke(buffer, 44, 1, 2, 3, 4.0, 6.0);
+    final int strokeId = codec.writeStroke(buffer, 44, 1, 2, 3, 4.0, 6.0);
     final int pathId = codec.writePath(
       buffer,
       Uint8List.fromList(<int>[

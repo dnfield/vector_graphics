@@ -159,7 +159,8 @@ Future<void> main(List<String> args) async {
   final bool overdrawOptimizerEnabled = results['optimize-overdraw'] == true;
   final bool tessellate = results['tessellate'] == true;
   final bool dumpDebug = results['dump-debug'] == true;
-  final bool useHalfPrecisionControlPoints = results['use-half-precision-control-points'] == true;
+  final bool useHalfPrecisionControlPoints =
+      results['use-half-precision-control-points'] == true;
   final int concurrency;
   if (results.wasParsed('concurrency')) {
     concurrency = int.parse(results['concurrency'] as String);

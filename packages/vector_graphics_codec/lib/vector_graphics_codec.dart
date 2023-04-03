@@ -29,8 +29,6 @@ const int kOverlineMask = 0x2;
 /// The mask constant for a line through or strike text decoration.
 const int kLineThroughMask = 0x4;
 
-/// This is Signature will report error when render an
-/// image
 typedef VectorGraphicsErrorListener = void Function(
   Object error,
   StackTrace? stackTrace,

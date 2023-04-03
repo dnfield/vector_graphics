@@ -205,8 +205,7 @@ class VectorGraphic extends StatefulWidget {
   /// The placeholder to use while fetching, decoding, and parsing the vector_graphics data.
   final WidgetBuilder? placeholderBuilder;
 
-  /// The errorBuilder to use in case of the vector_graphics fails to load because of some
-  /// error.
+  /// A callback that fires if some exception happens during data acquisition or decoding.
   final VectorGraphicsErrorWidget? errorBuilder;
 
   /// If provided, a color filter to apply to the vector graphic when painting.

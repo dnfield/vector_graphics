@@ -43,8 +43,7 @@ enum RenderingStrategy {
   picture,
 }
 
-/// This is the Signature that errorBuilder will use to replace
-/// the vector_graphics in case of any exception
+/// The signature that [VectorGraphic.errorBuilder] uses to report exceptions.
 typedef VectorGraphicsErrorWidget = Widget Function(
   BuildContext context,
   Object error,

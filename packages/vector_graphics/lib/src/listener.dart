@@ -9,11 +9,11 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/painting.dart'
     show
-    imageCache,
-    ImageStreamCompleter,
-    OneFrameImageStreamCompleter,
-    ImageInfo,
-    ImageStreamListener;
+        imageCache,
+        ImageStreamCompleter,
+        OneFrameImageStreamCompleter,
+        ImageInfo,
+        ImageStreamListener;
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
 import 'loader.dart';
@@ -718,12 +718,12 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     final Completer<void> completer = Completer<void>();
     _pendingImages.add(completer.future);
     final ImageStreamCompleter? cacheCompleter =
-    imageCache.putIfAbsent(_createImageKey(imageId, format), () {
+        imageCache.putIfAbsent(_createImageKey(imageId, format), () {
       return OneFrameImageStreamCompleter(ImmutableBuffer.fromUint8List(data)
           .then((ImmutableBuffer buffer) async {
         try {
           final ImageDescriptor descriptor =
-          await ImageDescriptor.encoded(buffer);
+              await ImageDescriptor.encoded(buffer);
           final Codec codec = await descriptor.instantiateCodec();
           final FrameInfo info = await codec.getNextFrame();
           final Image image = info.image;

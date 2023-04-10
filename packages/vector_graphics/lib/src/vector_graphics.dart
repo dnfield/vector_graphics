@@ -349,14 +349,12 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
         textDirection: key.textDirection,
         clipViewbox: key.clipViewbox,
         loader: loader,
-        onError: (
-          Object error,
-          StackTrace? stackTrace,
-        ) =>
-            _handleError(
-          error,
-          stackTrace,
-        ),
+        onError: (Object error, StackTrace? stackTrace) {
+          return _handleError(
+            error,
+            stackTrace,
+          );
+        },
       );
     }).then((PictureInfo pictureInfo) {
       return _PictureData(pictureInfo, 0, key);
@@ -676,7 +674,7 @@ class VectorGraphicUtilities {
           textDirection: textDirection,
           loader: loader,
           clipViewbox: clipViewbox,
-          onError: onError!,
+          onError: onError,
         );
       } catch (e) {
         debugPrint('Failed to decode $loader');

@@ -66,7 +66,8 @@ class _DebugVectorGraphicsListener extends VectorGraphicsCodecListener {
     Uint8List data, {
     VectorGraphicsErrorListener? onError,
   }) {
-    buffer.writeln('StoreImage: id:$imageId (format:$format, byteLength:${data.lengthInBytes}');
+    buffer.writeln(
+        'StoreImage: id:$imageId (format:$format, byteLength:${data.lengthInBytes}');
   }
 
   @override

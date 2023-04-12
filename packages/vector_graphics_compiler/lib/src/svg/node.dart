@@ -258,8 +258,8 @@ class TextPositionNode extends ParentNode {
 
     final bool hasXY = x != null && y != null;
     final bool hasDxDy = dx != null && dy != null;
-    final bool consumeTransform =
-        computedTransform.encodableInRect && (hasXY || hasDxDy);
+    final bool consumeTransform = computedTransform == AffineMatrix.identity ||
+        (computedTransform.encodableInRect && (hasXY || hasDxDy));
 
     if (hasXY) {
       final Point baseline = consumeTransform

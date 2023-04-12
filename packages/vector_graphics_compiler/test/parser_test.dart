@@ -38,8 +38,10 @@ void main() {
       ),
     ]);
     expect(instructions.textPositions, <TextPosition>[
-      TextPosition(reset: true, transform: AffineMatrix.identity.translated(60, 45)),
-      TextPosition(reset: true, transform: AffineMatrix.identity.translated(60, 75)),
+      TextPosition(
+          reset: true, transform: AffineMatrix.identity.translated(60, 45)),
+      TextPosition(
+          reset: true, transform: AffineMatrix.identity.translated(60, 75)),
     ]);
   });
 

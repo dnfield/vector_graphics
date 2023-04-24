@@ -618,8 +618,8 @@ void main() {
     final buffer = VectorGraphicsBuffer();
 
     for (final int format in ImageFormatTypes.values) {
-      final id = codec.writeImage(buffer, format,
-          Uint8List.fromList(<int>[0, 1, 3, 4, 5]));
+      final id = codec.writeImage(
+          buffer, format, Uint8List.fromList(<int>[0, 1, 3, 4, 5]));
       codec.writeDrawImage(buffer, id, 1, 2, 100, 100, null);
     }
   });

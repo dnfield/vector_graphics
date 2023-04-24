@@ -13,7 +13,7 @@ dependencies:
   args: ^2.3.0
   meta: ^1.7.0
   path_parsing: ^1.0.1
-  xml: ^6.0.1
+  xml: ^6.3.0
   vector_graphics_codec: 1.1.5+1
 
 dev_dependencies:

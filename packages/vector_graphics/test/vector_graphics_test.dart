@@ -680,7 +680,8 @@ void main() {
       visited = true;
     });
     expect(visited, true);
-    expect(matrix.getTranslation().x, 100); // Width specified in the TestAssetBundle.
+    expect(matrix.getTranslation().x,
+        100); // Width specified in the TestAssetBundle.
     expect(matrix.getTranslation().y, 0);
     expect(matrix.row0.x, -1);
     expect(matrix.row1.y, 1);

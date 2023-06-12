@@ -67,6 +67,7 @@ VectorGraphic createCompatVectorGraphic({
   Animation<double>? opacity,
   RenderingStrategy strategy = RenderingStrategy.picture,
   bool clipViewbox = true,
+  bool matchTextDirection = false,
 }) {
   return VectorGraphic._(
     key: key,
@@ -84,6 +85,7 @@ VectorGraphic createCompatVectorGraphic({
     opacity: opacity,
     strategy: strategy,
     clipViewbox: clipViewbox,
+    matchTextDirection: matchTextDirection,
   );
 }
 

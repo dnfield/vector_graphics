@@ -80,8 +80,6 @@ AffineMatrix? parseTransform(String? transform) {
   return result;
 }
 
-final RegExp _valueSeparator = RegExp('( *, *| +)');
-
 AffineMatrix _parseSvgMatrix(List<double> params, AffineMatrix current) {
   assert(params.isNotEmpty);
   assert(params.length == 6);

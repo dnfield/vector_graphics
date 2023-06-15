@@ -180,7 +180,7 @@ void main() {
     );
   });
 
-  test('Parse a transform with doubled periods',  () {
+  test('Parse a transform with doubled periods', () {
     print(parseTransform('matrix(.70711-.70711.70711.70711-640.89 452.68)'));
   });
 }

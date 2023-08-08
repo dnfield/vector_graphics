@@ -436,9 +436,9 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
       if (width == null && height == null) {
         width = pictureInfo.viewportSize.width;
         height = pictureInfo.viewportSize.height;
-      } else if (height != null && !pictureInfo.viewportSize.isEmpty) {
+      } else if (height != null && !pictureInfo.size.isEmpty) {
         width = height / pictureInfo.size.height * pictureInfo.size.width;
-      } else if (width != null && !pictureInfo.viewportSize.isEmpty) {
+      } else if (width != null && !pictureInfo.size.isEmpty) {
         height = width / pictureInfo.size.width * pictureInfo.size.height;
       }
 
@@ -446,8 +446,8 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
 
       double scale = 1.0;
       scale = math.min(
-        pictureInfo.viewportSize.width / width!,
-        pictureInfo.viewportSize.height / height!,
+        pictureInfo.size.width / width!,
+        pictureInfo.size.height / height!,
       );
 
       if (_webRenderObject) {
@@ -487,7 +487,7 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
       }
 
       child = SizedBox.fromSize(
-        size: pictureInfo.viewportSize ?? Size(width, height),
+        size: Size(width, height),
         child: FittedBox(
           fit: widget.fit,
           alignment: widget.alignment,

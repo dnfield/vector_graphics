@@ -10,6 +10,6 @@ void main() {
   test('DrawCommandBuilder does not emit empty paths', () {
     final DrawCommandBuilder builder = DrawCommandBuilder();
     builder.addPath(Path(), const Paint(), null, null);
-    expect(builder.toInstructions(100, 100).commands, isEmpty);
+    expect(builder.toInstructions(100, 100, 100, 100).commands, isEmpty);
   });
 }

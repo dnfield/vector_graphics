@@ -158,7 +158,11 @@ void main() {
 
   test('Parses pattern units to double correctly', () {
     final ViewportNode viewportNode = ViewportNode(SvgAttributes.empty,
-        width: 100, height: 1000, transform: AffineMatrix.identity);
+        width: 100,
+        height: 1000,
+        viewportWidth: 100,
+        viewportHeight: 1000,
+        transform: AffineMatrix.identity);
     expect(parsePatternUnitToDouble('25.0', 'width'), 25.0);
     expect(
         parsePatternUnitToDouble('0.25', 'width', viewBox: viewportNode), 25.0);

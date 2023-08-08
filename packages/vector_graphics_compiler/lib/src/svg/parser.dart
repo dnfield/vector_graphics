@@ -63,7 +63,7 @@ const Map<String, _PathFunc> _svgPathFuncs = <String, _PathFunc>{
 // ignore: avoid_classes_with_only_static_members
 class _Elements {
   static void svg(SvgParser parserState, bool warningsAsErrors) {
-    final _Viewport viewBox = parserState._parseViewBox();
+    final _Viewbox viewBox = parserState._parseViewBox();
 
     // TODO(dnfield): Support nested SVG elements. https://github.com/dnfield/flutter_svg/issues/132
     if (parserState._root != null) {
@@ -78,6 +78,8 @@ class _Elements {
             parserState._currentAttributes,
             width: viewBox.width,
             height: viewBox.height,
+            viewportWidth: viewBox.viewportWidth,
+            viewportHeight: viewBox.viewportHeight,
             transform: viewBox.transform,
           ),
         ),
@@ -88,6 +90,8 @@ class _Elements {
       parserState._currentAttributes,
       width: viewBox.width,
       height: viewBox.height,
+      viewportWidth: viewBox.viewportWidth,
+      viewportHeight: viewBox.viewportHeight,
       transform: viewBox.transform,
     );
     parserState.addGroup(parserState._currentStartElement!, parserState._root!);
@@ -157,7 +161,7 @@ class _Elements {
         viewBox: parserState._root);
 
     if (patternWidth == null || patternHeight == null) {
-      final _Viewport viewBox = parserState._parseViewBox();
+      final _Viewbox viewBox = parserState._parseViewBox();
       patternWidth = viewBox.width;
       patternHeight = viewBox.height;
     }
@@ -1101,7 +1105,7 @@ class SvgParser {
   }
 
   /// Parses an SVG @viewBox attribute (e.g. 0 0 100 100) to a [Viewport].
-  _Viewport _parseViewBox() {
+  _Viewbox _parseViewBox() {
     final String viewBox = attribute('viewBox') ?? '';
     final String rawWidth = attribute('width') ?? '';
     final String rawHeight = attribute('height') ?? '';
@@ -1115,12 +1119,14 @@ class SvgParser {
           '  ${_currentAttributes.raw}');
     }
 
+    final double viewportWidth = _parseRawWidthHeight(rawWidth);
+    final double viewportHeight = _parseRawWidthHeight(rawHeight);
     if (viewBox == '') {
-      final double width = _parseRawWidthHeight(rawWidth);
-      final double height = _parseRawWidthHeight(rawHeight);
-      return _Viewport(
-        width,
-        height,
+      return _Viewbox(
+        viewportWidth,
+        viewportHeight,
+        viewportWidth,
+        viewportHeight,
         AffineMatrix.identity,
       );
     }
@@ -1134,9 +1140,11 @@ class SvgParser {
     final double translateX = -parseDouble(parts[0])!;
     final double translateY = -parseDouble(parts[1])!;
 
-    return _Viewport(
+    return _Viewbox(
       width,
       height,
+      viewportWidth,
+      viewportHeight,
       AffineMatrix.identity.translated(translateX, translateY),
     );
   }
@@ -1830,9 +1838,17 @@ class _Resolver {
   }
 }
 
-class _Viewport {
-  const _Viewport(this.width, this.height, this.transform);
+class _Viewbox {
+  const _Viewbox(
+    this.width,
+    this.height,
+    this.viewportWidth,
+    this.viewportHeight,
+    this.transform,
+  );
 
+  final double viewportWidth;
+  final double viewportHeight;
   final double width;
   final double height;
   final AffineMatrix transform;

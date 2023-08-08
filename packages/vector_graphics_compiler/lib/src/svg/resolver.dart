@@ -170,6 +170,8 @@ class ResolvingVisitor extends Visitor<Node, AffineMatrix> {
       SvgAttributes.empty,
       width: viewportNode.width,
       height: viewportNode.height,
+      viewportWidth: viewportNode.viewportWidth,
+      viewportHeight: viewportNode.viewportHeight,
       transform: AffineMatrix.identity,
       children: <Node>[
         for (Node child in viewportNode.children)

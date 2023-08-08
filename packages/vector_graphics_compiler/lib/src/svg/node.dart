@@ -115,6 +115,8 @@ class ViewportNode extends ParentNode {
     SvgAttributes attributes, {
     required this.width,
     required this.height,
+    required this.viewportWidth,
+    required this.viewportHeight,
     required AffineMatrix transform,
     super.children,
   }) : super(
@@ -127,6 +129,10 @@ class ViewportNode extends ParentNode {
 
   /// The height of the viewport in pixels.
   final double height;
+
+  final double viewportHeight;
+
+  final double viewportWidth;
 
   /// The viewport rect described by [width] and [height].
   Rect get viewport => Rect.fromLTWH(0, 0, width, height);

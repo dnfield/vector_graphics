@@ -224,4 +224,9 @@ class _DebugVectorGraphicsListener extends VectorGraphicsCodecListener {
   void onUpdateTextPosition(int id) {
     buffer.writeln('UpdateTextPosition: id:$id');
   }
+
+  @override
+  void onViewPortSize(double width, double height) {
+    // TODO: implement onViewPortSize
+  }
 }

@@ -315,6 +315,8 @@ class MaskingOptimizer extends Visitor<_Result, Node>
       viewportNode.attributes,
       width: viewportNode.width,
       height: viewportNode.height,
+      viewportWidth: viewportNode.viewportWidth,
+      viewportHeight: viewportNode.viewportHeight,
       transform: viewportNode.transform,
       children: children,
     );

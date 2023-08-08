@@ -1055,6 +1055,11 @@ class TestListener extends VectorGraphicsCodecListener {
   void onPatternFinished() {
     commands.add(const OnPatternFinished());
   }
+
+  @override
+  void onViewPortSize(double width, double height) {
+    // TODO: implement onViewPortSize
+  }
 }
 
 class OnTextPosition {

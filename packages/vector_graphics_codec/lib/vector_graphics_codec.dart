@@ -122,6 +122,7 @@ class VectorGraphicsCodec {
   static const int _textPositionTag = 50;
   static const int _updateTextPositionTag = 51;
   static const int _pathTagHalfPrecision = 52;
+  static const int _viewportSizeTag = 53;
 
   static const int _version = 1;
   static const int _magicNumber = 0x00882d62;
@@ -198,6 +199,9 @@ class VectorGraphicsCodec {
         case _sizeTag:
           _readSize(buffer, listener);
           continue;
+        case _viewportSizeTag:
+          _readViewportSize(buffer, listener);
+          continue;
         case _clipPathTag:
           _readClipPath(buffer, listener);
           continue;
@@ -244,8 +248,25 @@ class VectorGraphicsCodec {
     if (buffer._decodePhase.index != _CurrentSection.size.index) {
       throw StateError('Size already written');
     }
-    buffer._decodePhase = _CurrentSection.images;
+    buffer._decodePhase = _CurrentSection.viewportSize;
     buffer._putUint8(_sizeTag);
+    buffer._putFloat32(width);
+    buffer._putFloat32(height);
+  }
+
+  /// Encode the dimensions of the vector graphic.
+  ///
+  /// This should be the first attribute encoded.
+  void writeViewportSize(
+    VectorGraphicsBuffer buffer,
+    double width,
+    double height,
+  ) {
+    if (buffer._decodePhase.index != _CurrentSection.viewportSize.index) {
+      throw StateError('Size already written');
+    }
+    buffer._decodePhase = _CurrentSection.images;
+    buffer._putUint8(_viewportSizeTag);
     buffer._putFloat32(width);
     buffer._putFloat32(height);
   }
@@ -904,6 +925,13 @@ class VectorGraphicsCodec {
     listener?.onSize(width, height);
   }
 
+  void _readViewportSize(
+      _ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
+    final double width = buffer.getFloat32();
+    final double height = buffer.getFloat32();
+    listener?.onViewPortSize(width, height);
+  }
+
   void _readTextPosition(
       _ReadBuffer buffer, VectorGraphicsCodecListener? listener) {
     final int id = buffer.getUint16();
@@ -1024,6 +1052,11 @@ class VectorGraphicsCodec {
 abstract class VectorGraphicsCodecListener {
   /// The size of the vector graphic has been decoded.
   void onSize(
+    double width,
+    double height,
+  );
+
+  void onViewPortSize(
     double width,
     double height,
   );
@@ -1190,6 +1223,7 @@ abstract class VectorGraphicsCodecListener {
 
 enum _CurrentSection {
   size,
+  viewportSize,
   images,
   shaders,
   paints,

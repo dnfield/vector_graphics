@@ -1119,9 +1119,9 @@ class SvgParser {
           '  ${_currentAttributes.raw}');
     }
 
-    final double viewportWidth = _parseRawWidthHeight(rawWidth);
-    final double viewportHeight = _parseRawWidthHeight(rawHeight);
     if (viewBox == '') {
+      final double viewportWidth = _parseRawWidthHeight(rawWidth);
+      final double viewportHeight = _parseRawWidthHeight(rawHeight);
       return _Viewbox(
         viewportWidth,
         viewportHeight,
@@ -1129,24 +1129,38 @@ class SvgParser {
         viewportHeight,
         AffineMatrix.identity,
       );
+    } else {
+      final List<String> parts = viewBox.split(RegExp(r'[ ,]+'));
+      if (parts.length < 4) {
+        throw StateError('viewBox element must be 4 elements long');
+      }
+      final double width = parseDouble(parts[2])!;
+      final double height = parseDouble(parts[3])!;
+      final double translateX = -parseDouble(parts[0])!;
+      final double translateY = -parseDouble(parts[1])!;
+      late double viewportWidth;
+      late double viewportHeight;
+      if (rawWidth.isNotEmpty && rawHeight.isNotEmpty) {
+        viewportWidth = _parseRawWidthHeight(rawWidth);
+        viewportHeight = _parseRawWidthHeight(rawHeight);
+      } else if (rawWidth.isEmpty && rawHeight.isEmpty) {
+        viewportWidth = width;
+        viewportHeight = height;
+      } else if (rawWidth.isEmpty) {
+        viewportHeight = _parseRawWidthHeight(rawHeight);
+        viewportWidth = viewportHeight * width / height;
+      } else {
+        viewportWidth = _parseRawWidthHeight(rawWidth);
+        viewportHeight = viewportWidth * height / width;
+      }
+      return _Viewbox(
+        width,
+        height,
+        viewportWidth,
+        viewportHeight,
+        AffineMatrix.identity.translated(translateX, translateY),
+      );
     }
-
-    final List<String> parts = viewBox.split(RegExp(r'[ ,]+'));
-    if (parts.length < 4) {
-      throw StateError('viewBox element must be 4 elements long');
-    }
-    final double width = parseDouble(parts[2])!;
-    final double height = parseDouble(parts[3])!;
-    final double translateX = -parseDouble(parts[0])!;
-    final double translateY = -parseDouble(parts[1])!;
-
-    return _Viewbox(
-      width,
-      height,
-      viewportWidth,
-      viewportHeight,
-      AffineMatrix.identity.translated(translateX, translateY),
-    );
   }
 
   /// Builds an IRI in the form of `'url(#id)'`.

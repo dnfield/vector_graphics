@@ -69,6 +69,11 @@ final ArgParser argParser = ArgParser()
         'Cannot be combined with --input or --output.',
   )
   ..addOption(
+    'out-dir',
+    help: 'The output directory  path '
+        'use it with --input-dir to specific the output dirictory',
+  )
+  ..addOption(
     'input',
     abbr: 'i',
     help: 'The path to a file containing a single SVG',
@@ -144,7 +149,23 @@ Future<void> main(List<String> args) async {
       if (!file.path.endsWith('.svg')) {
         continue;
       }
-      final String outputPath = '${file.path}.vec';
+
+      String outputPath = '${file.path}.vec';
+
+      // to specfic the output directory when parse multi svg
+      if (results.wasParsed('out-dir')) {
+        final Directory outDir = Directory(results['out-dir'] as String);
+        //to add the output dirctory if it exist
+        if (!outDir.existsSync()) {
+          outDir.createSync();
+        }
+        if (Platform.isWindows) {
+          outputPath = '${outDir.path}\\${file.path.split("\\").last}.vec';
+        } else {
+          outputPath = '${outDir.path}/${file.path.split("/").last}.vec';
+        }
+      }
+
       pairs.add(Pair(file.path, outputPath));
     }
   } else {

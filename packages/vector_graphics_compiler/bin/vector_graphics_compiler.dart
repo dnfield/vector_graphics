@@ -160,7 +160,7 @@ Future<void> main(List<String> args) async {
         if (!outDir.existsSync()) {
           outDir.createSync();
         }
-        outputPath = p.join(outDir.path, p.basename(file.path));
+        outputPath = p.join(outDir.path, '${p.basename(file.path)}.vec');
       }
 
       pairs.add(Pair(file.path, outputPath));

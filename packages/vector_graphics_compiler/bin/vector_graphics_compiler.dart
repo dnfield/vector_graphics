@@ -9,6 +9,7 @@ import 'package:vector_graphics_compiler/src/svg/colors.dart';
 import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
 
 import 'util/isolate_processor.dart';
+import 'package:path/path.dart' as p;
 
 final ArgParser argParser = ArgParser()
   ..addOption(
@@ -159,11 +160,7 @@ Future<void> main(List<String> args) async {
         if (!outDir.existsSync()) {
           outDir.createSync();
         }
-        if (Platform.isWindows) {
-          outputPath = '${outDir.path}\\${file.path.split("\\").last}.vec';
-        } else {
-          outputPath = '${outDir.path}/${file.path.split("/").last}.vec';
-        }
+        outputPath = p.join(outDir.path, p.basename(file.path));
       }
 
       pairs.add(Pair(file.path, outputPath));

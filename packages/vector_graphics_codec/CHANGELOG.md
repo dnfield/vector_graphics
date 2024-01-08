@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 1.1.9+2
+
+- Fix case sensitivity on scientific notation parsing.
+
 ## 1.1.9+1
 
 - Fix publication error that did not have latest source code.

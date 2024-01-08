@@ -178,6 +178,11 @@ void main() {
       parseTransform('translate(9e-6,6.5e-4)'),
       AffineMatrix.identity.translated(9e-6, 6.5e-4),
     );
+
+      expect(
+      parseTransform('translate(9E-6,6.5E-4)'),
+      AffineMatrix.identity.translated(9e-6, 6.5e-4),
+    );
   });
 
   test('Parse a transform with a missing space', () {

@@ -23,7 +23,7 @@ const VectorGraphicsCodec _codec = VectorGraphicsCodec();
 /// The deocded result of a vector graphics asset.
 class PictureInfo {
   /// Construct a new [PictureInfo].
-  PictureInfo._(this.picture, this.size);
+  PictureInfo._(this.picture, this.size, this.viewportSize);
 
   /// A picture generated from a vector graphics image.
   final Picture picture;
@@ -33,6 +33,9 @@ class PictureInfo {
   /// This information should be used to scale and position
   /// the picture based on the available space and alignment.
   final Size size;
+
+  // The viewport
+  final Size viewportSize;
 }
 
 /// Internal testing only.
@@ -256,6 +259,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
   final Map<int, _PatternState> _patterns = <int, _PatternState>{};
   Path? _currentPath;
   Size _size = Size.zero;
+  Size _viewportSize = Size.zero;
   bool _done = false;
 
   double? _accumulatedTextPositionX;
@@ -281,7 +285,7 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
     assert(!_done);
     _done = true;
     try {
-      return PictureInfo._(_recorder.endRecording(), _size);
+      return PictureInfo._(_recorder.endRecording(), _size, _viewportSize);
     } finally {
       for (final Image image in _images.values) {
         image.dispose();
@@ -562,6 +566,11 @@ class FlutterVectorGraphicsListener extends VectorGraphicsCodecListener {
       _canvas.clipRect(Offset.zero & Size(width, height));
     }
     _size = Size(width, height);
+  }
+
+  @override
+  void onViewPortSize(double width, double height) {
+    _viewportSize = Size(width, height);
   }
 
   @override

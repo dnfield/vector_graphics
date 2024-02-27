@@ -146,10 +146,13 @@ class DrawCommandBuilder {
   }
 
   /// Create a new [VectorInstructions] with the given width and height.
-  VectorInstructions toInstructions(double width, double height) {
+  VectorInstructions toInstructions(double width, double height,
+      double viewportWidth, double viewportHeight) {
     return VectorInstructions(
       width: width,
       height: height,
+      viewportWidth: viewportWidth,
+      viewportHeight: viewportHeight,
       paints: _paints.keys.toList(),
       paths: _paths.keys.toList(),
       text: _text.keys.toList(),

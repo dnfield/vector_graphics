@@ -166,6 +166,8 @@ class Tessellator extends Visitor<Node, void>
       SvgAttributes.empty,
       width: viewportNode.width,
       height: viewportNode.height,
+      viewportWidth: viewportNode.viewportWidth,
+      viewportHeight: viewportNode.viewportHeight,
       transform: viewportNode.transform,
       children: <Node>[
         for (Node child in viewportNode.children) child.accept(this, data),

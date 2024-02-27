@@ -21,6 +21,8 @@ class VectorInstructions {
   const VectorInstructions({
     required this.width,
     required this.height,
+    required this.viewportWidth,
+    required this.viewportHeight,
     required this.paints,
     this.paths = const <Path>[],
     this.vertices = const <IndexedVertices>[],
@@ -32,11 +34,17 @@ class VectorInstructions {
     required this.commands,
   });
 
-  /// The extent of the viewport on the x axis.
+  /// The extent of the viewbox on the x axis.
   final double width;
 
-  /// The extent of the viewport on the y axis.
+  /// The extent of the viewbox on the y axis.
   final double height;
+
+  /// The extent of the viewport on the x axis.
+  final double viewportWidth;
+
+  /// The extent of the viewport on the y axis.
+  final double viewportHeight;
 
   /// The [Paint] objects used in [commands].
   final List<Paint> paints;

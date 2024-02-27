@@ -128,6 +128,8 @@ class CommandBuilderVisitor extends Visitor<void, void>
   final DrawCommandBuilder _builder = DrawCommandBuilder();
   late double _width;
   late double _height;
+  late double _viewportWidth;
+  late double _viewportHeight;
 
   /// The current patternId. This will be `null` if
   /// there is no current pattern.
@@ -135,7 +137,8 @@ class CommandBuilderVisitor extends Visitor<void, void>
 
   /// Return the vector instructions encoded by the visitor given to this tree.
   VectorInstructions toInstructions() {
-    return _builder.toInstructions(_width, _height);
+    return _builder.toInstructions(
+        _width, _height, _viewportWidth, _viewportHeight);
   }
 
   @override
@@ -199,6 +202,8 @@ class CommandBuilderVisitor extends Visitor<void, void>
   void visitViewportNode(ViewportNode viewportNode, void data) {
     _width = viewportNode.width;
     _height = viewportNode.height;
+    _viewportWidth = viewportNode.viewportWidth;
+    _viewportHeight = viewportNode.viewportHeight;
     for (Node child in viewportNode.children) {
       child.accept(this, data);
     }

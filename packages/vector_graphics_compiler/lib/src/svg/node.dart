@@ -544,6 +544,7 @@ class TextNode extends AttributedNode {
       attributes.textDecoration ?? TextDecoration.none,
       attributes.textDecorationStyle ?? TextDecorationStyle.solid,
       attributes.textDecorationColor ?? Color.opaqueBlack,
+      attributes.letterSpacing ?? 0,
     );
   }
 

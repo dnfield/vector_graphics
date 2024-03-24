@@ -167,24 +167,26 @@ class _Elements {
     final String id = parserState.buildUrlIri();
     parserState.patternIds.add(id);
     final SvgAttributes newAttributes = SvgAttributes._(
-        raw: attributes.raw,
-        id: attributes.id,
-        href: attributes.href,
-        transform: attributes.transform,
-        color: attributes.color,
-        stroke: attributes.stroke,
-        fill: attributes.fill,
-        fillRule: attributes.fillRule,
-        clipRule: attributes.clipRule,
-        clipPathId: attributes.clipPathId,
-        blendMode: attributes.blendMode,
-        fontFamily: attributes.fontFamily,
-        fontWeight: attributes.fontWeight,
-        fontSize: attributes.fontSize,
-        x: DoubleOrPercentage.fromString(rawX),
-        y: DoubleOrPercentage.fromString(rawY),
-        width: patternWidth,
-        height: patternHeight);
+      raw: attributes.raw,
+      id: attributes.id,
+      href: attributes.href,
+      transform: attributes.transform,
+      color: attributes.color,
+      stroke: attributes.stroke,
+      fill: attributes.fill,
+      fillRule: attributes.fillRule,
+      clipRule: attributes.clipRule,
+      clipPathId: attributes.clipPathId,
+      blendMode: attributes.blendMode,
+      fontFamily: attributes.fontFamily,
+      fontWeight: attributes.fontWeight,
+      fontSize: attributes.fontSize,
+      x: DoubleOrPercentage.fromString(rawX),
+      y: DoubleOrPercentage.fromString(rawY),
+      width: patternWidth,
+      height: patternHeight,
+      letterSpacing: attributes.letterSpacing,
+    );
 
     final ParentNode group = ParentNode(newAttributes);
     parserState.addGroup(parserState._currentStartElement!, group);
@@ -1659,43 +1661,45 @@ class SvgParser {
     final String? rawDy = attributeMap['dy'];
 
     return SvgAttributes._(
-        raw: attributeMap,
-        id: id,
-        x: DoubleOrPercentage.fromString(rawX),
-        y: DoubleOrPercentage.fromString(rawY),
-        dx: DoubleOrPercentage.fromString(rawDx),
-        dy: DoubleOrPercentage.fromString(rawDy),
-        href: attributeMap['href'],
-        color: attributeMap['color']?.toLowerCase() == 'none'
-            ? const ColorOrNone.none()
-            : ColorOrNone.color(color),
-        stroke: _parseStrokeAttributes(
-          attributeMap,
-          opacity,
-          color,
-          id,
-        ),
-        fill: _parseFillAttributes(
-          attributeMap,
-          opacity,
-          color,
-          id,
-        ),
-        fillRule: parseRawFillRule(attributeMap['fill-rule']),
-        clipRule: parseRawFillRule(attributeMap['clip-rule']),
-        clipPathId: attributeMap['clip-path'],
-        blendMode: _blendModes[attributeMap['mix-blend-mode']],
-        transform:
-            parseTransform(attributeMap['transform']) ?? AffineMatrix.identity,
-        fontFamily: attributeMap['font-family'],
-        fontWeight: parseFontWeight(attributeMap['font-weight']),
-        fontSize: parseFontSize(attributeMap['font-size']),
-        textDecoration: parseTextDecoration(attributeMap['text-decoration']),
-        textDecorationStyle:
-            parseTextDecorationStyle(attributeMap['text-decoration-style']),
-        textDecorationColor: parseColor(attributeMap['text-decoration-color'],
-            attributeName: 'text-decoration-color', id: id),
-        textAnchorMultiplier: parseTextAnchor(attributeMap['text-anchor']));
+      raw: attributeMap,
+      id: id,
+      x: DoubleOrPercentage.fromString(rawX),
+      y: DoubleOrPercentage.fromString(rawY),
+      dx: DoubleOrPercentage.fromString(rawDx),
+      dy: DoubleOrPercentage.fromString(rawDy),
+      href: attributeMap['href'],
+      color: attributeMap['color']?.toLowerCase() == 'none'
+          ? const ColorOrNone.none()
+          : ColorOrNone.color(color),
+      stroke: _parseStrokeAttributes(
+        attributeMap,
+        opacity,
+        color,
+        id,
+      ),
+      fill: _parseFillAttributes(
+        attributeMap,
+        opacity,
+        color,
+        id,
+      ),
+      fillRule: parseRawFillRule(attributeMap['fill-rule']),
+      clipRule: parseRawFillRule(attributeMap['clip-rule']),
+      clipPathId: attributeMap['clip-path'],
+      blendMode: _blendModes[attributeMap['mix-blend-mode']],
+      transform:
+          parseTransform(attributeMap['transform']) ?? AffineMatrix.identity,
+      fontFamily: attributeMap['font-family'],
+      fontWeight: parseFontWeight(attributeMap['font-weight']),
+      fontSize: parseFontSize(attributeMap['font-size']),
+      textDecoration: parseTextDecoration(attributeMap['text-decoration']),
+      textDecorationStyle:
+          parseTextDecorationStyle(attributeMap['text-decoration-style']),
+      textDecorationColor: parseColor(attributeMap['text-decoration-color'],
+          attributeName: 'text-decoration-color', id: id),
+      textAnchorMultiplier: parseTextAnchor(attributeMap['text-anchor']),
+      letterSpacing: parseDouble(attributeMap['letter-spacing']),
+    );
   }
 }
 
@@ -1872,6 +1876,7 @@ class SvgAttributes {
     this.dy,
     this.width,
     this.height,
+    this.letterSpacing,
   });
 
   /// For use in tests to construct arbitrary attributes.
@@ -1901,6 +1906,7 @@ class SvgAttributes {
     this.dy,
     this.width,
     this.height,
+    this.letterSpacing,
   });
 
   /// The empty set of properties.
@@ -2056,6 +2062,9 @@ class SvgAttributes {
   /// The relative y translation.
   final DoubleOrPercentage? dy;
 
+  /// The space between the letters.
+  final double? letterSpacing;
+
   /// A copy of these attributes after absorbing a saveLayer.
   ///
   /// Specifically, this will null out `blendMode` and any opacity related
@@ -2086,6 +2095,7 @@ class SvgAttributes {
       y: y,
       width: width,
       height: height,
+      letterSpacing: letterSpacing,
     );
   }
 
@@ -2131,6 +2141,7 @@ class SvgAttributes {
       y: y,
       dx: dx,
       dy: dy,
+      letterSpacing: letterSpacing ?? parent.letterSpacing,
     );
   }
 }

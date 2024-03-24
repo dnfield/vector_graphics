@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:vector_graphics_compiler/src/svg/numbers.dart';
 import 'package:vector_graphics_compiler/vector_graphics_compiler.dart';
+
 import 'test_svg_strings.dart';
 
 void main() {
@@ -50,6 +51,7 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color(0xff000000),
+        0,
       ),
       TextConfig(
         'Tōkyū Railways route map',
@@ -60,6 +62,7 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color(0xff000000),
+        0,
       ),
     ]);
     expect(instructions.textPositions, <TextPosition>[
@@ -134,6 +137,7 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color(0xff000000),
+        0,
       ),
       TextConfig(
         '3',
@@ -144,6 +148,7 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color(0xff000000),
+        0,
       ),
       TextConfig(
         '1',
@@ -154,6 +159,7 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color(0xff000000),
+        0,
       ),
     ]);
   });
@@ -193,7 +199,7 @@ void main() {
     const String svg = '''
 <svg width="185" height="43" viewBox="0 0 185 43" xmlns="http://www.w3.org/2000/svg">
     <g fill="none" fill-rule="evenodd">
-        <text x="35.081" y="15" font-family="OpenSans-Italic, Open Sans" font-size="14" font-style="italic" fill="#333">
+        <text x="35.081" y="15" font-family="OpenSans-Italic, Open Sans" font-size="14" font-style="italic" fill="#333" letter-spacing="-0.5">
             π( D² - d² )( N - N
             <tspan y="15" font-size="10">u</tspan>
             )
@@ -219,6 +225,7 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color(0xff000000),
+        -0.5,
       ),
       TextConfig(
         ' u',
@@ -229,6 +236,7 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color(0xff000000),
+        -0.5,
       ),
       TextConfig(
         ' )',
@@ -239,6 +247,7 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color(0xff000000),
+        -0.5,
       ),
     ]);
   });
@@ -273,6 +282,7 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
+          0.009,
         ),
         TextConfig(
           'more text.',
@@ -283,6 +293,7 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
+          0.009,
         ),
         TextConfig(
           'Even more text',
@@ -293,6 +304,7 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
+          0.009,
         ),
         TextConfig(
           'text everywhere',
@@ -303,6 +315,7 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
+          0.009,
         ),
         TextConfig(
           'so many lines',
@@ -313,6 +326,7 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
+          0.009,
         ),
       ],
     );
@@ -579,6 +593,7 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color(0xff000000),
+        0,
       ),
       TextConfig(
         'Text anchor middle',
@@ -589,6 +604,7 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color(0xff000000),
+        0,
       ),
       TextConfig(
         'Text anchor end',
@@ -599,6 +615,7 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color(0xff000000),
+        0,
       )
     ]);
   });
@@ -618,6 +635,7 @@ void main() {
         TextDecoration.overline,
         TextDecorationStyle.solid,
         Color(0xffff0000),
+        0,
       ),
       TextConfig(
         'Strike text',
@@ -628,6 +646,7 @@ void main() {
         TextDecoration.lineThrough,
         TextDecorationStyle.solid,
         Color(0xff008000),
+        0,
       ),
       TextConfig(
         'Underline text',
@@ -638,6 +657,7 @@ void main() {
         TextDecoration.underline,
         TextDecorationStyle.double,
         Color(0xff008000),
+        0,
       )
     ]);
   });
@@ -782,6 +802,7 @@ void main() {
         TextDecoration.none,
         TextDecorationStyle.solid,
         Color.opaqueBlack,
+        0,
       ),
     );
   });
@@ -1404,6 +1425,7 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
+          0,
         )
       ],
     );

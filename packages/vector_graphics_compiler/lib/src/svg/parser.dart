@@ -1698,7 +1698,7 @@ class SvgParser {
       textDecorationColor: parseColor(attributeMap['text-decoration-color'],
           attributeName: 'text-decoration-color', id: id),
       textAnchorMultiplier: parseTextAnchor(attributeMap['text-anchor']),
-      letterSpacing: parseDouble(attributeMap['letter-spacing']),
+      letterSpacing: parseDoubleWithUnits(attributeMap['letter-spacing']),
     );
   }
 }

@@ -282,7 +282,7 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
-          0.009,
+          0.126,
         ),
         TextConfig(
           'more text.',
@@ -293,7 +293,7 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
-          0.009,
+          0.126,
         ),
         TextConfig(
           'Even more text',
@@ -304,7 +304,7 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
-          0.009,
+          0.126,
         ),
         TextConfig(
           'text everywhere',
@@ -315,7 +315,7 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
-          0.009,
+          0.126,
         ),
         TextConfig(
           'so many lines',
@@ -326,7 +326,7 @@ void main() {
           TextDecoration.none,
           TextDecorationStyle.solid,
           Color(0xff000000),
-          0.009,
+          0.126,
         ),
       ],
     );

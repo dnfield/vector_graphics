@@ -26,7 +26,7 @@ bool initializePathOpsFromFlutterCache() {
     platform = 'darwin-x64';
     executable = 'libpath_ops.dylib';
   } else if (Platform.isLinux) {
-    platform = 'linux-x64';
+    platform = 'linux-arm64';
     executable = 'libpath_ops.so';
   } else {
     print('path_ops not supported on ${Platform.localeName}');

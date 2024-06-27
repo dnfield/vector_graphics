@@ -3,9 +3,7 @@
 // found in the LICENSE file.
 
 import 'node.dart';
-import '_tessellator_unsupported.dart'
-    if (dart.library.js_interop) '_tessellator_unsupported.dart'
-    if (dart.library.ffi) '_tessellator_ffi.dart' as impl;
+import '_tessellator_unsupported.dart' if (dart.library.io) '_tessellator_ffi.dart' as impl;
 import 'visitor.dart';
 
 /// Whether or not tesselation should be used.

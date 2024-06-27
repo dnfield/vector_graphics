@@ -4,6 +4,7 @@
 
 import 'node.dart';
 import '_tessellator_unsupported.dart'
+    if (dart.library.js_interop) '_tessellator_unsupported.dart'
     if (dart.library.ffi) '_tessellator_ffi.dart' as impl;
 import 'visitor.dart';
 

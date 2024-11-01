@@ -24,10 +24,22 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const Scaffold(
+      home: Scaffold(
         body: Center(
           child: VectorGraphic(
-            loader: NetworkSvgLoader(
+            placeholderBuilder: (BuildContext context) => Container(
+                color: Colors.green,
+                width: double.infinity,
+                height: double.infinity,
+                child: const Center(
+                  child: SizedBox(
+                    width: 25,
+                    height: 25,
+                    child: CircularProgressIndicator(),
+                  ),
+                )),
+            transitionConfig: const VectorGraphicsStateTransitionConfig(),
+            loader: const NetworkSvgLoader(
               'https://upload.wikimedia.org/wikipedia/commons/f/fd/Ghostscript_Tiger.svg',
             ),
           ),

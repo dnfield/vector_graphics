@@ -10,4 +10,5 @@ export 'src/vector_graphics.dart'
         BytesLoader,
         VectorGraphic,
         VectorGraphicUtilities,
+        VectorGraphicsStateTransitionConfig,
         vg;

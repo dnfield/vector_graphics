@@ -7,6 +7,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
+import 'package:vector_graphics/src/state_transition_config.dart';
 
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
@@ -18,6 +19,7 @@ import 'render_vector_graphic.dart';
 
 export 'listener.dart' show PictureInfo;
 export 'loader.dart';
+export 'state_transition_config.dart';
 
 /// How the vector graphic will be rendered by the Flutter framework.
 ///
@@ -120,6 +122,7 @@ class VectorGraphic extends StatefulWidget {
     this.clipBehavior = Clip.hardEdge,
     this.placeholderBuilder,
     this.errorBuilder,
+    this.transitionConfig,
     this.colorFilter,
     this.opacity,
     this.clipViewbox = true,
@@ -138,6 +141,7 @@ class VectorGraphic extends StatefulWidget {
     this.excludeFromSemantics = false,
     this.clipBehavior = Clip.hardEdge,
     this.placeholderBuilder,
+    this.transitionConfig,
     this.errorBuilder,
     this.colorFilter,
     this.opacity,
@@ -217,6 +221,11 @@ class VectorGraphic extends StatefulWidget {
 
   /// A callback that fires if some exception happens during data acquisition or decoding.
   final VectorGraphicsErrorWidget? errorBuilder;
+
+  /// If provided, will be used to animate the transition between the various states of svg loading
+  ///
+  /// For example used to transition from the placeholder to error/success states.
+  final VectorGraphicsStateTransitionConfig? transitionConfig;
 
   /// If provided, a color filter to apply to the vector graphic when painting.
   ///
@@ -424,93 +433,40 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
   Widget build(BuildContext context) {
     final PictureInfo? pictureInfo = _pictureInfo?.pictureInfo;
 
+    final Object? localError = _error;
+    final VectorGraphicsErrorWidget? localErrorBuilder = widget.errorBuilder;
+    final VectorGraphicsStateTransitionConfig? localTransitionConfig = widget.transitionConfig;
+
     Widget child;
     if (pictureInfo != null) {
       // If the caller did not specify a width or height, fall back to the
       // size of the graphic.
       // If the caller did specify a width or height, preserve the aspect ratio
       // of the graphic and center it within that width and height.
-      double? width = widget.width;
-      double? height = widget.height;
-
-      if (width == null && height == null) {
-        width = pictureInfo.size.width;
-        height = pictureInfo.size.height;
-      } else if (height != null && !pictureInfo.size.isEmpty) {
-        width = height / pictureInfo.size.height * pictureInfo.size.width;
-      } else if (width != null && !pictureInfo.size.isEmpty) {
-        height = width / pictureInfo.size.width * pictureInfo.size.height;
-      }
-
-      assert(width != null && height != null);
-
-      double scale = 1.0;
-      scale = math.min(
-        pictureInfo.size.width / width!,
-        pictureInfo.size.height / height!,
-      );
-
-      if (_webRenderObject) {
-        child = _RawWebVectorGraphicWidget(
-          pictureInfo: pictureInfo,
-          assetKey: _pictureInfo!.key,
-          colorFilter: widget.colorFilter,
-          opacity: widget.opacity,
-        );
-      } else if (widget.strategy == RenderingStrategy.raster) {
-        child = _RawVectorGraphicWidget(
-          pictureInfo: pictureInfo,
-          assetKey: _pictureInfo!.key,
-          colorFilter: widget.colorFilter,
-          opacity: widget.opacity,
-          scale: scale,
-        );
-      } else {
-        child = _RawPictureVectorGraphicWidget(
-          pictureInfo: pictureInfo,
-          assetKey: _pictureInfo!.key,
-          colorFilter: widget.colorFilter,
-          opacity: widget.opacity,
-        );
-      }
-
-      if (widget.matchTextDirection) {
-        final TextDirection direction = Directionality.of(context);
-        if (direction == TextDirection.rtl) {
-          child = Transform(
-            transform: Matrix4.identity()
-              ..translate(pictureInfo.size.width)
-              ..scale(-1.0, 1.0),
-            child: child,
-          );
-        }
-      }
-
-      child = SizedBox(
-        width: width,
-        height: height,
-        child: FittedBox(
-          fit: widget.fit,
-          alignment: widget.alignment,
-          clipBehavior: widget.clipBehavior,
-          child: SizedBox.fromSize(
-            size: pictureInfo.size,
-            child: child,
-          ),
-        ),
-      );
-    } else if (_error != null && widget.errorBuilder != null) {
-      child = widget.errorBuilder!(
-        context,
-        _error!,
-        _stackTrace ?? StackTrace.empty,
-      );
+      child = _buildSvgChild(pictureInfo, context);
+    } else if (localError != null && localErrorBuilder != null) {
+      child = _buildErrorChild(context, localError, localErrorBuilder);
     } else {
-      child = widget.placeholderBuilder?.call(context) ??
-          SizedBox(
-            width: widget.width,
-            height: widget.height,
-          );
+      child = Container(
+        key: const ValueKey<String>('svg-placeholder-state'),
+        child: widget.placeholderBuilder?.call(context) ??
+            SizedBox(
+              width: widget.width,
+              height: widget.height,
+            ),
+      );
+    }
+
+    if (localTransitionConfig != null) {
+      child = AnimatedSwitcher(
+        duration: localTransitionConfig.duration,
+        reverseDuration: localTransitionConfig.reverseDuration,
+        switchInCurve: localTransitionConfig.switchInCurve,
+        switchOutCurve: localTransitionConfig.switchOutCurve,
+        transitionBuilder: localTransitionConfig.transitionBuilder,
+        layoutBuilder: localTransitionConfig.layoutBuilder,
+        child: child,
+      );
     }
 
     if (!widget.excludeFromSemantics) {
@@ -522,6 +478,90 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
       );
     }
     return child;
+  }
+
+  Widget _buildErrorChild(BuildContext context, Object error,
+          VectorGraphicsErrorWidget errorBuilder) =>
+      Container(
+        key: const ValueKey<String>('svg-error-state'),
+        child: errorBuilder(
+          context,
+          error,
+          _stackTrace ?? StackTrace.empty,
+        ),
+      );
+
+  Widget _buildSvgChild(PictureInfo pictureInfo, BuildContext context) {
+    double? width = widget.width;
+    double? height = widget.height;
+    if (width == null && height == null) {
+      width = pictureInfo.size.width;
+      height = pictureInfo.size.height;
+    } else if (height != null && !pictureInfo.size.isEmpty) {
+      width = height / pictureInfo.size.height * pictureInfo.size.width;
+    } else if (width != null && !pictureInfo.size.isEmpty) {
+      height = width / pictureInfo.size.width * pictureInfo.size.height;
+    }
+
+    assert(width != null && height != null);
+
+    double scale = 1.0;
+    scale = math.min(
+      pictureInfo.size.width / width!,
+      pictureInfo.size.height / height!,
+    );
+
+    Widget child;
+    if (_webRenderObject) {
+      child = _RawWebVectorGraphicWidget(
+        pictureInfo: pictureInfo,
+        assetKey: _pictureInfo!.key,
+        colorFilter: widget.colorFilter,
+        opacity: widget.opacity,
+      );
+    } else if (widget.strategy == RenderingStrategy.raster) {
+      child = _RawVectorGraphicWidget(
+        pictureInfo: pictureInfo,
+        assetKey: _pictureInfo!.key,
+        colorFilter: widget.colorFilter,
+        opacity: widget.opacity,
+        scale: scale,
+      );
+    } else {
+      child = _RawPictureVectorGraphicWidget(
+        pictureInfo: pictureInfo,
+        assetKey: _pictureInfo!.key,
+        colorFilter: widget.colorFilter,
+        opacity: widget.opacity,
+      );
+    }
+
+    if (widget.matchTextDirection) {
+      final TextDirection direction = Directionality.of(context);
+      if (direction == TextDirection.rtl) {
+        child = Transform(
+          transform: Matrix4.identity()
+            ..translate(pictureInfo.size.width)
+            ..scale(-1.0, 1.0),
+          child: child,
+        );
+      }
+    }
+
+    return SizedBox(
+      key: const ValueKey<String>('svg-loaded-state'),
+      width: width,
+      height: height,
+      child: FittedBox(
+        fit: widget.fit,
+        alignment: widget.alignment,
+        clipBehavior: widget.clipBehavior,
+        child: SizedBox.fromSize(
+          size: pictureInfo.size,
+          child: child,
+        ),
+      ),
+    );
   }
 }
 

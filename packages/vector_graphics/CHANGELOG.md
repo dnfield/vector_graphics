@@ -1,5 +1,12 @@
 # CHANGELOG
 
+## 1.1.12
+
+- [x] error when parsing an invalid svg string.
+- [x] error when download svg string from network.
+- [x] error when read svg file from asset.
+- [x] expose ErrorWidgetBuilder.
+
 ## 1.1.11+
 
 - Relax package:http constraint.

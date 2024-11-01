@@ -1328,6 +1328,7 @@ class TextConfig {
     this.decoration,
     this.decorationStyle,
     this.decorationColor,
+    this.letterSpacing,
   );
 
   /// The text to be rendered.
@@ -1354,6 +1355,9 @@ class TextConfig {
   /// The decoration style to apply to the text.
   final TextDecorationStyle decorationStyle;
 
+  /// The space between letters.
+  final double letterSpacing;
+
   /// The color to use for the decoration, if any.
   final Color decorationColor;
 
@@ -1367,6 +1371,7 @@ class TextConfig {
         decoration,
         decorationStyle,
         decorationColor,
+        letterSpacing,
       );
 
   @override
@@ -1379,7 +1384,8 @@ class TextConfig {
         other.fontWeight == fontWeight &&
         other.decoration == decoration &&
         other.decorationStyle == decorationStyle &&
-        other.decorationColor == decorationColor;
+        other.decorationColor == decorationColor &&
+        other.letterSpacing == letterSpacing;
   }
 
   @override
@@ -1392,7 +1398,9 @@ class TextConfig {
         '$fontSize, '
         '$decoration, '
         '$decorationStyle, '
-        '$decorationColor,)';
+        '$decorationColor, '
+        '$letterSpacing'
+        ')';
   }
 }
 

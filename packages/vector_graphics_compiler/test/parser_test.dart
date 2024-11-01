@@ -925,6 +925,8 @@ void main() {
                 .translated(-250, -250),
           ),
     );
+  }, onPlatform: <String, Skip>{
+    'windows': const Skip('small floating point differences on Windows')
   });
 
   test('Opaque blend mode gets a save layer', () {

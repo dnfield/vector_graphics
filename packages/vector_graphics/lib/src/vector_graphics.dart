@@ -7,12 +7,11 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/widgets.dart';
-
 import 'package:vector_graphics_codec/vector_graphics_codec.dart';
 
 import 'html_render_vector_graphics.dart';
-import 'loader.dart';
 import 'listener.dart';
+import 'loader.dart';
 import 'render_object_selection.dart';
 import 'render_vector_graphic.dart';
 
@@ -309,8 +308,8 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
 
   static final Map<_PictureKey, _PictureData> _livePictureCache =
       <_PictureKey, _PictureData>{};
-  static final Map<_PictureKey, Future<_PictureData>> _pendingPictures =
-      <_PictureKey, Future<_PictureData>>{};
+  static final Map<_PictureKey, Future<_PictureData?>> _pendingPictures =
+      <_PictureKey, Future<_PictureData?>>{};
 
   @override
   void didChangeDependencies() {
@@ -346,12 +345,13 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
     }
   }
 
-  Future<_PictureData> _loadPicture(
+  Future<_PictureData?> _loadPicture(
       BuildContext context, _PictureKey key, BytesLoader loader) {
     if (_pendingPictures.containsKey(key)) {
       return _pendingPictures[key]!;
     }
-    final Future<_PictureData> result =
+
+    final Future<_PictureData?> result =
         loader.loadBytes(context).then((ByteData data) {
       return decodeVectorGraphics(
         data,
@@ -360,19 +360,25 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
         clipViewbox: key.clipViewbox,
         loader: loader,
         onError: (Object error, StackTrace? stackTrace) {
-          return _handleError(
-            error,
-            stackTrace,
-          );
+          _handleError(error, stackTrace);
         },
       );
-    }).then((PictureInfo pictureInfo) {
+    }).then<_PictureData?>((PictureInfo pictureInfo) {
       return _PictureData(pictureInfo, 0, key);
+    }).catchError((Object error, StackTrace stackTrace) {
+      if (widget.errorBuilder != null) {
+        _handleError(error, stackTrace);
+        return null;
+      } else {
+        // ignore: only_throw_errors
+        throw error;
+      }
     });
     _pendingPictures[key] = result;
     result.whenComplete(() {
       _pendingPictures.remove(key);
     });
+
     return result;
   }
 
@@ -384,7 +390,7 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
   }
 
   void _loadAssetBytes() {
-    // First check if we have an avilable picture and use this immediately.
+    // First check if we have an available picture and use this immediately.
     final Object loaderKey = widget.loader.cacheKey(context);
     final _PictureKey key =
         _PictureKey(loaderKey, locale, textDirection, widget.clipViewbox);
@@ -399,7 +405,12 @@ class _VectorGraphicWidgetState extends State<VectorGraphic> {
     }
     // If not, then check if there is a pending load.
     final BytesLoader loader = widget.loader;
-    _loadPicture(context, key, loader).then((_PictureData data) {
+    _loadPicture(context, key, loader).then((_PictureData? data) {
+      if (data == null) {
+        // If data is null, an error occurred, and it has been handled.
+        return;
+      }
+
       data.count += 1;
 
       // The widget may have changed, requesting a new vector graphic before

@@ -653,6 +653,31 @@ void main() {
     expect(matrix.row0.x, -1);
     expect(matrix.row1.y, 1);
   });
+
+  testWidgets('Displays errorBuilder on loadBytes failure', (WidgetTester tester) async {
+    const ErrorBytesLoader loader = ErrorBytesLoader();
+    final GlobalKey key = GlobalKey();
+
+    // Build the VectorGraphic widget with an errorBuilder
+    await tester.pumpWidget(Directionality(
+      textDirection: TextDirection.ltr,
+      child: VectorGraphic(
+        key: key,
+        loader: loader,
+        width: 100,
+        height: 100,
+        errorBuilder: (BuildContext context, Object error, StackTrace stackTrace) {
+          return const Text('Error occurred');
+        },
+      ),
+    ));
+
+    // Let the widget rebuild and show the error
+    await tester.pumpAndSettle();
+
+    // Expect that the error widget is displayed
+    expect(find.text('Error occurred'), findsOneWidget);
+  });
 }
 
 class TestBundle extends Fake implements AssetBundle {
@@ -718,4 +743,24 @@ class TestBytesLoader extends BytesLoader {
 
   @override
   String toString() => 'TestBytesLoader: $source';
+}
+
+class ErrorBytesLoader extends BytesLoader {
+  const ErrorBytesLoader();
+
+  @override
+  Future<ByteData> loadBytes(BuildContext? context) async {
+    throw StateError('Load failure');
+  }
+
+  @override
+  int get hashCode => 0;
+
+  @override
+  bool operator ==(Object other) {
+    return other is ErrorBytesLoader;
+  }
+
+  @override
+  String toString() => 'ErrorBytesLoader';
 }
